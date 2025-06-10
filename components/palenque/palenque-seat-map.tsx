@@ -9,6 +9,23 @@ import { Button } from "@/components/ui/button"
 // @ts-ignore
 import venueConfig from "../../data/seats-data-palenque-victoria.json"
 
+// Importar componentes de secciones
+import {
+  GeneralSection,
+  Oro1Section,
+  Oro2Section,
+  Oro3Section,
+  Oro4Section,
+  Oro5Section,
+  Oro6Section,
+  Oro7Section,
+  Oro8Section,
+  VIP1Section,
+  VIP2Section,
+  VIP3Section,
+  VIP4Section,
+} from "./sections"
+
 // Interfaces para la configuración exportada del seat-map creator
 interface CreatedSeat {
   id: string
@@ -64,6 +81,7 @@ interface ZoneInfo {
   price: number
   color: string
   selectable: boolean
+  component: React.ComponentType<any>
 }
 
 interface GeneralTicket {
@@ -73,21 +91,21 @@ interface GeneralTicket {
   quantity: number
 }
 
-// Configuración de zonas
+// Configuración de zonas con componentes
 const zoneConfig: Record<string, ZoneInfo> = {
-  General: { name: "General", price: 300, color: "#10B981", selectable: false },
-  "Oro 1": { name: "Oro 1", price: 600, color: "#F59E0B", selectable: true },
-  "Oro 2": { name: "Oro 2", price: 600, color: "#F59E0B", selectable: true },
-  "Oro 3": { name: "Oro 3", price: 600, color: "#F59E0B", selectable: true },
-  "Oro 4": { name: "Oro 4", price: 600, color: "#F59E0B", selectable: true },
-  "Oro 5": { name: "Oro 5", price: 600, color: "#F59E0B", selectable: true },
-  "Oro 6": { name: "Oro 6", price: 600, color: "#F59E0B", selectable: true },
-  "Oro 7": { name: "Oro 7", price: 600, color: "#F59E0B", selectable: true },
-  "Oro 8": { name: "Oro 8", price: 600, color: "#F59E0B", selectable: true },
-  "VIP 1": { name: "VIP 1", price: 900, color: "#8B5CF6", selectable: true },
-  "VIP 2": { name: "VIP 2", price: 900, color: "#8B5CF6", selectable: true },
-  "VIP 3": { name: "VIP 3", price: 900, color: "#8B5CF6", selectable: true },
-  "VIP 4": { name: "VIP 4", price: 900, color: "#8B5CF6", selectable: true },
+  General: { name: "General", price: 300, color: "#10B981", selectable: false, component: GeneralSection },
+  "Oro 1": { name: "Oro 1", price: 600, color: "#F59E0B", selectable: true, component: Oro1Section },
+  "Oro 2": { name: "Oro 2", price: 600, color: "#F59E0B", selectable: true, component: Oro2Section },
+  "Oro 3": { name: "Oro 3", price: 600, color: "#F59E0B", selectable: true, component: Oro3Section },
+  "Oro 4": { name: "Oro 4", price: 600, color: "#F59E0B", selectable: true, component: Oro4Section },
+  "Oro 5": { name: "Oro 5", price: 600, color: "#F59E0B", selectable: true, component: Oro5Section },
+  "Oro 6": { name: "Oro 6", price: 600, color: "#F59E0B", selectable: true, component: Oro6Section },
+  "Oro 7": { name: "Oro 7", price: 600, color: "#F59E0B", selectable: true, component: Oro7Section },
+  "Oro 8": { name: "Oro 8", price: 600, color: "#F59E0B", selectable: true, component: Oro8Section },
+  "VIP 1": { name: "VIP 1", price: 900, color: "#8B5CF6", selectable: true, component: VIP1Section },
+  "VIP 2": { name: "VIP 2", price: 900, color: "#8B5CF6", selectable: true, component: VIP2Section },
+  "VIP 3": { name: "VIP 3", price: 900, color: "#8B5CF6", selectable: true, component: VIP3Section },
+  "VIP 4": { name: "VIP 4", price: 900, color: "#8B5CF6", selectable: true, component: VIP4Section },
 }
 
 // Función de utilidad para verificar si un asiento está en el viewport
@@ -575,30 +593,23 @@ export function PalenqueSeatMap() {
                   {venueConfig.venue.name.toUpperCase()}
                 </text>
 
-                {/* Renderizar SVGs de secciones */}
-                {Object.keys(zoneConfig).map((zoneName) => {
-                  const zone = zoneConfig[zoneName]
-                  const svgPath = `/secciones-palenque/${zoneName}.svg`
+                {/* Renderizar componentes SVG de secciones */}
+                {Object.entries(zoneConfig).map(([zoneName, zone]) => {
+                  const SectionComponent = zone.component
 
                   return (
-                    <g key={zoneName}>
-                      <image
-                        href={svgPath}
-                        x={centerX - 400}
-                        y={centerY - 400}
-                        width={800}
-                        height={800}
-                        className={`
-                          ${zone.selectable ? "cursor-pointer" : "cursor-default"}
-                          ${hoveredZone === zoneName ? "opacity-80" : "opacity-100"}
-                          ${selectedZone === zoneName ? "brightness-110" : ""}
-                          transition-all duration-200
-                        `}
-                        onMouseEnter={(e) => zone.selectable && handleZoneHover(zoneName, e)}
-                        onMouseLeave={() => setHoveredZone(null)}
-                        onClick={() => handleZoneClick(zoneName)}
-                      />
-                    </g>
+                    <SectionComponent
+                      key={zoneName}
+                      className={`
+                        ${zone.selectable ? "cursor-pointer" : "cursor-default"}
+                        ${hoveredZone === zoneName ? "opacity-80" : "opacity-100"}
+                        ${selectedZone === zoneName ? "brightness-110" : ""}
+                        transition-all duration-200
+                      `}
+                      onMouseEnter={(e: React.MouseEvent) => zone.selectable && handleZoneHover(zoneName, e)}
+                      onMouseLeave={() => setHoveredZone(null)}
+                      onClick={() => handleZoneClick(zoneName)}
+                    />
                   )
                 })}
 
