@@ -106,10 +106,10 @@ const zoneConfig: Record<string, ZoneInfo> = {
   "Oro 6": { name: "Oro 6", price: 600, color: "#F59E0B", selectable: true, component: Oro6Section },
   "Oro 7": { name: "Oro 7", price: 600, color: "#F59E0B", selectable: true, component: Oro7Section },
   "Oro 8": { name: "Oro 8", price: 600, color: "#F59E0B", selectable: true, component: Oro8Section },
-  "VIP 1": { name: "VIP 1", price: 900, color: "#8B5CF6", selectable: true, component: VIP1Section },
-  "VIP 2": { name: "VIP 2", price: 900, color: "#8B5CF6", selectable: true, component: VIP2Section },
-  "VIP 3": { name: "VIP 3", price: 900, color: "#8B5CF6", selectable: true, component: VIP3Section },
-  "VIP 4": { name: "VIP 4", price: 900, color: "#8B5CF6", selectable: true, component: VIP4Section },
+  "VIP 1": { name: "VIP 1", price: 800, color: "#8B5CF6", selectable: true, component: VIP1Section },
+  "VIP 2": { name: "VIP 2", price: 800, color: "#8B5CF6", selectable: true, component: VIP2Section },
+  "VIP 3": { name: "VIP 3", price: 800, color: "#8B5CF6", selectable: true, component: VIP3Section },
+  "VIP 4": { name: "VIP 4", price: 800, color: "#8B5CF6", selectable: true, component: VIP4Section },
 }
 
 // Función de utilidad para verificar si un asiento está en el viewport
