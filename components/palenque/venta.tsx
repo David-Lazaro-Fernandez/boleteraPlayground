@@ -364,7 +364,7 @@ export function Venta({ generalTickets, selectedSeats }: VentaProps) {
                               <div className="h-8 w-px bg-black"></div>
                               <div className="text-center">
                                 <div className="text-[9.5px]">ORDEN</div>
-                                <div className="text-base">{ticketId}</div>
+                                <div className="text-base">{ticketId.slice(8, 14)}</div>
                               </div>
                               <div className="h-8 w-px bg-black"></div>
                               <div className="text-center">
@@ -394,7 +394,7 @@ export function Venta({ generalTickets, selectedSeats }: VentaProps) {
                               </div>
                               <div className="flex flex-col items-center">
                                 <div className="text-xs font-[8px]">ORDEN</div>
-                                <div className="text-sm">{ticketId}</div>
+                                <div className="text-sm">{ticketId.slice(8, 14)}</div>
                                 {borderLine()}
                               </div>
                               <div className="flex flex-col items-center">
@@ -482,7 +482,7 @@ export function Venta({ generalTickets, selectedSeats }: VentaProps) {
                             <div className="h-8 w-px bg-black"></div>
                             <div className="text-center">
                               <div className="text-[9.5px]">ORDEN</div>
-                              <div className="text-base">{seat.id.slice(0, 6)}</div>
+                              <div className="text-base">{seat.id.slice(8, 14)}</div>
                             </div>
                             <div className="h-8 w-px bg-black"></div>
                             <div className="text-center">
@@ -517,7 +517,7 @@ export function Venta({ generalTickets, selectedSeats }: VentaProps) {
                             </div>
                             <div className="flex flex-col items-center">
                               <div className="text-xs font-[8px] ">ORDEN</div>
-                              <div className="text-sm text-base">{seat.id.slice(0, 6)}</div>
+                              <div className="text-sm text-base">{seat.id.slice(8, 14)}</div>
                               {borderLine()}
                             </div>
                             <div className="flex flex-col items-center">
@@ -563,7 +563,7 @@ export function Venta({ generalTickets, selectedSeats }: VentaProps) {
             </Link>
           </div>
         </div> 
-        
+
       )}
 
       {/* Modal para Pago con Terminal */}
