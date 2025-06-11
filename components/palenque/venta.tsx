@@ -78,7 +78,7 @@ function getTicketDescription() {
 
 export function Venta({ generalTickets, selectedSeats }: VentaProps) {
     const { toast } = useToast()
-    const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card' | null>(null)
+    const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card' | 'courtesy' | null>(null)
     const [cashReceived, setCashReceived] = useState<string>('')
     const [showTerminalModal, setShowTerminalModal] = useState(false)
     const [showConfirmationModal, setShowConfirmationModal] = useState(false)
@@ -87,15 +87,22 @@ export function Venta({ generalTickets, selectedSeats }: VentaProps) {
     const [showTicketPreviews, setShowTicketPreviews] = useState(false)
 
     // Calcular totales
-    const subtotal = generalTickets.reduce((sum, ticket) => sum + (ticket.price * ticket.quantity), 0) + selectedSeats.reduce((sum, seat) => sum + seat.price, 0)
-    const serviceCharge = subtotal * 0.18 // 18% cargo por servicio
+    const subtotal = paymentMethod === 'courtesy' ? 0 : 
+        generalTickets.reduce((sum, ticket) => sum + (ticket.price * ticket.quantity), 0) + 
+        selectedSeats.reduce((sum, seat) => sum + seat.price, 0)
+    const serviceCharge = paymentMethod === 'courtesy' ? 0 : subtotal * 0.18 // 18% cargo por servicio
     const total = subtotal + serviceCharge
 
     // Calcular cambio
     const change = cashReceived ? parseFloat(cashReceived) - total : 0
 
     const handlePaymentSuccess = () => {
-        setShowConfirmationModal(true)
+        // Solo mostramos el modal de confirmación si no es cortesía
+        if (paymentMethod !== 'courtesy') {
+            setShowConfirmationModal(true)
+        } else {
+            handleConfirmSale(true)
+        }
     }
 
     const updateSeatsStatus = async () => {
@@ -239,9 +246,9 @@ export function Venta({ generalTickets, selectedSeats }: VentaProps) {
                 if (success) {
                     // Create the movement data
                     const movementData: Omit<Movement, 'id'> = {
-                        total: total,
-                        subtotal: subtotal,
-                        cargo_servicio: serviceCharge,
+                        total: paymentMethod === 'courtesy' ? 0 : total,
+                        subtotal: paymentMethod === 'courtesy' ? 0 : subtotal,
+                        cargo_servicio: paymentMethod === 'courtesy' ? 0 : serviceCharge,
                         fecha: new Date()
                     }
 
@@ -255,7 +262,7 @@ export function Venta({ generalTickets, selectedSeats }: VentaProps) {
                                     asiento: 0,
                                     zona: ticket.zoneName
                                 },
-                                precio: ticket.price
+                                precio: paymentMethod === 'courtesy' ? 0 : ticket.price
                             }))
                         ),
                         // Add numbered seats
@@ -265,7 +272,7 @@ export function Venta({ generalTickets, selectedSeats }: VentaProps) {
                                 asiento: seat.seatNumber,
                                 zona: seat.zoneName
                             },
-                            precio: seat.price
+                            precio: paymentMethod === 'courtesy' ? 0 : seat.price
                         }))
                     ]
 
@@ -301,7 +308,10 @@ export function Venta({ generalTickets, selectedSeats }: VentaProps) {
         }
         setShowConfirmationModal(false)
         setShowTerminalModal(false)
-        setPaymentMethod(null)
+        // Solo reseteamos el método de pago si no es cortesía
+        if (paymentMethod !== 'courtesy') {
+            setPaymentMethod(null)
+        }
     }
 
     function borderLine() {
@@ -327,11 +337,11 @@ export function Venta({ generalTickets, selectedSeats }: VentaProps) {
                                     <div>
                                         <div className="font-medium font-dazzleUnicase">{ticket.zoneName}</div>
                                         <div className="text-gray-600 font-gontserrat">
-                                            ${ticket.price.toFixed(2)} MXN x {ticket.quantity}
+                                            ${paymentMethod === 'courtesy' ? '0.00' : ticket.price.toFixed(2)} MXN x {ticket.quantity}
                                         </div>
                                     </div>
                                     <div className="font-semibold font-gontserrat">
-                                        ${(ticket.price * ticket.quantity).toFixed(2)} MXN
+                                        ${paymentMethod === 'courtesy' ? '0.00' : (ticket.price * ticket.quantity).toFixed(2)} MXN
                                     </div>
                                 </div>
                             ))}
@@ -354,7 +364,7 @@ export function Venta({ generalTickets, selectedSeats }: VentaProps) {
                                         <div className="font-medium">
                                             {seat.zoneName} - Fila {seat.rowLetter}, Asiento {seat.seatNumber}
                                         </div>
-                                        <div className="opacity-90">${seat.price.toFixed(2)} MXN</div>
+                                        <div className="opacity-90">${paymentMethod === 'courtesy' ? '0.00' : seat.price.toFixed(2)} MXN</div>
                                     </div>
                                 </div>
                             ))}
@@ -383,6 +393,11 @@ export function Venta({ generalTickets, selectedSeats }: VentaProps) {
                             <span className="text-lg font-bold">Total:</span>
                             <span className="text-lg font-bold">${total.toFixed(2)} MXN</span>
                         </div>
+                        {paymentMethod === 'courtesy' && (
+                            <div className="mt-2 text-center text-green-600 font-semibold">
+                                Boletos de Cortesía - Sin Cargo
+                            </div>
+                        )}
                     </div>
 
                     {!paymentMethod && (
@@ -404,6 +419,17 @@ export function Venta({ generalTickets, selectedSeats }: VentaProps) {
                                 disabled={isProcessing}
                             >
                                 Pago con Tarjeta
+                            </Button>
+                            <Button
+                                className="flex-1"
+                                variant="outline"
+                                onClick={() => {
+                                    setPaymentMethod('courtesy')
+                                    handlePaymentSuccess()
+                                }}
+                                disabled={isProcessing}
+                            >
+                                Cortesía
                             </Button>
                         </div>
                     )}
@@ -486,12 +512,14 @@ export function Venta({ generalTickets, selectedSeats }: VentaProps) {
                                                         <div className="space-y-2 text-center">
                                                             <div className="flex flex-col items-center">
                                                                 <div className={`text-xs font-[7px] ${gontserrat.className}`}>PRECIO</div>
-                                                                <div className={`text-[13px] ${gontserrat.className}`}>$ {ticket.price}</div>
+                                                                <div className={`text-[13px] ${gontserrat.className}`}>$ {paymentMethod === 'courtesy' ? '0.00' : ticket.price}</div>
                                                                 {borderLine()}
                                                             </div>
                                                             <div className="flex flex-col items-center">
                                                                 <div className={`text-xs font-[7px] ${gontserrat.className}`}>TIPO</div>
-                                                                <div className={`text-[13px] ${gontserrat.className}`}>GENERAL</div>
+                                                                <div className={`text-[13px] ${gontserrat.className}`}>
+                                                                    {paymentMethod === 'courtesy' ? 'CORTESIA' : 'GENERAL'}
+                                                                </div>
                                                                 {borderLine()}
                                                             </div>
                                                             <div className="flex flex-col items-center">
@@ -526,12 +554,14 @@ export function Venta({ generalTickets, selectedSeats }: VentaProps) {
                                                         <div className={`flex items-center space-x-[13.5px] ${gontserrat.className}`}>
                                                             <div className="text-center">
                                                                 <div className={`text-[8.5px] ${gontserrat.className}`}>PRECIO</div>
-                                                                <div className={`text-sm ${gontserrat.className}`}>$ {ticket.price}</div>
+                                                                <div className={`text-sm ${gontserrat.className}`}>$ {paymentMethod === 'courtesy' ? '0.00' : ticket.price}</div>
                                                             </div>
                                                             <div className="h-8 w-px bg-black"></div>
                                                             <div className="text-center">
                                                                 <div className={`text-[8.5px] ${gontserrat.className}`}>TIPO</div>
-                                                                <div className={`text-sm ${gontserrat.className}`}>GENERAL</div>
+                                                                <div className={`text-sm ${gontserrat.className}`}>
+                                                                    {paymentMethod === 'courtesy' ? 'CORTESIA' : 'GENERAL'}
+                                                                </div>
                                                             </div>
                                                             <div className="h-8 w-px bg-black"></div>
                                                             <div className="text-center">
@@ -556,12 +586,14 @@ export function Venta({ generalTickets, selectedSeats }: VentaProps) {
                                                         <div className="space-y-2 text-center">
                                                             <div className="flex flex-col items-center">
                                                                 <div className={`text-xs font-[7px] ${gontserrat.className}`}>PRECIO</div>
-                                                                <div className={`text-[13px] ${gontserrat.className}`}>$ {ticket.price}</div>
+                                                                <div className={`text-[13px] ${gontserrat.className}`}>$ {paymentMethod === 'courtesy' ? '0.00' : ticket.price}</div>
                                                                 {borderLine()}
                                                             </div>
                                                             <div className="flex flex-col items-center">
                                                                 <div className={`text-xs font-[7px] ${gontserrat.className}`}>TIPO</div>
-                                                                <div className={`text-[13px] ${gontserrat.className}`}>GENERAL</div>
+                                                                <div className={`text-[13px] ${gontserrat.className}`}>
+                                                                    {paymentMethod === 'courtesy' ? 'CORTESIA' : 'GENERAL'}
+                                                                </div>
                                                                 {borderLine()}
                                                             </div>
                                                             <div className="flex flex-col items-center">
@@ -630,12 +662,14 @@ export function Venta({ generalTickets, selectedSeats }: VentaProps) {
                                                     <div className="space-y-[3px] text-center">
                                                         <div className="flex flex-col items-center">
                                                             <div className={`text-xs font-[7px] ${gontserrat.className}`}>PRECIO</div>
-                                                            <div className={`text-[13px] ${gontserrat.className}`}>$ {seat.price}</div>
+                                                            <div className={`text-[13px] ${gontserrat.className}`}>$ {paymentMethod === 'courtesy' ? '0.00' : seat.price}</div>
                                                             {borderLine()}
                                                         </div>
                                                         <div className="flex flex-col items-center">
                                                             <div className={`text-xs font-[7px] ${gontserrat.className}`}>TIPO</div>
-                                                            <div className={`text-[13px] ${gontserrat.className}`}>NUMERADO</div>
+                                                            <div className={`text-[13px] ${gontserrat.className}`}>
+                                                                {paymentMethod === 'courtesy' ? 'CORTESIA' : 'NUMERADO'}
+                                                            </div>
                                                             {borderLine()}
                                                         </div>
                                                         <div className="flex flex-col items-center">
@@ -674,12 +708,14 @@ export function Venta({ generalTickets, selectedSeats }: VentaProps) {
                                                     <div className={`flex items-center space-x-[8px] ${gontserrat.className}`}>
                                                         <div className="text-center">
                                                             <div className={`text-[8px] ${gontserrat.className}`}>PRECIO</div>
-                                                            <div className={`text-sm ${gontserrat.className}`}>$ {seat.price}</div>
+                                                            <div className={`text-sm ${gontserrat.className}`}>$ {paymentMethod === 'courtesy' ? '0.00' : seat.price}</div>
                                                         </div>
                                                         <div className="h-8 w-px bg-black"></div>
                                                         <div className="text-center">
                                                             <div className={`text-[8.5px] ${gontserrat.className}`}>TIPO</div>
-                                                            <div className={`text-sm ${gontserrat.className}`}>NUMERADO</div>
+                                                            <div className={`text-sm ${gontserrat.className}`}>
+                                                                {paymentMethod === 'courtesy' ? 'CORTESIA' : 'NUMERADO'}
+                                                            </div>
                                                         </div>
                                                         <div className="h-8 w-px bg-black"></div>
                                                         <div className="text-center">
@@ -709,12 +745,14 @@ export function Venta({ generalTickets, selectedSeats }: VentaProps) {
                                                     <div className="space-y-[3px] text-center">
                                                         <div className="flex flex-col items-center">
                                                             <div className={`text-xs font-[7px] ${gontserrat.className}`}>PRECIO</div>
-                                                            <div className={`text-[13px] ${gontserrat.className}`}>$ {seat.price}</div>
+                                                            <div className={`text-[13px] ${gontserrat.className}`}>$ {paymentMethod === 'courtesy' ? '0.00' : seat.price}</div>
                                                             {borderLine()}
                                                         </div>
                                                         <div className="flex flex-col items-center">
                                                             <div className={`text-xs font-[7px] ${gontserrat.className}`}>TIPO</div>
-                                                            <div className={`text-[13px] ${gontserrat.className}`}>NUMERADO</div>
+                                                            <div className={`text-[13px] ${gontserrat.className}`}>
+                                                                {paymentMethod === 'courtesy' ? 'CORTESIA' : 'NUMERADO'}
+                                                            </div>
                                                             {borderLine()}
                                                         </div>
                                                         <div className="flex flex-col items-center">
