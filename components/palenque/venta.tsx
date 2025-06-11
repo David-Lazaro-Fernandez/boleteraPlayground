@@ -562,7 +562,8 @@ export function Venta({ generalTickets, selectedSeats }: VentaProps) {
               Finalizar Venta
             </Link>
           </div>
-        </div>
+        </div> 
+        
       )}
 
       {/* Modal para Pago con Terminal */}
