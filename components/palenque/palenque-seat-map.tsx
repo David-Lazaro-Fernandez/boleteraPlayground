@@ -147,6 +147,14 @@ const zoneCoordinates: Record<string, { x: number; y: number }> = {
 export function PalenqueSeatMap() {
   const router = useRouter()
   const svgRef = useRef<SVGSVGElement>(null)
+  
+  // Constants
+  const svgWidth = 1800
+  const svgHeight = 1800
+  const centerX = svgWidth / 2
+  const centerY = svgHeight / 2
+  
+  // Group all useState hooks together
   const [selectedSeats, setSelectedSeats] = useState<CreatedSeat[]>([])
   const [hoveredSeat, setHoveredSeat] = useState<CreatedSeat | null>(null)
   const [hoveredZone, setHoveredZone] = useState<string | null>(null)
@@ -159,12 +167,41 @@ export function PalenqueSeatMap() {
   const [isZoomLocked, setIsZoomLocked] = useState(false)
   const [venueConfig, setVenueConfig] = useState<VenueConfig | null>(null)
   const [loading, setLoading] = useState(true)
-
   const [isDragging, setIsDragging] = useState(false)
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
   const [lastPan, setLastPan] = useState({ x: 0, y: 0 })
 
-  // Fetch venue configuration from Firebase Storage
+  // Calculate viewBox string
+  const adjustedWidth = svgWidth / zoomLevel
+  const adjustedHeight = svgHeight / zoomLevel
+  const viewBox = `${panX - adjustedWidth / 2 + svgWidth / 2} ${panY - adjustedHeight / 2 + svgHeight / 2} ${adjustedWidth} ${adjustedHeight}`
+
+  // Group all useMemo hooks together
+  const groupedSeats = useMemo(() => {
+    if (!selectedSeats.length) return {}
+    return selectedSeats.reduce(
+      (acc: Record<string, CreatedSeat[]>, seat: CreatedSeat) => {
+        if (!acc[seat.zoneName]) {
+          acc[seat.zoneName] = []
+        }
+        acc[seat.zoneName].push(seat)
+        return acc
+      },
+      {} as Record<string, CreatedSeat[]>,
+    )
+  }, [selectedSeats])
+
+  const zoneSeats = useMemo(() => {
+    if (!selectedZone || !venueConfig) return []
+    return venueConfig.createdSeats.filter(seat => seat.zoneName === selectedZone)
+  }, [selectedZone, venueConfig])
+
+  const currentViewBox = useMemo(() => {
+    const [x, y, width, height] = viewBox.split(" ").map(Number)
+    return { x, y, width, height }
+  }, [viewBox])
+
+  // useEffect hooks
   useEffect(() => {
     const fetchVenueConfig = async () => {
       try {
@@ -207,33 +244,6 @@ export function PalenqueSeatMap() {
     time: "21:00 hrs",
     venue: "Palenque Victoria, San Luis Potosí",
   }
-
-  // Configuración del ruedo
-  const svgWidth = 1800
-  const svgHeight = 1800
-  const centerX = svgWidth / 2
-  const centerY = svgHeight / 2
-
-  // Memoize grouped seats by zone for better performance
-  const groupedSeats = useMemo(() => {
-    if (!selectedSeats.length) return {}
-    return selectedSeats.reduce(
-      (acc: Record<string, CreatedSeat[]>, seat: CreatedSeat) => {
-        if (!acc[seat.zoneName]) {
-          acc[seat.zoneName] = []
-        }
-        acc[seat.zoneName].push(seat)
-        return acc
-      },
-      {} as Record<string, CreatedSeat[]>,
-    )
-  }, [selectedSeats])
-
-  // Obtener asientos de la zona seleccionada
-  const zoneSeats = useMemo(() => {
-    if (!selectedZone) return []
-    return venueConfig.createdSeats.filter(seat => seat.zoneName === selectedZone)
-  }, [selectedZone])
 
   const handleSeatClick = (seat: CreatedSeat) => {
     if (seat.status === "occupied") return
@@ -323,15 +333,6 @@ export function PalenqueSeatMap() {
       return Math.min(Math.max(newZoom, 0.5), 4)
     })
   }
-
-  const adjustedWidth = svgWidth / zoomLevel
-  const adjustedHeight = svgHeight / zoomLevel
-  const viewBox = `${panX - adjustedWidth / 2 + svgWidth / 2} ${panY - adjustedHeight / 2 + svgHeight / 2} ${adjustedWidth} ${adjustedHeight}`
-
-  const currentViewBox = useMemo(() => {
-    const [x, y, width, height] = viewBox.split(" ").map(Number)
-    return { x, y, width, height }
-  }, [viewBox])
 
   const handleZoomIn = () => {
     setZoomLevel((prev) => Math.min(prev + 0.5, 4))

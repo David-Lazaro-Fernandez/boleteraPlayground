@@ -15,6 +15,39 @@ import { useToast } from "@/hooks/use-toast"
 import { Logo } from "@/components/prueba-boleto/logo"
 import { Download } from "lucide-react"
 import Link from "next/link"
+import { storage } from '@/lib/firebase/config'
+import { ref, getDownloadURL, uploadString } from 'firebase/storage'
+
+interface VenueConfigSeat {
+  id: string
+  x: number
+  y: number
+  zone: string
+  zoneName: string
+  color: string
+  price: number
+  status: string
+  rowLetter: string
+  seatNumber: number
+  lineId?: string
+  lineIndex?: number
+}
+
+interface VenueConfig {
+  venue: {
+    name: string
+    type: string
+    capacity: number
+    layout: string
+  }
+  ruedo: {
+    centerX: number
+    centerY: number
+    radius: number
+  }
+  createdSeats: VenueConfigSeat[]
+  exportDate: string
+}
 
 interface VentaProps {
   generalTickets: {
@@ -63,7 +96,35 @@ export function Venta({ generalTickets, selectedSeats }: VentaProps) {
 
   const updateSeatsStatus = async () => {
     try {
-      const response = await fetch('/api/seats/update', {
+      // First, get the current venue configuration from Firebase Storage
+      const fileRef = ref(storage, 'seats-data-palenque-victoria.json')
+      const downloadURL = await getDownloadURL(fileRef)
+      const response = await fetch(downloadURL)
+      const venueConfig: VenueConfig = await response.json()
+
+      // Update the seats status in the venue configuration
+      const updatedSeats = venueConfig.createdSeats.map((seat: VenueConfigSeat) => {
+        const selectedSeat = selectedSeats.find(s => s.id === seat.id)
+        if (selectedSeat) {
+          return { ...seat, status: 'occupied' }
+        }
+        return seat
+      })
+
+      // Create updated venue configuration
+      const updatedVenueConfig: VenueConfig = {
+        ...venueConfig,
+        createdSeats: updatedSeats
+      }
+
+      // Convert the updated configuration to a JSON string
+      const jsonString = JSON.stringify(updatedVenueConfig)
+
+      // Upload the updated JSON back to Firebase Storage
+      await uploadString(fileRef, jsonString, 'raw', { contentType: 'application/json' })
+
+      // Also update seats status in Firestore if needed
+      const firestoreResponse = await fetch('/api/seats/update', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -71,8 +132,8 @@ export function Venta({ generalTickets, selectedSeats }: VentaProps) {
         body: JSON.stringify({ selectedSeats }),
       })
 
-      const data = await response.json()
-      return data.success
+      const firestoreData = await firestoreResponse.json()
+      return firestoreData.success && true // Return true only if both operations succeed
     } catch (error) {
       console.error('Error al actualizar los asientos:', error)
       return false
