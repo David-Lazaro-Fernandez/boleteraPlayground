@@ -35,7 +35,7 @@ interface CreatedSeat {
   zoneName: string
   color: string
   price: number
-  status: "available" | "occupied" | "selected"
+  status: string
   rowLetter: string
   seatNumber: number
   lineId?: string
@@ -121,6 +121,25 @@ const isSeatInViewport = (
   )
 }
 
+// Coordenadas predefinidas para cada zona
+const zoneCoordinates: Record<string, { x: number; y: number }> = {
+  "VIP 1": { x: 0, y: 300 },
+  "VIP 2": { x: -200, y: -280 },
+  "VIP 3": { x: 0, y: -200 },
+  "VIP 4": { x: 100, y: 300 },
+  "VIP 5": { x: 500, y: 500 },
+  "VIP 6": { x: 600, y: 500 },
+  "Oro 1": { x: -450, y: 500 },
+  "Oro 2": { x: -400, y: 150 },
+  "Oro 3": { x: -500, y: -180 },
+  "Oro 4": { x: -300, y: -450 },
+  "Oro 5": { x: -50, y: -450 },
+  "Oro 6": { x: 300, y: -250},
+  "Oro 7": { x: 300, y: 350 },
+  "Oro 8": { x: 200, y: 600 },
+  "General": { x: 400, y: 400 }
+}
+
 export function PalenqueSeatMap() {
   const svgRef = useRef<SVGSVGElement>(null)
   const [selectedSeats, setSelectedSeats] = useState<CreatedSeat[]>([])
@@ -132,6 +151,7 @@ export function PalenqueSeatMap() {
   const [panX, setPanX] = useState(0)
   const [panY, setPanY] = useState(0)
   const [generalTickets, setGeneralTickets] = useState<GeneralTicket[]>([])
+  const [isZoomLocked, setIsZoomLocked] = useState(false)
 
   const [isDragging, setIsDragging] = useState(false)
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
@@ -169,7 +189,7 @@ export function PalenqueSeatMap() {
   // Obtener asientos de la zona seleccionada
   const zoneSeats = useMemo(() => {
     if (!selectedZone) return []
-    return venueConfig.createdSeats.filter((seat: CreatedSeat) => seat.zoneName === selectedZone)
+    return venueConfig.createdSeats.filter(seat => seat.zoneName === selectedZone)
   }, [selectedZone])
 
   const handleSeatClick = (seat: CreatedSeat) => {
@@ -200,9 +220,30 @@ export function PalenqueSeatMap() {
     }
   }
 
+  // Función para calcular el centro de los asientos de una zona
+  const calculateZoneCenter = (zoneName: string) => {
+    const seats = venueConfig.createdSeats.filter(seat => seat.zoneName === zoneName)
+    if (seats.length === 0) return { x: centerX, y: centerY }
+    
+    const sumX = seats.reduce((acc, seat) => acc + seat.x, 0)
+    const sumY = seats.reduce((acc, seat) => acc + seat.y, 0)
+    return {
+      x: sumX / seats.length,
+      y: sumY / seats.length
+    }
+  }
+
   const handleZoneClick = (zoneName: string) => {
     if (!zoneConfig[zoneName]?.selectable) return
-    setSelectedZone(selectedZone === zoneName ? null : zoneName)
+    
+    setSelectedZone(zoneName)
+
+    const coordinates = zoneCoordinates[zoneName]
+    if (coordinates) {
+      setZoomLevel(2.7)
+      setPanX(-coordinates.x)
+      setPanY(-coordinates.y)
+    }
   }
 
   // Funciones para manejo de arrastre con click derecho
@@ -228,10 +269,16 @@ export function PalenqueSeatMap() {
     setIsDragging(false)
   }
 
-  const handleWheel = (e: React.WheelEvent<SVGSVGElement>) => {
+  const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault()
-    const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1
-    setZoomLevel((prev) => Math.max(0.3, Math.min(3, prev * zoomFactor)))
+    const delta = e.deltaY
+    const zoomFactor = 0.1
+
+    setZoomLevel((prevZoom) => {
+      const newZoom = delta > 0 ? prevZoom - zoomFactor : prevZoom + zoomFactor
+      // Limitar el zoom entre 0.5 y 4 (400%)
+      return Math.min(Math.max(newZoom, 0.5), 4)
+    })
   }
 
   const adjustedWidth = svgWidth / zoomLevel
@@ -244,11 +291,18 @@ export function PalenqueSeatMap() {
   }, [viewBox])
 
   const handleZoomIn = () => {
-    setZoomLevel((prev) => Math.min(3, prev * 1.1))
+    setZoomLevel((prev) => Math.min(prev + 0.5, 4))
   }
 
   const handleZoomOut = () => {
-    setZoomLevel((prev) => Math.max(0.3, prev * 0.9))
+    setZoomLevel((prev) => Math.max(prev - 0.5, 0.5))
+  }
+
+  const handleBackToMap = () => {
+    setSelectedZone(null)
+    setZoomLevel(1)
+    setPanX(0)
+    setPanY(0)
   }
 
   // Funciones para boletos generales
@@ -486,6 +540,7 @@ export function PalenqueSeatMap() {
                     size="sm"
                     className="w-8 h-8 p-0"
                     onClick={() => setPanY((prev) => prev - 50)}
+                    disabled={isZoomLocked}
                   >
                     ↑
                   </Button>
@@ -495,6 +550,7 @@ export function PalenqueSeatMap() {
                     size="sm"
                     className="w-8 h-8 p-0"
                     onClick={() => setPanX((prev) => prev - 50)}
+                    disabled={isZoomLocked}
                   >
                     ←
                   </Button>
@@ -502,19 +558,16 @@ export function PalenqueSeatMap() {
                     variant="outline"
                     size="sm"
                     className="w-8 h-8 p-0"
-                    onClick={() => {
-                      setPanX(0)
-                      setPanY(0)
-                      setZoomLevel(1)
-                    }}
+                    onClick={handleBackToMap}
                   >
-                    ⌂
+                    {selectedZone ? "←" : "⌂"}
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
                     className="w-8 h-8 p-0"
                     onClick={() => setPanX((prev) => prev + 50)}
+                    disabled={isZoomLocked}
                   >
                     →
                   </Button>
@@ -524,6 +577,7 @@ export function PalenqueSeatMap() {
                     size="sm"
                     className="w-8 h-8 p-0"
                     onClick={() => setPanY((prev) => prev + 50)}
+                    disabled={isZoomLocked}
                   >
                     ↓
                   </Button>
@@ -538,7 +592,7 @@ export function PalenqueSeatMap() {
                   size="sm"
                   className="w-8 h-8 p-0"
                   onClick={handleZoomIn}
-                  disabled={zoomLevel >= 3}
+                  disabled={zoomLevel >= 3 || isZoomLocked}
                 >
                   +
                 </Button>
@@ -547,7 +601,7 @@ export function PalenqueSeatMap() {
                   size="sm"
                   className="w-8 h-8 p-0"
                   onClick={handleZoomOut}
-                  disabled={zoomLevel <= 0.3}
+                  disabled={zoomLevel <= 0.3 || isZoomLocked}
                 >
                   −
                 </Button>
@@ -559,6 +613,9 @@ export function PalenqueSeatMap() {
                 <div>
                   Pan: ({Math.round(panX)}, {Math.round(panY)})
                 </div>
+                {selectedZone && (
+                  <div className="text-green-400">Zona: {selectedZone}</div>
+                )}
               </div>
             </div>
 
@@ -593,110 +650,123 @@ export function PalenqueSeatMap() {
                   {venueConfig.venue.name.toUpperCase()}
                 </text>
 
-                {/* Renderizar componentes SVG de secciones */}
-                {Object.entries(zoneConfig).map(([zoneName, zone]) => {
+                {/* Solo mostramos las secciones si no hay una zona seleccionada */}
+                {!selectedZone && Object.entries(zoneConfig).map(([zoneName, zone]) => {
                   const SectionComponent = zone.component
+                  let transform = ""
+                  switch (zoneName) {
+                    case "General":
+                      transform = `translate(${centerX - 418}, ${centerY - 418})`
+                      break
+                    case "Oro 1":
+                      transform = `translate(${centerX + 10}, ${centerY - 345})`
+                      break
+                    case "Oro 2":
+                      transform = `translate(${centerX + 190}, ${centerY - 165})`
+                      break
+                    case "Oro 3":
+                      transform = `translate(${centerX + 170}, ${centerY + 30})`
+                      break
+                    case "Oro 4":
+                      transform = `translate(${centerX + 10}, ${centerY + 190})`
+                      break
+                    case "Oro 5":
+                      transform = `translate(${centerX - 240}, ${centerY + 180})`
+                      break
+                    case "Oro 6":
+                      transform = `translate(${centerX - 340}, ${centerY + 10})`
+                      break
+                    case "Oro 7":
+                      transform = `translate(${centerX - 340}, ${centerY - 280})`
+                      break
+                    case "Oro 8":
+                      transform = `translate(${centerX - 200}, ${centerY - 345})`
+                      break
+                    case "VIP 1":
+                      transform = `translate(${centerX + 20}, ${centerY - 240})`
+                      break
+                    case "VIP 2":
+                      transform = `translate(${centerX + 10}, ${centerY + 10})`
+                      break
+                    case "VIP 3":
+                      transform = `translate(${centerX - 225}, ${centerY + 10})`
+                      break
+                    case "VIP 4":
+                      transform = `translate(${centerX - 230}, ${centerY - 245})`
+                      break
+                  }
 
                   return (
-                    <SectionComponent
-                      key={zoneName}
-                      className={`
-                        ${zone.selectable ? "cursor-pointer" : "cursor-default"}
-                        ${hoveredZone === zoneName ? "opacity-80" : "opacity-100"}
-                        ${selectedZone === zoneName ? "brightness-110" : ""}
-                        transition-all duration-200
-                      `}
-                      onMouseEnter={(e: React.MouseEvent) => zone.selectable && handleZoneHover(zoneName, e)}
-                      onMouseLeave={() => setHoveredZone(null)}
-                      onClick={() => handleZoneClick(zoneName)}
-                    />
+                    <g key={zoneName} transform={transform}>
+                      <SectionComponent
+                        className={`
+                          ${zone.selectable ? "cursor-pointer" : "cursor-default"}
+                          ${hoveredZone === zoneName ? "opacity-80 hover:opacity-70" : "opacity-100"}
+                          transition-all duration-200
+                        `}
+                        onMouseEnter={(e: React.MouseEvent) => zone.selectable && handleZoneHover(zoneName, e)}
+                        onMouseLeave={() => setHoveredZone(null)}
+                        onClick={() => handleZoneClick(zoneName)}
+                      />
+                    </g>
                   )
                 })}
 
-                {/* Renderizar asientos de la zona seleccionada */}
-                {selectedZone &&
-                  zoneSeats.map((seat: CreatedSeat) => {
-                    const isSelected = selectedSeats.some((s: CreatedSeat) => s.id === seat.id)
-                    return (
-                      <g key={seat.id}>
-                        <circle
-                          cx={seat.x}
-                          cy={seat.y}
-                          r="4"
-                          fill={
-                            isSelected
-                              ? "#EC4899"
-                              : seat.status === "occupied"
-                                ? "#6B7280"
-                                : zoneConfig[selectedZone].color
+                {/* Renderizar asientos */}
+                {selectedZone && venueConfig.createdSeats
+                  .filter((seat) => seat.zoneName === selectedZone)
+                  .map((seat) => (
+                    <g key={seat.id}>
+                      <circle
+                        cx={seat.x}
+                        cy={seat.y}
+                        r="4"
+                        fill={
+                          selectedSeats.some((s: CreatedSeat) => s.id === seat.id)
+                            ? "#EC4899"
+                            : seat.status === "occupied"
+                              ? "#6B7280"
+                              : zoneConfig[selectedZone].color
+                        }
+                        stroke={selectedSeats.some((s: CreatedSeat) => s.id === seat.id) ? "#BE185D" : "#374151"}
+                        strokeWidth="1.5"
+                        className="cursor-pointer hover:stroke-gray-400 hover:stroke-3 transition-all duration-200"
+                        onClick={() => handleSeatClick(seat)}
+                        onMouseEnter={(e) => {
+                          setHoveredSeat(seat)
+                          const svgRect = svgRef.current?.getBoundingClientRect()
+                          if (svgRect) {
+                            const x = e.clientX - svgRect.left
+                            const y = e.clientY - svgRect.top
+                            setMousePosition({ x, y })
                           }
-                          stroke={isSelected ? "#BE185D" : "#374151"}
-                          strokeWidth="1.5"
-                          className="cursor-pointer hover:stroke-gray-400 hover:stroke-3 transition-all duration-200"
-                          onClick={() => handleSeatClick(seat)}
-                          onMouseEnter={(e) => {
-                            setHoveredSeat(seat)
-                            const svgRect = svgRef.current?.getBoundingClientRect()
-                            if (svgRect) {
-                              const x = e.clientX - svgRect.left
-                              const y = e.clientY - svgRect.top
-                              setMousePosition({ x, y })
-                            }
-                          }}
-                          onMouseMove={(e) => {
-                            const svgRect = svgRef.current?.getBoundingClientRect()
-                            if (svgRect) {
-                              const x = e.clientX - svgRect.left
-                              const y = e.clientY - svgRect.top
-                              setMousePosition({ x, y })
-                            }
-                          }}
-                          onMouseLeave={() => setHoveredSeat(null)}
-                        />
-                        {zoomLevel >= 0.5 && (
-                          <text
-                            x={seat.x}
-                            y={seat.y - 8}
-                            textAnchor="middle"
-                            fill="#374151"
-                            fontSize="6"
-                            fontWeight="bold"
-                            className="pointer-events-none"
-                          >
-                            {seat.rowLetter}
-                            {seat.seatNumber}
-                          </text>
-                        )}
-                      </g>
-                    )
-                  })}
-
-                {/* Tooltip para zona hover */}
-                {hoveredZone && zoneConfig[hoveredZone] && (
-                  <g transform={`translate(${mousePosition.x + 15}, ${mousePosition.y - 25})`}>
-                    <g filter="url(#zoneTooltipShadow)">
-                      <rect x="0" y="0" width="200" height="60" fill="white" rx="8" ry="8" />
-                      <rect x="0" y="40" width="200" height="20" fill={zoneConfig[hoveredZone].color} rx="8" ry="8" />
-                      <rect x="0" y="35" width="200" height="10" fill={zoneConfig[hoveredZone].color} />
+                        }}
+                        onMouseMove={(e) => {
+                          const svgRect = svgRef.current?.getBoundingClientRect()
+                          if (svgRect) {
+                            const x = e.clientX - svgRect.left
+                            const y = e.clientY - svgRect.top
+                            setMousePosition({ x, y })
+                          }
+                        }}
+                        onMouseLeave={() => setHoveredSeat(null)}
+                      />
+                      {zoomLevel >= 0.5 && (
+                        <text
+                          x={seat.x}
+                          y={seat.y - 8}
+                          textAnchor="middle"
+                          fill="#374151"
+                          fontSize="6"
+                          fontWeight="bold"
+                          className="pointer-events-none"
+                        >
+                          {seat.rowLetter}
+                          {seat.seatNumber}
+                        </text>
+                      )}
                     </g>
-
-                    <defs>
-                      <filter id="zoneTooltipShadow" x="-20%" y="-20%" width="140%" height="140%">
-                        <feDropShadow dx="0" dy="2" stdDeviation="4" floodOpacity="0.25" />
-                      </filter>
-                    </defs>
-
-                    <text x="15" y="20" fill="#1F2937" fontSize="14" fontWeight="bold">
-                      {zoneConfig[hoveredZone].name}
-                    </text>
-                    <text x="15" y="35" fill="#4B5563" fontSize="12" fontWeight="normal">
-                      Click para seleccionar
-                    </text>
-                    <text x="185" y="55" fill="white" fontSize="14" fontWeight="bold" textAnchor="end">
-                      ${zoneConfig[hoveredZone].price} MXN
-                    </text>
-                  </g>
-                )}
+                  ))}
 
                 {/* Tooltip para asiento hover */}
                 {hoveredSeat && (
