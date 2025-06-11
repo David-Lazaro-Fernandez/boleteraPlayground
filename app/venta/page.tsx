@@ -3,6 +3,7 @@ import { useSearchParams } from "next/navigation"
 import { useEffect, useState, Suspense } from "react"
 import { Venta } from "@/components/palenque/venta"
 import type { CreatedSeat } from "@/types/seat"
+import { dazzleUnicase, gontserrat } from '@/lib/fonts'
 
 // Create a client component that uses useSearchParams
 function VentaContent() {
@@ -26,7 +27,11 @@ function VentaContent() {
     return <div>Cargando...</div>
   }
 
-  return <Venta selectedSeats={selectedSeats} generalTickets={generalTickets} />
+  return (
+    <div className={`${dazzleUnicase.variable} ${gontserrat.variable}`}>
+      <Venta selectedSeats={selectedSeats} generalTickets={generalTickets} />
+    </div>
+  )
 }
 
 // Main page component with Suspense boundary

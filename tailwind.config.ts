@@ -10,6 +10,10 @@ const config: Config = {
   ],
   theme: {
   	extend: {
+  		fontFamily: {
+  			dazzleUnicase: ['var(--font-dazzle-unicase)'],
+  			gontserrat: ['var(--font-gontserrat)'],
+  		},
   		colors: {
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
