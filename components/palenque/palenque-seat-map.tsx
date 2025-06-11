@@ -2,13 +2,16 @@
 
 import type React from "react"
 
-import { useState, useMemo, useRef } from "react"
+import { useState, useMemo, useRef, useEffect } from "react"
 import { Trash2, MapPin, Calendar, Clock, Users, DollarSign, Plus, Minus } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { useRouter } from 'next/navigation'
+import { ref as storageRef, getDownloadURL } from 'firebase/storage'
+import { storage } from '@/lib/firebase/config'
+
 // @ts-ignore
-import venueConfig from "../../data/seats-data-palenque-victoria.json"
+// import venueConfig from "../../data/seats-data-palenque-victoria.json"
 
 // Importar componentes de secciones
 import {
@@ -154,10 +157,48 @@ export function PalenqueSeatMap() {
   const [panY, setPanY] = useState(0)
   const [generalTickets, setGeneralTickets] = useState<GeneralTicket[]>([])
   const [isZoomLocked, setIsZoomLocked] = useState(false)
+  const [venueConfig, setVenueConfig] = useState<VenueConfig | null>(null)
+  const [loading, setLoading] = useState(true)
 
   const [isDragging, setIsDragging] = useState(false)
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
   const [lastPan, setLastPan] = useState({ x: 0, y: 0 })
+
+  // Fetch venue configuration from Firebase Storage
+  useEffect(() => {
+    const fetchVenueConfig = async () => {
+      try {
+        const fileRef = storageRef(storage, 'seats-data-palenque-victoria.json');
+        const downloadURL = await getDownloadURL(fileRef);
+        
+        const response = await fetch(downloadURL);
+        if (!response.ok) {
+          throw new Error('Failed to fetch venue configuration');
+        }
+        
+        const data = await response.json();
+        setVenueConfig(data);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching venue configuration:', error);
+        setLoading(false);
+      }
+    };
+
+    fetchVenueConfig();
+  }, []);
+
+  // If loading or no venue config, show loading state
+  if (loading || !venueConfig) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-semibold mb-4">Cargando mapa de asientos...</h2>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
+        </div>
+      </div>
+    );
+  }
 
   // Información del evento
   const eventInfo = {
