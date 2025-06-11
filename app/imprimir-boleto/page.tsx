@@ -274,39 +274,83 @@ export default function ImprimirBoletoPage() {
 
               {/* Preview Card */}
               {isFormValid && (
-                <div className="mt-8 p-4 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                <div className="mt-8 p-4 bg-white rounded-lg border-2 border-gray-300">
                   <h3 className="text-sm font-medium text-gray-900 mb-3">Vista previa del boleto:</h3>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="text-gray-600">Sección:</span>
-                      <span className="ml-2 font-medium">{formData.seccion}</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">Tipo:</span>
-                      <span className="ml-2 font-medium">{formData.tipo}</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">Orden:</span>
-                      <span className="ml-2 font-medium">{formData.orden}</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">Precio:</span>
-                      <span className="ml-2 font-medium">${formData.precio}</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">Fila:</span>
-                      <span className="ml-2 font-medium">{formData.fila}</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">Asiento:</span>
-                      <span className="ml-2 font-medium">{formData.asiento}</span>
-                    </div>
-                  </div>
+                  <div className="flex">
+                    {/* Main Content */}
+                    <div className="flex-grow pr-6 border-r border-gray-300">
+                      {/* Event Title and Venue */}
+                      <div className="text-[14.8399pt] font-bold mb-4">
+                        TÍTULO DEL EVENTO
+                        <div>RECINTO</div>
+                      </div>
 
-                  {/* JSON Preview */}
-                  <div className="mt-4 p-3 bg-gray-800 rounded text-green-400 text-xs font-mono">
-                    <div className="text-gray-300 mb-1">JSON que se enviará:</div>
-                    <pre>{JSON.stringify(formData, null, 2)}</pre>
+                      {/* Date and Time */}
+                      <div className="text-[9.5365pt] mb-4">
+                        Domingo 15 de Junio 2025
+                        <div>21:00 hrs.</div>
+                        <div>Ciudad</div>
+                      </div>
+
+                      {/* Ticket Details */}
+                      <div className="flex items-center space-x-4 text-[6.4968pt]">
+                        <div>
+                          <div className="font-bold">${formData.precio}</div>
+                          <div>PRECIO</div>
+                        </div>
+                        <div className="h-8 w-px bg-gray-300"></div>
+                        <div>
+                          <div className="font-bold">{formData.tipo}</div>
+                          <div>TIPO</div>
+                        </div>
+                        <div className="h-8 w-px bg-gray-300"></div>
+                        <div>
+                          <div className="font-bold">{formData.orden}</div>
+                          <div>ORDEN</div>
+                        </div>
+                        <div className="h-8 w-px bg-gray-300"></div>
+                        <div>
+                          <div className="font-bold">{formData.seccion}</div>
+                          <div>SECCIÓN</div>
+                        </div>
+                        <div className="h-8 w-px bg-gray-300"></div>
+                        <div>
+                          <div className="font-bold">{formData.asiento}</div>
+                          <div>ASIENTO</div>
+                        </div>
+                      </div>
+
+                      {/* Logo */}
+                      <div className="mt-4">
+                        <div className="text-blue-600 font-bold">ASTRAL TICKETS</div>
+                      </div>
+                    </div>
+
+                    {/* Right Column */}
+                    <div className="w-32 pl-6 flex flex-col justify-between">
+                      <div className="space-y-4">
+                        <div>
+                          <div className="text-[5.8593pt]">PRECIO</div>
+                          <div className="font-bold">${formData.precio}</div>
+                        </div>
+                        <div>
+                          <div className="text-[5.8593pt]">TIPO</div>
+                          <div className="font-bold">{formData.tipo}</div>
+                        </div>
+                        <div>
+                          <div className="text-[5.8593pt]">ORDEN</div>
+                          <div className="font-bold">{formData.orden}</div>
+                        </div>
+                        <div>
+                          <div className="text-[5.8593pt]">SECCIÓN</div>
+                          <div className="font-bold">{formData.seccion}</div>
+                        </div>
+                        <div>
+                          <div className="text-[5.8593pt]">ASIENTO</div>
+                          <div className="font-bold">{formData.asiento}</div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}

@@ -6,6 +6,7 @@ import { useState, useMemo, useRef } from "react"
 import { Trash2, MapPin, Calendar, Clock, Users, DollarSign, Plus, Minus } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { useRouter } from 'next/navigation'
 // @ts-ignore
 import venueConfig from "../../data/seats-data-palenque-victoria.json"
 
@@ -141,6 +142,7 @@ const zoneCoordinates: Record<string, { x: number; y: number }> = {
 }
 
 export function PalenqueSeatMap() {
+  const router = useRouter()
   const svgRef = useRef<SVGSVGElement>(null)
   const [selectedSeats, setSelectedSeats] = useState<CreatedSeat[]>([])
   const [hoveredSeat, setHoveredSeat] = useState<CreatedSeat | null>(null)
@@ -337,6 +339,15 @@ export function PalenqueSeatMap() {
     generalTickets.reduce((sum, ticket) => sum + ticket.price * ticket.quantity, 0)
   const totalSeats = selectedSeats.length + generalTickets.reduce((sum, ticket) => sum + ticket.quantity, 0)
 
+  const handlePurchase = () => {
+    if (selectedSeats.length > 0 || generalTickets.length > 0) {
+      const searchParams = new URLSearchParams()
+      searchParams.set('selectedSeats', JSON.stringify(selectedSeats))
+      searchParams.set('generalTickets', JSON.stringify(generalTickets))
+      router.push(`/venta?${searchParams.toString()}`)
+    }
+  }
+
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Panel lateral izquierdo */}
@@ -368,15 +379,29 @@ export function PalenqueSeatMap() {
         <div className="p-6 border-b">
           <h3 className="font-semibold text-gray-800 mb-4">Precios por Zona</h3>
           <div className="space-y-3">
-            {Object.entries(zoneConfig).map(([zoneName, zone]) => (
-              <div key={zoneName} className="flex items-center p-3 rounded-lg border bg-gray-50">
-                <div className="w-4 h-8 rounded mr-3" style={{ backgroundColor: zone.color }} />
-                <div className="flex-1">
-                  <div className="font-medium text-gray-800">{zone.name}</div>
-                  <div className="text-green-600 font-semibold">${zone.price.toFixed(2)} MXN</div>
-                </div>
+            {/* General */}
+            <div className="flex items-center p-3 rounded-lg border bg-gray-50">
+              <div className="flex-1">
+                <div className="font-medium text-gray-800">General</div>
+                <div className="text-green-600 font-semibold">${zoneConfig["General"].price.toFixed(2)} MXN</div>
               </div>
-            ))}
+            </div>
+
+            {/* Oro */}
+            <div className="flex items-center p-3 rounded-lg border bg-gray-50">
+              <div className="flex-1">
+                <div className="font-medium text-gray-800">Oro</div>
+                <div className="text-green-600 font-semibold">${zoneConfig["Oro 1"].price.toFixed(2)} MXN</div>
+              </div>
+            </div>
+
+            {/* VIP */}
+            <div className="flex items-center p-3 rounded-lg border bg-gray-50">
+              <div className="flex-1">
+                <div className="font-medium text-gray-800">VIP</div>
+                <div className="text-green-600 font-semibold">${zoneConfig["VIP 1"].price.toFixed(2)} MXN</div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -393,10 +418,10 @@ export function PalenqueSeatMap() {
             <h3 className="font-semibold text-gray-800 mb-4">Boletos Generales</h3>
             <div className="space-y-3">
               {generalTickets.map((ticket) => (
-                <div key={ticket.id} className="flex items-center justify-between p-3 rounded-lg border bg-green-50">
+                <div key={ticket.id} className="flex items-center justify-between p-3 rounded-lg border bg-blue-100">
                   <div className="flex-1">
                     <div className="font-medium text-gray-800">{ticket.zoneName}</div>
-                    <div className="text-green-600 font-semibold">
+                    <div className="font-semibold text-gray-600">
                       ${ticket.price.toFixed(2)} MXN x {ticket.quantity}
                     </div>
                   </div>
@@ -431,7 +456,7 @@ export function PalenqueSeatMap() {
         {/* Asientos seleccionados */}
         {selectedSeats.length > 0 && (
           <div className="p-6 border-b">
-            <Card className="bg-pink-500 text-white border-0">
+            <Card className="bg-[#325CE5] text-white border-0">
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2">
                   <Users className="w-5 h-5" />
@@ -819,6 +844,18 @@ export function PalenqueSeatMap() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Botón de compra */}
+      {(selectedSeats.length > 0 || generalTickets.length > 0) && (
+        <div className="fixed bottom-4 right-4 z-10">
+          <Button 
+            className="bg-[#325CE5] text-white hover:bg-[#2849B3]"
+            onClick={handlePurchase}
+          >
+            Comprar {selectedSeats.length + generalTickets.reduce((sum, ticket) => sum + ticket.quantity, 0)} boletos
+          </Button>
+        </div>
+      )}
     </div>
   )
 }
