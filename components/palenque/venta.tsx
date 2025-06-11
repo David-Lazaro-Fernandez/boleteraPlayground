@@ -123,17 +123,7 @@ export function Venta({ generalTickets, selectedSeats }: VentaProps) {
       // Upload the updated JSON back to Firebase Storage
       await uploadString(fileRef, jsonString, 'raw', { contentType: 'application/json' })
 
-      // Also update seats status in Firestore if needed
-      const firestoreResponse = await fetch('/api/seats/update', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ selectedSeats }),
-      })
-
-      const firestoreData = await firestoreResponse.json()
-      return firestoreData.success && true // Return true only if both operations succeed
+      return true // Return true if the operation succeeds
     } catch (error) {
       console.error('Error al actualizar los asientos:', error)
       return false
