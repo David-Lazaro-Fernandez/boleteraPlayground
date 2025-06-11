@@ -10,10 +10,11 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card"
-import { useRouter } from 'next/navigation'
+import {  } from 'next/navigation'
 import { useToast } from "@/hooks/use-toast"
 import { Logo } from "@/components/prueba-boleto/logo"
 import { Download } from "lucide-react"
+import Link from "next/link"
 
 interface VentaProps {
   generalTickets: {
@@ -40,7 +41,6 @@ function getTicketDescription() {
 }
 
 export function Venta({ generalTickets, selectedSeats }: VentaProps) {
-  const router = useRouter()
   const { toast } = useToast()
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card' | null>(null)
   const [cashReceived, setCashReceived] = useState<string>('')
@@ -555,14 +555,12 @@ export function Venta({ generalTickets, selectedSeats }: VentaProps) {
           })}
 
           <div className="flex justify-end mt-6">
-            <Button
-              onClick={() => {
-                router.push('/mapas-asientos')
-                router.refresh()
-              }}
+            <Link
+              href="/mapas-asientos"
+              className="bg-[#325CE5] text-white hover:bg-[#2849B3] px-4 py-2 rounded-md"
             >
               Finalizar Venta
-            </Button>
+            </Link>
           </div>
         </div>
       )}
