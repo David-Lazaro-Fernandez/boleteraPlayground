@@ -270,4 +270,4 @@ export function Venta({ generalTickets, selectedSeats }: VentaProps) {
       </Dialog>
     </div>
   )
-} 
+}

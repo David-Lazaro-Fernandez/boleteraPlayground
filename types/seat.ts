@@ -11,4 +11,4 @@ export interface CreatedSeat {
   seatNumber: number
   lineId?: string
   lineIndex?: number
-} 
+}

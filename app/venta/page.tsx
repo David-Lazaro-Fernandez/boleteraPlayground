@@ -26,4 +26,4 @@ export default function VentaPage() {
   }
 
   return <Venta selectedSeats={selectedSeats} generalTickets={generalTickets} />
-} 
+}
