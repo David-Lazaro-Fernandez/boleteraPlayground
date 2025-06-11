@@ -239,10 +239,10 @@ export function PalenqueSeatMap() {
 
   // Información del evento
   const eventInfo = {
-    title: "Gloria Trevi - En Vivo",
-    date: "Sábado, 29 de marzo 2025",
-    time: "21:00 hrs",
-    venue: "Palenque Victoria, San Luis Potosí",
+    title: "Acordéonazo",
+    date: "Sábado, 19 de junio 2025",
+    time: "20:00 hrs",
+    venue: "Centro de Espectáculos, CD. Victoria",
   }
 
   const handleSeatClick = (seat: CreatedSeat) => {

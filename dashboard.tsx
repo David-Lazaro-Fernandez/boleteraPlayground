@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -8,51 +9,40 @@ import { CalendarIcon, DollarSignIcon, TicketIcon, UsersIcon, TrendingUpIcon, Do
 import { Bar, BarChart, XAxis, YAxis } from "recharts"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { MainLayout } from "@/components/layout/main-layout"
-
-const chartData = [
-  { month: "Jan", sales: 5200 },
-  { month: "Feb", sales: 6000 },
-  { month: "Mar", sales: 5800 },
-  { month: "Apr", sales: 5500 },
-  { month: "May", sales: 2200 },
-  { month: "Jun", sales: 4200 },
-  { month: "Jul", sales: 2800 },
-  { month: "Aug", sales: 3800 },
-  { month: "Sep", sales: 3200 },
-  { month: "Oct", sales: 3400 },
-  { month: "Nov", sales: 3600 },
-  { month: "Dec", sales: 4400 },
-]
-
-const recentSales = [
-  {
-    name: "Pedro Fernandez",
-    email: "pedro_239847@gmail.com",
-    amount: "+$1,999.00",
-  },
-  {
-    name: "Jack Sparrow",
-    email: "jack_239847@gmail.com",
-    amount: "+$39.00",
-  },
-  {
-    name: "Pedro Pascal",
-    email: "pedro_p7@gmail.com",
-    amount: "+$299.00",
-  },
-  {
-    name: "Nicolas Chavez",
-    email: "nikoniko09@gmail.com",
-    amount: "+$99.00",
-  },
-  {
-    name: "Sofia Dalia",
-    email: "sofila_mas@gmail.com",
-    amount: "+$1,999.00",
-  },
-]
+import { getDashboardStats, DashboardStats } from "@/lib/firebase/transactions"
+import { format } from "date-fns"
 
 export default function Dashboard() {
+  const [stats, setStats] = useState<DashboardStats | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [dateRange, setDateRange] = useState({
+    start: new Date(new Date().setDate(new Date().getDate() - 30)), // últimos 30 días
+    end: new Date()
+  })
+
+  useEffect(() => {
+    loadDashboardData()
+  }, [dateRange])
+
+  const loadDashboardData = async () => {
+    try {
+      setIsLoading(true)
+      const data = await getDashboardStats(dateRange.start, dateRange.end)
+      setStats(data)
+    } catch (error) {
+      console.error('Error loading dashboard data:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('es-MX', {
+      style: 'currency',
+      currency: 'MXN'
+    }).format(amount)
+  }
+
   return (
     <MainLayout activePage="inicio">
       {/* Page Header */}
@@ -61,7 +51,9 @@ export default function Dashboard() {
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2 text-sm text-gray-600">
             <CalendarIcon className="h-4 w-4" />
-            <span>Jan 20, 2023 - Feb 09, 2023</span>
+            <span>
+              {format(dateRange.start, "MMM dd, yyyy")} - {format(dateRange.end, "MMM dd, yyyy")}
+            </span>
           </div>
           <Button className="bg-blue-600 hover:bg-blue-700">
             <DownloadIcon className="h-4 w-4 mr-2" />
@@ -90,7 +82,9 @@ export default function Dashboard() {
                 <DollarSignIcon className="h-4 w-4 text-gray-400" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">$45,231.89</div>
+                <div className="text-2xl font-bold">
+                  {isLoading ? "..." : formatCurrency(stats?.ventasTotales || 0)}
+                </div>
                 <p className="text-xs text-green-600">+20.1% comparado al mes anterior</p>
               </CardContent>
             </Card>
@@ -100,7 +94,9 @@ export default function Dashboard() {
                 <TicketIcon className="h-4 w-4 text-gray-400" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">+2350</div>
+                <div className="text-2xl font-bold">
+                  {isLoading ? "..." : `+${stats?.boletosVendidos || 0}`}
+                </div>
                 <p className="text-xs text-green-600">+180.1% comparado al mes anterior</p>
               </CardContent>
             </Card>
@@ -110,7 +106,9 @@ export default function Dashboard() {
                 <UsersIcon className="h-4 w-4 text-gray-400" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">+12,234</div>
+                <div className="text-2xl font-bold">
+                  {isLoading ? "..." : `+${stats?.totalMovimientos || 0}`}
+                </div>
                 <p className="text-xs text-green-600">+19% comparado al mes anterior</p>
               </CardContent>
             </Card>
@@ -120,7 +118,9 @@ export default function Dashboard() {
                 <TrendingUpIcon className="h-4 w-4 text-gray-400" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">+573</div>
+                <div className="text-2xl font-bold">
+                  {isLoading ? "..." : `+${stats?.activosAhora || 0}`}
+                </div>
                 <p className="text-xs text-green-600">+201 en la última hora</p>
               </CardContent>
             </Card>
@@ -143,7 +143,7 @@ export default function Dashboard() {
                   }}
                   className="h-[350px]"
                 >
-                  <BarChart data={chartData}>
+                  <BarChart data={stats?.ventasPorMes || []}>
                     <XAxis dataKey="month" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
                     <YAxis
                       stroke="#888888"
@@ -163,11 +163,16 @@ export default function Dashboard() {
             <Card className="col-span-3">
               <CardHeader>
                 <CardTitle>Ventas Recientes</CardTitle>
-                <CardDescription>Vendiste 250 boletos este mes.</CardDescription>
+                <CardDescription>
+                  {isLoading 
+                    ? "Cargando ventas..."
+                    : `Vendiste ${stats?.boletosVendidos || 0} boletos este mes.`
+                  }
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-8">
-                  {recentSales.map((sale, index) => (
+                  {stats?.ventasRecientes.map((venta, index) => (
                     <div key={index} className="flex items-center">
                       <Avatar className="h-9 w-9">
                         <AvatarImage src="/placeholder.svg?height=36&width=36" />
@@ -176,10 +181,10 @@ export default function Dashboard() {
                         </AvatarFallback>
                       </Avatar>
                       <div className="ml-4 space-y-1">
-                        <p className="text-sm font-medium leading-none">{sale.name}</p>
-                        <p className="text-sm text-gray-500">{sale.email}</p>
+                        <p className="text-sm font-medium leading-none">Boleto vendido de forma presencial</p>
+                        <p className="text-sm text-gray-500">Venta Fisica</p>
                       </div>
-                      <div className="ml-auto font-medium">{sale.amount}</div>
+                      <div className="ml-auto font-medium">{formatCurrency(venta.monto)}</div>
                     </div>
                   ))}
                 </div>

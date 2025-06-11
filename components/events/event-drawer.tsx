@@ -15,19 +15,23 @@ import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { CalendarIcon, MapPinIcon, ImageIcon, Upload } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { Venue, createEvent, Event } from "@/lib/firebase/transactions"
+import { useToast } from "@/components/ui/use-toast"
 
 interface EventDrawerProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   eventId?: string
+  venues: Venue[]
+  onSuccess?: () => void
 }
 
-export function EventDrawer({ open, onOpenChange, eventId }: EventDrawerProps) {
+export function EventDrawer({ open, onOpenChange, eventId, venues, onSuccess }: EventDrawerProps) {
   const [date, setDate] = useState<Date | undefined>(new Date())
   const [time, setTime] = useState("19:00")
   const [name, setName] = useState("")
   const [description, setDescription] = useState("")
-  const [venue, setVenue] = useState("")
+  const [selectedVenueId, setSelectedVenueId] = useState("")
   const [seatingEnabled, setSeatingEnabled] = useState(false)
   const [onlineSalesEnabled, setOnlineSalesEnabled] = useState(true)
   const [reservationEnabled, setReservationEnabled] = useState(false)
@@ -43,42 +47,71 @@ export function EventDrawer({ open, onOpenChange, eventId }: EventDrawerProps) {
       // Por ahora usamos datos de ejemplo
       setName("Concierto de Rock en Vivo")
       setDescription("Un increíble concierto con las mejores bandas de rock.")
-      setVenue("Arena Potosí")
+      setSelectedVenueId(venues[0]?.id || "")
       setSeatingEnabled(true)
       setOnlineSalesEnabled(true)
       setReservationEnabled(true)
     }
   })
 
-  const handleSave = () => {
+  const { toast } = useToast()
+
+  const handleSave = async () => {
     // Validación básica
-    if (!name || !date || !venue) {
-      // Mostrar errores
+    if (!name || !date || !selectedVenueId) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Por favor completa todos los campos requeridos.",
+      })
       return
     }
 
-    // Aquí enviaríamos los datos a la API
-    console.log({
-      name,
-      description,
-      date,
-      time,
-      venue,
-      seatingEnabled,
-      onlineSalesEnabled,
-      reservationEnabled,
-      mainImage,
-      secondaryImage,
-    })
+    try {
+      const eventData: Omit<Event, 'id' | 'created_at' | 'updated_at'> = {
+        nombre: name,
+        descripcion: description,
+        fecha: date,
+        hora: time,
+        lugar_id: selectedVenueId,
+        estado_venta: 'activo',
+        venta_en_linea: onlineSalesEnabled,
+        imagen_url: '', // TODO: Implementar subida de imágenes
+      }
 
-    // Cerrar el drawer
-    onOpenChange(false)
+      await createEvent(eventData)
 
-    // Mostrar toast de éxito
-    // toast({
-    //   title: isEditing ? "Evento actualizado" : "Evento creado",
-    //   description: `El evento "${name}" ha sido ${isEditing ? "actualizado" : "creado"} con éxito.`,
-    // })
+      // Cerrar el drawer
+      onOpenChange(false)
+
+      // Notificar éxito
+      toast({
+        title: isEditing ? "Evento actualizado" : "Evento creado",
+        description: `El evento "${name}" ha sido ${isEditing ? "actualizado" : "creado"} con éxito.`,
+      })
+
+      // Llamar al callback de éxito si existe
+      onSuccess?.()
+
+      // Limpiar el formulario
+      setName("")
+      setDescription("")
+      setDate(new Date())
+      setTime("19:00")
+      setSelectedVenueId("")
+      setSeatingEnabled(false)
+      setOnlineSalesEnabled(true)
+      setReservationEnabled(false)
+      setMainImage(null)
+      setSecondaryImage(null)
+    } catch (error) {
+      console.error('Error al guardar el evento:', error)
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Hubo un error al guardar el evento. Por favor intenta de nuevo.",
+      })
+    }
   }
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>, type: "main" | "secondary") => {
@@ -177,17 +210,20 @@ export function EventDrawer({ open, onOpenChange, eventId }: EventDrawerProps) {
               </Label>
               <div className="relative">
                 <MapPinIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
+                <select
                   id="venue"
-                  value={venue}
-                  onChange={(e) => setVenue(e.target.value)}
-                  placeholder="Ej. Arena Potosí"
-                  className="pl-10"
-                />
+                  value={selectedVenueId}
+                  onChange={(e) => setSelectedVenueId(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">Seleccionar lugar</option>
+                  {venues.map(venue => (
+                    <option key={venue.id} value={venue.id}>
+                      {venue.nombre}
+                    </option>
+                  ))}
+                </select>
               </div>
-              <Button variant="link" className="h-auto p-0 text-xs text-blue-600">
-                + Agregar nuevo recinto
-              </Button>
             </div>
           </div>
 
@@ -227,77 +263,67 @@ export function EventDrawer({ open, onOpenChange, eventId }: EventDrawerProps) {
             <h3 className="text-sm font-medium text-gray-900">Imágenes</h3>
 
             <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>Imagen principal</Label>
-                <div className="border-2 border-dashed rounded-md p-6 flex flex-col items-center justify-center bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer">
-                  {mainImage ? (
-                    <div className="text-center">
-                      <p className="text-sm font-medium">{mainImage.name}</p>
-                      <p className="text-xs text-gray-500">{(mainImage.size / 1024 / 1024).toFixed(2)} MB</p>
-                      <Button
-                        variant="link"
-                        className="h-auto p-0 text-xs text-red-600 mt-2"
-                        onClick={() => setMainImage(null)}
-                      >
-                        Eliminar
-                      </Button>
-                    </div>
-                  ) : (
-                    <>
-                      <ImageIcon className="h-10 w-10 text-gray-400 mb-2" />
-                      <div className="text-center">
-                        <p className="text-sm font-medium">Arrastra una imagen o haz clic para seleccionar</p>
-                        <p className="text-xs text-gray-500">JPEG o PNG, máx. 5MB</p>
-                      </div>
-                      <Input
-                        type="file"
-                        className="hidden"
-                        id="main-image"
-                        accept="image/jpeg,image/png"
-                        onChange={(e) => handleImageChange(e, "main")}
+              <div>
+                <Label htmlFor="main-image">Imagen principal</Label>
+                <div className="mt-1 flex items-center gap-4">
+                  <div className="h-32 w-32 rounded-lg border-2 border-dashed border-gray-300 p-2 flex items-center justify-center">
+                    {mainImage ? (
+                      <img
+                        src={URL.createObjectURL(mainImage)}
+                        alt="Preview"
+                        className="max-h-full max-w-full object-contain"
                       />
-                      <Label htmlFor="main-image" className="sr-only">
-                        Seleccionar imagen
-                      </Label>
-                    </>
-                  )}
+                    ) : (
+                      <ImageIcon className="h-8 w-8 text-gray-400" />
+                    )}
+                  </div>
+                  <div>
+                    <input
+                      type="file"
+                      id="main-image"
+                      className="hidden"
+                      accept="image/*"
+                      onChange={(e) => handleImageChange(e, "main")}
+                    />
+                    <Button asChild variant="outline" size="sm">
+                      <label htmlFor="main-image" className="cursor-pointer">
+                        <Upload className="h-4 w-4 mr-2" />
+                        Subir imagen
+                      </label>
+                    </Button>
+                  </div>
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label>Imagen secundaria</Label>
-                <div className="border-2 border-dashed rounded-md p-6 flex flex-col items-center justify-center bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer">
-                  {secondaryImage ? (
-                    <div className="text-center">
-                      <p className="text-sm font-medium">{secondaryImage.name}</p>
-                      <p className="text-xs text-gray-500">{(secondaryImage.size / 1024 / 1024).toFixed(2)} MB</p>
-                      <Button
-                        variant="link"
-                        className="h-auto p-0 text-xs text-red-600 mt-2"
-                        onClick={() => setSecondaryImage(null)}
-                      >
-                        Eliminar
-                      </Button>
-                    </div>
-                  ) : (
-                    <>
-                      <Upload className="h-10 w-10 text-gray-400 mb-2" />
-                      <div className="text-center">
-                        <p className="text-sm font-medium">Arrastra una imagen o haz clic para seleccionar</p>
-                        <p className="text-xs text-gray-500">JPEG o PNG, máx. 5MB</p>
-                      </div>
-                      <Input
-                        type="file"
-                        className="hidden"
-                        id="secondary-image"
-                        accept="image/jpeg,image/png"
-                        onChange={(e) => handleImageChange(e, "secondary")}
+              <div>
+                <Label htmlFor="secondary-image">Imagen secundaria (opcional)</Label>
+                <div className="mt-1 flex items-center gap-4">
+                  <div className="h-32 w-32 rounded-lg border-2 border-dashed border-gray-300 p-2 flex items-center justify-center">
+                    {secondaryImage ? (
+                      <img
+                        src={URL.createObjectURL(secondaryImage)}
+                        alt="Preview"
+                        className="max-h-full max-w-full object-contain"
                       />
-                      <Label htmlFor="secondary-image" className="sr-only">
-                        Seleccionar imagen
-                      </Label>
-                    </>
-                  )}
+                    ) : (
+                      <ImageIcon className="h-8 w-8 text-gray-400" />
+                    )}
+                  </div>
+                  <div>
+                    <input
+                      type="file"
+                      id="secondary-image"
+                      className="hidden"
+                      accept="image/*"
+                      onChange={(e) => handleImageChange(e, "secondary")}
+                    />
+                    <Button asChild variant="outline" size="sm">
+                      <label htmlFor="secondary-image" className="cursor-pointer">
+                        <Upload className="h-4 w-4 mr-2" />
+                        Subir imagen
+                      </label>
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>

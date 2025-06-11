@@ -23,13 +23,7 @@ export function Header({ activePage }: HeaderProps) {
   const navItems = [
     { name: "Inicio", href: "/" },
     { name: "Eventos", href: "/eventos" },
-    { name: "Mapas De Asientos", href: "/mapas-asientos" },
-    { name: "Creador De Mapas", href: "/seat-map-creator" },
-    { name: "Ventas y Canales", href: "/ventas-canales" },
-    { name: "Finanzas por Evento", href: "/finanzas" },
-    { name: "Reportes y Exportación", href: "/reportes" },
-    { name: "Imprimir Boleto", href: "/imprimir-boleto" },
-    { name: "Prueba Boleto", href: "/prueba-boleto" },
+    { name: "Mapas De Asientos", href: "/mapas-asientos" }
   ]
 
   return (

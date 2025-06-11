@@ -1,5 +1,6 @@
 import type React from "react"
 import { Header } from "./header"
+import { Toaster } from "@/components/ui/toaster"
 
 interface MainLayoutProps {
   children: React.ReactNode
@@ -11,6 +12,7 @@ export function MainLayout({ children, activePage }: MainLayoutProps) {
     <div className="min-h-screen bg-gray-50/40">
       <Header activePage={activePage} />
       <main className="p-6">{children}</main>
+      <Toaster />
     </div>
   )
 }

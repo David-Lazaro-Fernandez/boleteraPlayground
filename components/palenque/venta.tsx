@@ -19,6 +19,7 @@ import Link from "next/link"
 import { storage } from '@/lib/firebase/config'
 import { ref, getDownloadURL, uploadString } from 'firebase/storage'
 import { dazzleUnicase, gontserrat } from '@/lib/fonts'
+import { createSale, Movement, Ticket } from '@/lib/firebase/transactions'
 
 interface VenueConfigSeat {
     id: string
@@ -81,6 +82,7 @@ export function Venta({ generalTickets, selectedSeats }: VentaProps) {
     const [cashReceived, setCashReceived] = useState<string>('')
     const [showTerminalModal, setShowTerminalModal] = useState(false)
     const [showConfirmationModal, setShowConfirmationModal] = useState(false)
+    const [showPrintConfirmationModal, setShowPrintConfirmationModal] = useState(false)
     const [isProcessing, setIsProcessing] = useState(false)
     const [showTicketPreviews, setShowTicketPreviews] = useState(false)
 
@@ -232,13 +234,53 @@ export function Venta({ generalTickets, selectedSeats }: VentaProps) {
         if (confirmed) {
             setIsProcessing(true)
             try {
+                // First update seats status in the venue configuration
                 const success = await updateSeatsStatus()
                 if (success) {
-                    toast({
-                        title: "Venta exitosa",
-                        description: "Los asientos han sido actualizados correctamente.",
-                    })
-                    setShowTicketPreviews(true)
+                    // Create the movement data
+                    const movementData: Omit<Movement, 'id'> = {
+                        total: total,
+                        subtotal: subtotal,
+                        cargo_servicio: serviceCharge,
+                        fecha: new Date()
+                    }
+
+                    // Prepare tickets data
+                    const ticketsData: Array<{ ticket: Omit<Ticket, 'id'>, precio: number }> = [
+                        // Add general tickets
+                        ...generalTickets.flatMap(ticket => 
+                            Array(ticket.quantity).fill(null).map(() => ({
+                                ticket: {
+                                    fila: 'GENERAL',
+                                    asiento: 0,
+                                    zona: ticket.zoneName
+                                },
+                                precio: ticket.price
+                            }))
+                        ),
+                        // Add numbered seats
+                        ...selectedSeats.map(seat => ({
+                            ticket: {
+                                fila: seat.rowLetter,
+                                asiento: seat.seatNumber,
+                                zona: seat.zoneName
+                            },
+                            precio: seat.price
+                        }))
+                    ]
+
+                    // Create the sale in Firebase
+                    const movementId = await createSale(movementData, ticketsData)
+
+                    if (movementId) {
+                        toast({
+                            title: "Venta exitosa",
+                            description: "La venta ha sido registrada correctamente.",
+                        })
+                        setShowTicketPreviews(true)
+                    } else {
+                        throw new Error('No se pudo crear el movimiento')
+                    }
                 } else {
                     toast({
                         title: "Error en la venta",
@@ -247,6 +289,7 @@ export function Venta({ generalTickets, selectedSeats }: VentaProps) {
                     })
                 }
             } catch (error) {
+                console.error('Error al procesar la venta:', error)
                 toast({
                     title: "Error en la venta",
                     description: "Ocurrió un error al procesar la venta.",
@@ -356,7 +399,6 @@ export function Venta({ generalTickets, selectedSeats }: VentaProps) {
                                 className="flex-1"
                                 variant="outline"
                                 onClick={() => {
-                                    setPaymentMethod('card')
                                     setShowTerminalModal(true)
                                 }}
                                 disabled={isProcessing}
@@ -443,23 +485,23 @@ export function Venta({ generalTickets, selectedSeats }: VentaProps) {
                                                     <div className="w-32 border-r border-black p-2 font-gontserrat">
                                                         <div className="space-y-2 text-center">
                                                             <div className="flex flex-col items-center">
-                                                                <div className={`text-xs font-[8px] ${gontserrat.className}`}>PRECIO</div>
-                                                                <div className={`text-sm ${gontserrat.className}`}>$ {ticket.price}</div>
+                                                                <div className={`text-xs font-[7px] ${gontserrat.className}`}>PRECIO</div>
+                                                                <div className={`text-[13px] ${gontserrat.className}`}>$ {ticket.price}</div>
                                                                 {borderLine()}
                                                             </div>
                                                             <div className="flex flex-col items-center">
-                                                                <div className={`text-xs font-[8px] ${gontserrat.className}`}>TIPO</div>
-                                                                <div className={`text-sm ${gontserrat.className}`}>GENERAL</div>
+                                                                <div className={`text-xs font-[7px] ${gontserrat.className}`}>TIPO</div>
+                                                                <div className={`text-[13px] ${gontserrat.className}`}>GENERAL</div>
                                                                 {borderLine()}
                                                             </div>
                                                             <div className="flex flex-col items-center">
-                                                                <div className={`text-xs font-[8px] ${gontserrat.className}`}>ORDEN</div>
-                                                                <div className={`text-sm ${gontserrat.className}`}>{ticketId.slice(8, 14)}</div>
+                                                                <div className={`text-xs font-[7px] ${gontserrat.className}`}>ORDEN</div>
+                                                                <div className={`text-[13px] ${gontserrat.className}`}>{ticketId.slice(8, 14)}</div>
                                                                 {borderLine()}
                                                             </div>
                                                             <div className="flex flex-col items-center">
-                                                                <div className={`text-xs font-[8px] ${gontserrat.className}`}>SECCIÓN</div>
-                                                                <div className={`text-sm ${gontserrat.className}`}>{ticket.zoneName}</div>
+                                                                <div className={`text-xs font-[7px] ${gontserrat.className}`}>SECCIÓN</div>
+                                                                <div className={`text-[13px] ${gontserrat.className}`}>{ticket.zoneName}</div>
                                                                 {borderLine()}
                                                             </div>
                                                         </div>
@@ -469,15 +511,15 @@ export function Venta({ generalTickets, selectedSeats }: VentaProps) {
                                                     <div className="flex-grow p-4 flex flex-col relative">
                                                         {/* Título del evento y recinto */}
                                                         <div className={`text-2xl font-bold mb-2 ${dazzleUnicase.className}`}>
-                                                            GLORIA TREVI
-                                                            <div className={`text-xl ${dazzleUnicase.className}`}>ARENA POTOSI</div>
+                                                            ACORDEONAZO
+                                                            <div className={`text-xl ${dazzleUnicase.className}`}>CENTRO DE ESPECTACULOS</div>
                                                         </div>
 
                                                         {/* Fecha, hora y ciudad */}
                                                         <div className={`text-md mb-10 text-[11.7px] ${gontserrat.className}`}>
-                                                            29 DE MARZO 2024
-                                                            <div className={`${gontserrat.className}`}>21:00 hrs.</div>
-                                                            <div className={`${gontserrat.className}`}>SAN LUIS POTOSÍ, SLP</div>
+                                                            19 DE JUNIO 2025
+                                                            <div className={`${gontserrat.className}`}>20:00 hrs.</div>
+                                                            <div className={`${gontserrat.className}`}>CD. VICTORIA, TAM</div>
                                                         </div>
 
                                                         {/* Detalles del boleto con separadores */}
@@ -514,22 +556,22 @@ export function Venta({ generalTickets, selectedSeats }: VentaProps) {
                                                         <div className="space-y-2 text-center">
                                                             <div className="flex flex-col items-center">
                                                                 <div className={`text-xs font-[7px] ${gontserrat.className}`}>PRECIO</div>
-                                                                <div className={`text-sm ${gontserrat.className}`}>$ {ticket.price}</div>
+                                                                <div className={`text-[13px] ${gontserrat.className}`}>$ {ticket.price}</div>
                                                                 {borderLine()}
                                                             </div>
                                                             <div className="flex flex-col items-center">
-                                                                <div className={`text-xs font-[8px] ${gontserrat.className}`}>TIPO</div>
-                                                                <div className={`text-sm ${gontserrat.className}`}>GENERAL</div>
+                                                                <div className={`text-xs font-[7px] ${gontserrat.className}`}>TIPO</div>
+                                                                <div className={`text-[13px] ${gontserrat.className}`}>GENERAL</div>
                                                                 {borderLine()}
                                                             </div>
                                                             <div className="flex flex-col items-center">
-                                                                <div className={`text-xs font-[8px] ${gontserrat.className}`}>ORDEN</div>
-                                                                <div className={`text-sm ${gontserrat.className}`}>{ticketId.slice(8, 14)}</div>
+                                                                <div className={`text-xs font-[7px] ${gontserrat.className}`}>ORDEN</div>
+                                                                <div className={`text-[13px] ${gontserrat.className}`}>{ticketId.slice(8, 14)}</div>
                                                                 {borderLine()}
                                                             </div>
                                                             <div className="flex flex-col items-center">
-                                                                <div className={`text-xs font-[8px] ${gontserrat.className}`}>SECCIÓN</div>
-                                                                <div className={`text-sm ${gontserrat.className}`}>{ticket.zoneName}</div>
+                                                                <div className={`text-xs font-[7px] ${gontserrat.className}`}>SECCIÓN</div>
+                                                                <div className={`text-[13px] ${gontserrat.className}`}>{ticket.zoneName}</div>
                                                                 {borderLine()}
                                                             </div>
                                                         </div>
@@ -585,31 +627,30 @@ export function Venta({ generalTickets, selectedSeats }: VentaProps) {
                                             <div className={`flex w-full ${dazzleUnicase.variable} ${gontserrat.variable}`}>
                                                 {/* Columna izquierda */}
                                                 <div className="w-28 border-r border-black p-2 font-gontserrat">
-                                                    <div className="space-y-2 text-center">
+                                                    <div className="space-y-[3px] text-center">
                                                         <div className="flex flex-col items-center">
-                                                            <div className={`text-xs font-[8px] ${gontserrat.className}`}>PRECIO</div>
-                                                            <div className={`text-sm ${gontserrat.className}`}>$ {seat.price}</div>
+                                                            <div className={`text-xs font-[7px] ${gontserrat.className}`}>PRECIO</div>
+                                                            <div className={`text-[13px] ${gontserrat.className}`}>$ {seat.price}</div>
                                                             {borderLine()}
                                                         </div>
                                                         <div className="flex flex-col items-center">
-                                                            <div className={`text-xs font-[8px] ${gontserrat.className}`}>TIPO</div>
-                                                            <div className={`text-sm ${gontserrat.className}`}>NUMERADO</div>
+                                                            <div className={`text-xs font-[7px] ${gontserrat.className}`}>TIPO</div>
+                                                            <div className={`text-[13px] ${gontserrat.className}`}>NUMERADO</div>
                                                             {borderLine()}
                                                         </div>
                                                         <div className="flex flex-col items-center">
-                                                            <div className={`text-xs font-[8px] ${gontserrat.className}`}>ORDEN</div>
-                                                            <div className={`text-sm ${gontserrat.className}`}>{seat.id.slice(8, 14)}</div>
+                                                            <div className={`text-xs font-[7px] ${gontserrat.className}`}>ORDEN</div>
+                                                            <div className={`text-[13px] ${gontserrat.className}`}>{seat.id.slice(8, 14)}</div>
                                                             {borderLine()}
                                                         </div>
                                                         <div className="flex flex-col items-center">
-                                                            <div className={`text-xs font-[8px] ${gontserrat.className}`}>SECCIÓN</div>
-                                                            <div className={`text-sm ${gontserrat.className}`}>{seat.zoneName}</div>
+                                                            <div className={`text-xs font-[7px] ${gontserrat.className}`}>SECCIÓN</div>
+                                                            <div className={`text-[13px] ${gontserrat.className}`}>{seat.zoneName}</div>
                                                             {borderLine()}
                                                         </div>
                                                         <div className="flex flex-col items-center">
-                                                            <div className={`text-xs font-[8px] ${gontserrat.className}`}>ASIENTO</div>
-                                                            <div className={`text-sm ${gontserrat.className}`}>{seat.seatNumber}</div>
-                                                            {borderLine()}
+                                                            <div className={`text-xs font-[7px] ${gontserrat.className}`}>ASIENTO</div>
+                                                            <div className={`text-[13px] ${gontserrat.className}`}>{seat.rowLetter}{seat.seatNumber}</div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -618,15 +659,15 @@ export function Venta({ generalTickets, selectedSeats }: VentaProps) {
                                                 <div className="flex-grow p-4 flex flex-col relative">
                                                     {/* Título del evento y recinto */}
                                                     <div className={`text-2xl font-bold mb-2 ${dazzleUnicase.className}`}>
-                                                        GLORIA TREVI
-                                                        <div className={`text-xl ${dazzleUnicase.className}`}>ARENA POTOSI</div>
+                                                        ACORDEONAZO
+                                                        <div className={`text-xl ${dazzleUnicase.className}`}>CENTRO DE ESPECTACULOS</div>
                                                     </div>
 
                                                     {/* Fecha, hora y ciudad */}
                                                     <div className={`text-md mb-10 text-[11.7px] ${gontserrat.className}`}>
-                                                        29 DE MARZO 2024
-                                                        <div className={`${gontserrat.className}`}>21:00 hrs.</div>
-                                                        <div className={`${gontserrat.className}`}>SAN LUIS POTOSÍ, SLP</div>
+                                                        19 DE JUNIO 2025
+                                                        <div className={`${gontserrat.className}`}>20:00 hrs.</div>
+                                                        <div className={`${gontserrat.className}`}>CD. VICTORIA, TAM</div>
                                                     </div>
 
                                                     {/* Detalles del boleto con separadores */}
@@ -653,7 +694,7 @@ export function Venta({ generalTickets, selectedSeats }: VentaProps) {
                                                         <div className="h-8 w-px bg-black"></div>
                                                         <div className="text-center">
                                                             <div className={`text-[8.5px] ${gontserrat.className}`}>ASIENTO</div>
-                                                            <div className={`text-sm ${gontserrat.className}`}>{seat.seatNumber}</div>
+                                                            <div className={`text-sm ${gontserrat.className}`}>{seat.rowLetter}{seat.seatNumber}</div>
                                                         </div>
                                                     </div>
 
@@ -665,31 +706,31 @@ export function Venta({ generalTickets, selectedSeats }: VentaProps) {
 
                                                 {/* Columna derecha */}
                                                 <div className="w-32 border-l border-black p-2 font-gontserrat">
-                                                    <div className="space-y-2 text-center">
+                                                    <div className="space-y-[3px] text-center">
                                                         <div className="flex flex-col items-center">
-                                                            <div className={`text-xs font-[8px] ${gontserrat.className}`}>PRECIO</div>
-                                                            <div className={`text-sm ${gontserrat.className}`}>$ {seat.price}</div>
+                                                            <div className={`text-xs font-[7px] ${gontserrat.className}`}>PRECIO</div>
+                                                            <div className={`text-[13px] ${gontserrat.className}`}>$ {seat.price}</div>
                                                             {borderLine()}
                                                         </div>
                                                         <div className="flex flex-col items-center">
-                                                            <div className={`text-xs font-[8px] ${gontserrat.className}`}>TIPO</div>
-                                                            <div className={`text-sm ${gontserrat.className}`}>NUMERADO</div>
+                                                            <div className={`text-xs font-[7px] ${gontserrat.className}`}>TIPO</div>
+                                                            <div className={`text-[13px] ${gontserrat.className}`}>NUMERADO</div>
                                                             {borderLine()}
                                                         </div>
                                                         <div className="flex flex-col items-center">
-                                                            <div className={`text-xs font-[8px] ${gontserrat.className}`}>ORDEN</div>
-                                                            <div className={`text-sm ${gontserrat.className}`}>{seat.id.slice(8, 14)}</div>
+                                                            <div className={`text-xs font-[7px] ${gontserrat.className}`}>ORDEN</div>
+                                                            <div className={`text-[13px] ${gontserrat.className}`}>{seat.id.slice(8, 14)}</div>
                                                             {borderLine()}
                                                         </div>
                                                         <div className="flex flex-col items-center">
-                                                            <div className={`text-xs font-[8px] ${gontserrat.className}`}>SECCIÓN</div>
-                                                            <div className={`text-sm ${gontserrat.className}`}>{seat.zoneName}</div>
+                                                            <div className={`text-xs font-[7px] ${gontserrat.className}`}>SECCIÓN</div>
+                                                            <div className={`text-[13px] ${gontserrat.className}`}>{seat.zoneName}</div>
                                                             {borderLine()}
                                                         </div>
                                                         <div className="flex flex-col items-center">
-                                                            <div className={`text-xs font-[8px] ${gontserrat.className}`}>ASIENTO</div>
-                                                            <div className={`text-sm ${gontserrat.className}`}>{seat.seatNumber}</div>
-                                                            {borderLine()}
+                                                            <div className={`text-xs font-[7px] ${gontserrat.className}`}>ASIENTO</div>
+                                                            <div className={`text-[13px] ${gontserrat.className}`}>{seat.rowLetter}{seat.seatNumber}</div>
+                                                        
                                                         </div>
                                                     </div>
                                                 </div>
@@ -716,19 +757,20 @@ export function Venta({ generalTickets, selectedSeats }: VentaProps) {
                     })}
 
                     <div className="flex justify-end mt-6">
-                        <Link
-                            href="/mapas-asientos"
-                            className="bg-[#325CE5] text-white hover:bg-[#2849B3] px-4 py-2 rounded-md"
+                        <Button
+                            className="bg-[#325CE5] text-white hover:bg-[#2849B3]"
+                            onClick={() => setShowPrintConfirmationModal(true)}
                         >
                             Finalizar Venta
-                        </Link>
+                        </Button>
                     </div>
                 </div>
-
             )}
 
             {/* Modal para Pago con Terminal */}
-            <Dialog open={showTerminalModal} onOpenChange={setShowTerminalModal}>
+            <Dialog open={showTerminalModal} onOpenChange={(open) => {
+                setShowTerminalModal(open)
+            }}>
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>Pago con Terminal</DialogTitle>
@@ -736,9 +778,20 @@ export function Venta({ generalTickets, selectedSeats }: VentaProps) {
                             Por favor, realice el cobro en la terminal por ${total.toFixed(2)} MXN
                         </DialogDescription>
                     </DialogHeader>
-                    <DialogFooter>
+                    <DialogFooter className="flex gap-2">
                         <Button
-                            onClick={() => handlePaymentSuccess()}
+                            variant="outline"
+                            onClick={() => {
+                                setShowTerminalModal(false)
+                            }}
+                        >
+                            Cancelar
+                        </Button>
+                        <Button
+                            onClick={() => {
+                                setPaymentMethod('card')
+                                handlePaymentSuccess()
+                            }}
                             disabled={isProcessing}
                         >
                             El pago en terminal fue exitoso
@@ -769,6 +822,41 @@ export function Venta({ generalTickets, selectedSeats }: VentaProps) {
                             disabled={isProcessing}
                         >
                             {isProcessing ? "Procesando..." : "Sí"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Modal de Confirmación de Impresión */}
+            <Dialog open={showPrintConfirmationModal} onOpenChange={setShowPrintConfirmationModal}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Confirmar Impresión</DialogTitle>
+                        <DialogDescription>
+                            ¿Se han impreso todos los boletos correctamente?
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="flex gap-2">
+                        <Button
+                            variant="outline"
+                            onClick={() => {
+                                setShowPrintConfirmationModal(false)
+                                toast({
+                                    title: "Impresión pendiente",
+                                    description: "Por favor, asegúrate de imprimir todos los boletos antes de finalizar.",
+                                    variant: "destructive",
+                                })
+                            }}
+                        >
+                            No
+                        </Button>
+                        <Button
+                            onClick={() => {
+                                setShowPrintConfirmationModal(false)
+                                window.location.href = '/mapas-asientos'
+                            }}
+                        >
+                            Sí, todo correcto
                         </Button>
                     </DialogFooter>
                 </DialogContent>
