@@ -504,7 +504,7 @@ export function Venta({ generalTickets, selectedSeats }: VentaProps) {
                                                         </div>
 
                                                         {/* Logo */}
-                                                        <div className="absolute top-32 right-36 w-24">
+                                                        <div className="absolute top-28 right-6 w-24">
                                                             <Logo />
                                                         </div>
                                                     </div>
