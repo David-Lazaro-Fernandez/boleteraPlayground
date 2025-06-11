@@ -9,9 +9,11 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card"
 import { useRouter } from 'next/navigation'
 import { useToast } from "@/hooks/use-toast"
+import { Logo } from "@/components/prueba-boleto/logo"
+import { Download } from "lucide-react"
 
 interface VentaProps {
   generalTickets: {
@@ -29,6 +31,14 @@ interface VentaProps {
   }[]
 }
 
+function getTicketHeight() {
+  return "240px"
+}
+
+function getTicketDescription() {
+  return "Diseño optimizado para impresión térmica de boletos - Formato horizontal"
+}
+
 export function Venta({ generalTickets, selectedSeats }: VentaProps) {
   const router = useRouter()
   const { toast } = useToast()
@@ -37,6 +47,7 @@ export function Venta({ generalTickets, selectedSeats }: VentaProps) {
   const [showTerminalModal, setShowTerminalModal] = useState(false)
   const [showConfirmationModal, setShowConfirmationModal] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
+  const [showTicketPreviews, setShowTicketPreviews] = useState(false)
 
   // Calcular totales
   const generalTotal = generalTickets.reduce((sum, ticket) => sum + (ticket.price * ticket.quantity), 0)
@@ -68,6 +79,74 @@ export function Venta({ generalTickets, selectedSeats }: VentaProps) {
     }
   }
 
+  // Función para convertir a monocromo
+  const convertToMonochrome = async (canvas: HTMLCanvasElement): Promise<HTMLCanvasElement> => {
+    const ctx = canvas.getContext("2d")
+    if (!ctx) return canvas
+
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+    const data = imageData.data
+
+    for (let i = 0; i < data.length; i += 4) {
+      const grayValue = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]
+      const bwValue = grayValue > 128 ? 255 : 0
+      data[i] = bwValue
+      data[i + 1] = bwValue
+      data[i + 2] = bwValue
+    }
+
+    ctx.putImageData(imageData, 0, 0)
+    return canvas
+  }
+
+  // Función para generar PDF de un boleto
+  const generateTicketPDF = async (ticketRef: HTMLDivElement, ticketId: string) => {
+    try {
+      const { jsPDF } = await import("jspdf")
+      const html2canvas = (await import("html2canvas")).default
+
+      if (ticketRef) {
+        const canvas = await html2canvas(ticketRef, {
+          scale: 3,
+          useCORS: true,
+          backgroundColor: "#ffffff",
+          logging: false,
+          removeContainer: true,
+        })
+
+        const finalCanvas = await convertToMonochrome(canvas)
+        const imgData = finalCanvas.toDataURL("image/png")
+
+        const pdfWidth = 140
+        const pdfHeight = 50
+
+        const pdf = new jsPDF({
+          orientation: "landscape",
+          unit: "mm",
+          format: [pdfWidth, pdfHeight],
+          compress: true,
+        })
+
+        pdf.setFillColor(255, 255, 255)
+        pdf.rect(0, 0, pdfWidth, pdfHeight, "F")
+        pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight, undefined, "FAST")
+        pdf.save(`boleto-${ticketId}.pdf`)
+
+        toast({
+          title: "PDF generado",
+          description: "El boleto se ha descargado como PDF.",
+        })
+      }
+    } catch (error) {
+      console.error("Error generando PDF:", error)
+      toast({
+        title: "Error",
+        description: "No se pudo generar el PDF. Intenta nuevamente.",
+        variant: "destructive",
+      })
+    }
+  }
+
   const handleConfirmSale = async (confirmed: boolean) => {
     if (confirmed) {
       setIsProcessing(true)
@@ -78,11 +157,7 @@ export function Venta({ generalTickets, selectedSeats }: VentaProps) {
             title: "Venta exitosa",
             description: "Los asientos han sido actualizados correctamente.",
           })
-          // Redirigir al mapa de asientos después de un breve delay
-          setTimeout(() => {
-            router.push('/')
-            router.refresh() // Esto forzará una recarga de los datos
-          }, 2000)
+          setShowTicketPreviews(true)
         } else {
           toast({
             title: "Error en la venta",
@@ -103,6 +178,12 @@ export function Venta({ generalTickets, selectedSeats }: VentaProps) {
     setShowConfirmationModal(false)
     setShowTerminalModal(false)
     setPaymentMethod(null)
+  }
+
+  function borderLine() {
+    return (
+      <div className="w-12 h-[1px] bg-black mt-1"></div>
+    )
   }
 
   return (
@@ -221,6 +302,270 @@ export function Venta({ generalTickets, selectedSeats }: VentaProps) {
           )}
         </CardContent>
       </Card>
+
+      {/* Previews de Boletos */}
+      {showTicketPreviews && (
+        <div className="mt-8 space-y-8">
+          <h2 className="text-2xl font-bold">Boletos Generados</h2>
+          
+          {/* Boletos Generales */}
+          {generalTickets.map((ticket) => 
+            Array.from({ length: ticket.quantity }).map((_, index) => {
+              const ticketId = `${ticket.id}-${index + 1}`
+              return (
+                <Card key={ticketId}>
+                  <CardHeader>
+                    <CardTitle>
+                      Vista Previa del Boleto (140mm x 50mm)
+                    </CardTitle>
+                    <CardDescription>{getTicketDescription()}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="bg-gray-100 p-8 rounded-lg flex justify-center">
+                      <div
+                        id={`ticket-${ticketId}`}
+                        className="bg-white"
+                        style={{
+                          width: "100%",
+                          maxWidth: "600px",
+                          height: getTicketHeight(),
+                          display: "flex",
+                          overflow: "hidden",
+                        }}
+                      >
+                        {/* Contenido principal del boleto */}
+                        <div className="flex-grow flex relative">
+                          {/* Contenido central */}
+                          <div className="flex-grow p-4 flex flex-col">
+                            {/* Título del evento y recinto */}
+                            <div className="text-3xl font-bold mb-2">
+                              GLORIA TREVI
+                              <div className="text-2xl">ARENA POTOSI</div>
+                            </div>
+
+                            {/* Fecha, hora y ciudad */}
+                            <div className="text-md mb-10 text-[12.7px]">
+                              29 DE MARZO 2024
+                              <div>21:00 hrs.</div>
+                              <div>SAN LUIS POTOSÍ, SLP</div>
+                            </div>
+
+                            {/* Detalles del boleto con separadores */}
+                            <div className="flex items-center space-x-[13.5px]">
+                              <div className="text-center">
+                                <div className="text-[9.5px]">PRECIO</div>
+                                <div className="text-base">$ {ticket.price}</div>
+                              </div>
+                              <div className="h-8 w-px bg-black"></div>
+                              <div className="text-center">
+                                <div className="text-[9.5px]">TIPO</div>
+                                <div className="text-base">GENERAL</div>
+                              </div>
+                              <div className="h-8 w-px bg-black"></div>
+                              <div className="text-center">
+                                <div className="text-[9.5px]">ORDEN</div>
+                                <div className="text-base">{ticketId}</div>
+                              </div>
+                              <div className="h-8 w-px bg-black"></div>
+                              <div className="text-center">
+                                <div className="text-[9.5px]">SECCIÓN</div>
+                                <div className="text-base">{ticket.zoneName}</div>
+                              </div>
+                            </div>
+
+                            {/* Logo */}
+                            <div className="absolute top-32 right-36 w-24">
+                              <Logo />
+                            </div>
+                          </div>
+
+                          {/* Columna derecha */}
+                          <div className="w-32 border-l border-black p-2">
+                            <div className="space-y-2 text-center">
+                              <div className="flex flex-col items-center">
+                                <div className="text-xs font-[8px]">PRECIO</div>
+                                <div className="text-sm">$ {ticket.price}</div>
+                                {borderLine()}
+                              </div>
+                              <div className="flex flex-col items-center">
+                                <div className="text-xs font-[8px]">TIPO</div>
+                                <div className="text-sm">GENERAL</div>
+                                {borderLine()}
+                              </div>
+                              <div className="flex flex-col items-center">
+                                <div className="text-xs font-[8px]">ORDEN</div>
+                                <div className="text-sm">{ticketId}</div>
+                                {borderLine()}
+                              </div>
+                              <div className="flex flex-col items-center">
+                                <div className="text-xs font-[8px]">SECCIÓN</div>
+                                <div className="text-sm">{ticket.zoneName}</div>
+                                {borderLine()}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex justify-end mt-4">
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          const ticketRef = document.getElementById(`ticket-${ticketId}`)
+                          if (ticketRef instanceof HTMLDivElement) {
+                            generateTicketPDF(ticketRef, ticketId)
+                          }
+                        }}
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                        Descargar PDF
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )
+            })
+          )}
+
+          {/* Boletos Numerados */}
+          {selectedSeats.map((seat) => {
+            const ticketId = seat.id
+            return (
+              <Card key={ticketId}>
+                <CardHeader>
+                  <CardTitle>
+                    Vista Previa del Boleto (140mm x 50mm)
+                  </CardTitle>
+                  <CardDescription>{getTicketDescription()}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="bg-gray-100 p-8 rounded-lg flex justify-center">
+                    <div
+                      id={`ticket-${ticketId}`}
+                      className="bg-white"
+                      style={{
+                        width: "100%",
+                        maxWidth: "600px",
+                        height: getTicketHeight(),
+                        display: "flex",
+                        overflow: "hidden",
+                      }}
+                    >
+                      {/* Contenido principal del boleto */}
+                      <div className="flex-grow flex relative">
+                        {/* Contenido central */}
+                        <div className="flex-grow p-4 flex flex-col">
+                          {/* Título del evento y recinto */}
+                          <div className="text-3xl font-bold mb-2">
+                            GLORIA TREVI
+                            <div className="text-2xl">ARENA POTOSI</div>
+                          </div>
+
+                          {/* Fecha, hora y ciudad */}
+                          <div className="text-md mb-10 text-[12.7px]">
+                            29 DE MARZO 2024
+                            <div>21:00 hrs.</div>
+                            <div>SAN LUIS POTOSÍ, SLP</div>
+                          </div>
+
+                          {/* Detalles del boleto con separadores */}
+                          <div className="flex items-center space-x-[13.5px]">
+                            <div className="text-center">
+                              <div className="text-[9.5px]">PRECIO</div>
+                              <div className="text-base">$ {seat.price}</div>
+                            </div>
+                            <div className="h-8 w-px bg-black"></div>
+                            <div className="text-center">
+                              <div className="text-[9.5px]">TIPO</div>
+                              <div className="text-base">NUMERADO</div>
+                            </div>
+                            <div className="h-8 w-px bg-black"></div>
+                            <div className="text-center">
+                              <div className="text-[9.5px]">ORDEN</div>
+                              <div className="text-base">{seat.id.slice(0, 6)}</div>
+                            </div>
+                            <div className="h-8 w-px bg-black"></div>
+                            <div className="text-center">
+                              <div className="text-[9.5px]">SECCIÓN</div>
+                              <div className="text-base">{seat.zoneName}</div>
+                            </div>
+                            <div className="h-8 w-px bg-black"></div>
+                            <div className="text-center">
+                              <div className="text-[9.5px]">ASIENTO</div>
+                              <div className="text-base">{seat.seatNumber}</div>
+                            </div>
+                          </div>
+
+                          {/* Logo */}
+                          <div className="absolute top-32 right-36 w-24">
+                            <Logo />
+                          </div>
+                        </div>
+
+                        {/* Columna derecha */}
+                        <div className="w-32 border-l border-black p-2">
+                          <div className="space-y-2 text-center">
+                            <div className="flex flex-col items-center">
+                              <div className="text-xs font-[8px]">PRECIO</div>
+                              <div className="text-sm">$ {seat.price}</div>
+                              {borderLine()}
+                            </div>
+                            <div className="flex flex-col items-center">
+                              <div className="text-xs font-[8px]">TIPO</div>
+                              <div className="text-sm">NUMERADO</div>
+                              {borderLine()}
+                            </div>
+                            <div className="flex flex-col items-center">
+                              <div className="text-xs font-[8px] ">ORDEN</div>
+                              <div className="text-sm text-base">{seat.id.slice(0, 6)}</div>
+                              {borderLine()}
+                            </div>
+                            <div className="flex flex-col items-center">
+                              <div className="text-xs font-[8px]">SECCIÓN</div>
+                              <div className="text-sm">{seat.zoneName}</div>
+                              {borderLine()}
+                            </div>
+                            <div className="flex flex-col items-center">
+                              <div className="text-xs font-[8px]">ASIENTO</div>
+                              <div className="text-sm">{seat.seatNumber}</div>
+                              {borderLine()}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex justify-end mt-4">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        const ticketRef = document.getElementById(`ticket-${ticketId}`)
+                        if (ticketRef instanceof HTMLDivElement) {
+                          generateTicketPDF(ticketRef, ticketId)
+                        }
+                      }}
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      Descargar PDF
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )
+          })}
+
+          <div className="flex justify-end mt-6">
+            <Button
+              onClick={() => {
+                router.push('/mapas-asientos')
+                router.refresh()
+              }}
+            >
+              Finalizar Venta
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Modal para Pago con Terminal */}
       <Dialog open={showTerminalModal} onOpenChange={setShowTerminalModal}>

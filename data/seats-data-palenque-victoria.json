@@ -21761,7 +21761,7 @@
       "zoneName": "Oro 6",
       "color": "#FFCC99",
       "price": 600,
-      "status": "available",
+      "status": "occupied",
       "rowLetter": "J",
       "seatNumber": 104,
       "lineId": "seat_1749511483743_hudsqbjvq",

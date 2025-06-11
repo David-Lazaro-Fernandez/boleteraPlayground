@@ -37,7 +37,7 @@ interface PrintConfig {
 
 function borderLine() {
   return (
-    <div className="w-12 h-[0.3px] bg-black mt-1"></div>
+    <div className="w-12 h-[1px] bg-black mt-1"></div>
   )
 }
 
@@ -709,7 +709,7 @@ export default function PruebaBoletoPage() {
                       </div>
 
                       {/* Fecha, hora y ciudad */}
-                      <div className="text-md mb-10 text-[12.7px]">
+                      <div className="text-md mb-8 text-[12.7px]">
                         {ticketData.fecha}
                         <div>{ticketData.hora} hrs.</div>
                         <div>{ticketData.ciudad}</div>
