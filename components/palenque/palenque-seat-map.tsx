@@ -135,7 +135,7 @@ const zoneCoordinates: Record<string, { x: number; y: number }> = {
   "Oro 3": { x: -500, y: -180 },
   "Oro 4": { x: -300, y: -450 },
   "Oro 5": { x: -50, y: -450 },
-  "Oro 6": { x: 300, y: -250},
+  "Oro 6": { x: 300, y: -250 },
   "Oro 7": { x: 300, y: 350 },
   "Oro 8": { x: 200, y: 600 },
   "General": { x: 400, y: 400 }
@@ -226,7 +226,7 @@ export function PalenqueSeatMap() {
   const calculateZoneCenter = (zoneName: string) => {
     const seats = venueConfig.createdSeats.filter(seat => seat.zoneName === zoneName)
     if (seats.length === 0) return { x: centerX, y: centerY }
-    
+
     const sumX = seats.reduce((acc, seat) => acc + seat.x, 0)
     const sumY = seats.reduce((acc, seat) => acc + seat.y, 0)
     return {
@@ -237,7 +237,7 @@ export function PalenqueSeatMap() {
 
   const handleZoneClick = (zoneName: string) => {
     if (!zoneConfig[zoneName]?.selectable) return
-    
+
     setSelectedZone(zoneName)
 
     const coordinates = zoneCoordinates[zoneName]
@@ -502,9 +502,17 @@ export function PalenqueSeatMap() {
                     <span className="text-lg font-bold">${totalPrice.toFixed(2)} MXN</span>
                   </div>
                 </div>
-                <Button className="w-full bg-green-600 hover:bg-green-700 text-white">
-                  Comprar {totalSeats} boleto{totalSeats !== 1 ? "s" : ""}
-                </Button>
+                {/* Botón de compra */}
+                {(selectedSeats.length > 0 || generalTickets.length > 0) && (
+                  <div className="fixed bottom-4 right-4 z-10">
+                    <Button
+                      className="bg-[#325CE5] text-white hover:bg-[#2849B3]"
+                      onClick={handlePurchase}
+                    >
+                      Comprar {selectedSeats.length + generalTickets.reduce((sum, ticket) => sum + ticket.quantity, 0)} boletos
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -845,17 +853,7 @@ export function PalenqueSeatMap() {
         </Card>
       </div>
 
-      {/* Botón de compra */}
-      {(selectedSeats.length > 0 || generalTickets.length > 0) && (
-        <div className="fixed bottom-4 right-4 z-10">
-          <Button 
-            className="bg-[#325CE5] text-white hover:bg-[#2849B3]"
-            onClick={handlePurchase}
-          >
-            Comprar {selectedSeats.length + generalTickets.reduce((sum, ticket) => sum + ticket.quantity, 0)} boletos
-          </Button>
-        </div>
-      )}
+
     </div>
   )
 }
