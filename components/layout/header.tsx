@@ -24,7 +24,7 @@ export function Header({ activePage }: HeaderProps) {
     { name: "Inicio", href: "/" },
     { name: "Eventos", href: "/eventos" },
     { name: "Mapas De Asientos", href: "/mapas-asientos" },
-    { name: "Boletos Pruebas", href: "/boletos-pruebas" }
+    { name: "Boletos Pruebas", href: "/prueba-boleto" }
   ]
 
   return (
