@@ -75,6 +75,12 @@ function borderLine() {
   )
 }
 
+const getPrecioByZona = (zona: string): string => {
+  if (zona.startsWith('ORO')) return '600'
+  if (zona.startsWith('VIP')) return '800'
+  return '300' // GENERAL
+}
+
 export default function PruebaBoletoPage() {
   const { toast } = useToast()
   const ticketRef = useRef<HTMLDivElement>(null)
@@ -82,7 +88,7 @@ export default function PruebaBoletoPage() {
   const [ticketData, setTicketData] = useState<TicketData>({
     seccion: "GENERAL",
     orden: generateRandomOrder(),
-    precio: "300",
+    precio: "300", // Precio inicial para GENERAL
     tipo: "NUMERADO",
     fila: "5",
     asiento: "12",
@@ -104,10 +110,16 @@ export default function PruebaBoletoPage() {
 
   const handleTicketDataChange = (field: keyof TicketData, value: string) => {
     if (field === 'orden') {
-      // Generate new random order instead of using manual input
       setTicketData((prev) => ({
         ...prev,
         orden: generateRandomOrder(),
+      }))
+    } else if (field === 'seccion') {
+      // Actualizar precio cuando cambia la sección
+      setTicketData((prev) => ({
+        ...prev,
+        [field]: value,
+        precio: prev.tipo === 'CORTESIA' ? '0' : getPrecioByZona(value)
       }))
     } else {
       setTicketData((prev) => ({
@@ -128,7 +140,7 @@ export default function PruebaBoletoPage() {
     setTicketData(prev => ({
       ...prev,
       tipo: value,
-      precio: value === "CORTESIA" ? "0" : "300"
+      precio: value === "CORTESIA" ? "0" : getPrecioByZona(prev.seccion)
     }))
   }
 
@@ -540,7 +552,7 @@ export default function PruebaBoletoPage() {
                       value={ticketData.precio}
                       onChange={(e) => handleTicketDataChange("precio", e.target.value)}
                       placeholder="300"
-                      disabled={ticketData.tipo === "CORTESIA"}
+                      disabled={true} // Siempre deshabilitado ya que ahora es automático
                     />
                   </div>
                   <div className="space-y-2">
