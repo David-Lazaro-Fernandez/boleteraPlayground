@@ -340,6 +340,59 @@ export default function Dashboard() {
                 )}
               </CardContent>
             </Card>
+
+            {/* Nuevo gráfico: Boletos por Tipo de Pago */}
+            <Card className="col-span-2">
+              <CardHeader>
+                <CardTitle>Boletos por Tipo de Pago - {format(selectedDate, "dd MMM yyyy")}</CardTitle>
+                <CardDescription>Cantidad de boletos vendidos por método de pago</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {isLoading ? (
+                  <div className="h-[300px] flex items-center justify-center">
+                    <p>Cargando datos...</p>
+                  </div>
+                ) : stats?.boletosPorTipoPago && (
+                  <div className="h-[300px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        data={[
+                          { name: 'Efectivo', cantidad: stats.boletosPorTipoPago.efectivo },
+                          { name: 'Tarjeta', cantidad: stats.boletosPorTipoPago.tarjeta },
+                          { name: 'Cortesía', cantidad: stats.boletosPorTipoPago.cortesia }
+                        ]}
+                        margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                      >
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <Tooltip
+                          content={({ active, payload }) => {
+                            if (active && payload && payload.length) {
+                              return (
+                                <div className="bg-white p-2 border rounded shadow">
+                                  <p className="text-sm font-bold">{payload[0].payload.name}</p>
+                                  <p className="text-sm">{payload[0].value} boletos</p>
+                                </div>
+                              );
+                            }
+                            return null;
+                          }}
+                        />
+                        <Legend />
+                        <Bar
+                          dataKey="cantidad"
+                          radius={[4, 4, 0, 0]}
+                        >
+                          <Cell fill="#22c55e" /> {/* Efectivo */}
+                          <Cell fill="#3b82f6" /> {/* Tarjeta */}
+                          <Cell fill="#f59e0b" /> {/* Cortesía */}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
         </TabsContent>
       </Tabs>

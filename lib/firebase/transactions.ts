@@ -13,7 +13,9 @@ import {
   orderBy,
   updateDoc,
   limit,
-  deleteDoc
+  deleteDoc,
+  QuerySnapshot,
+  DocumentSnapshot
 } from 'firebase/firestore';
 import { db } from './config';
 
@@ -107,6 +109,11 @@ export interface DashboardStats {
     zona: string;
     cantidad: number;
   }[];
+  boletosPorTipoPago: {
+    efectivo: number;
+    tarjeta: number;
+    cortesia: number;
+  };
 }
 
 // Funciones para Movimientos
@@ -401,6 +408,23 @@ export async function getEventsByVenue(venueId: string): Promise<Event[]> {
   }
 }
 
+async function getTicketsInBatches(ticketIds: string[]): Promise<QuerySnapshot<DocumentData>[]> {
+  const batchSize = 30;
+  const batches = [];
+  
+  for (let i = 0; i < ticketIds.length; i += batchSize) {
+    const batch = ticketIds.slice(i, i + batchSize);
+    const ticketsRef = collection(db, 'tickets');
+    const batchQuery = query(
+      ticketsRef,
+      where('__name__', 'in', batch)
+    );
+    batches.push(getDocs(batchQuery));
+  }
+
+  return Promise.all(batches);
+}
+
 export async function getDashboardStats(startDate: Date, endDate: Date): Promise<DashboardStats> {
   try {
     const movementsRef = collection(db, 'movements');
@@ -428,34 +452,37 @@ export async function getDashboardStats(startDate: Date, endDate: Date): Promise
     // Calcular ventas totales
     const ventasTotales = movements.reduce((total, mov) => total + mov.total, 0);
 
-    // 2. Obtener los IDs de los movimientos del día
+    // 2. Obtener los IDs de los movimientos del día y procesarlos en lotes
     const movementIds = movements.map(mov => mov.id);
-
-    // 3. Obtener los tickets relacionados con estos movimientos
-    const movementTicketsRef = collection(db, 'movement_tickets');
-    const ticketsForDayQuery = query(
-      movementTicketsRef,
-      where('movimiento_id', 'in', movementIds.length > 0 ? movementIds : ['no-movements'])
-    );
-    const movementTicketsSnapshot = await getDocs(ticketsForDayQuery);
+    const movementBatches = [];
     
-    // 4. Obtener los IDs de los boletos
-    const ticketIds = movementTicketsSnapshot.docs.map(doc => doc.data().boleto_id);
+    for (let i = 0; i < movementIds.length; i += 30) {
+      const batch = movementIds.slice(i, i + 30);
+      const movementTicketsRef = collection(db, 'movement_tickets');
+      const batchQuery = query(
+        movementTicketsRef,
+        where('movimiento_id', 'in', batch)
+      );
+      movementBatches.push(getDocs(batchQuery));
+    }
 
-    // 5. Obtener los boletos completos
-    const ticketsRef = collection(db, 'tickets');
-    const ticketsQuery = query(
-      ticketsRef,
-      where('__name__', 'in', ticketIds.length > 0 ? ticketIds : ['no-tickets'])
-    );
-    const ticketsSnapshot = await getDocs(ticketsQuery);
+    // 3. Obtener todos los movement_tickets
+    const movementTicketsSnapshots = await Promise.all(movementBatches);
+    const ticketIds = movementTicketsSnapshots
+      .flatMap(snapshot => snapshot.docs)
+      .map(doc => doc.data().boleto_id);
 
-    // Contar boletos por zona
+    // 4. Obtener los boletos en lotes
+    const ticketSnapshots = await getTicketsInBatches(ticketIds);
+
+    // 5. Procesar todos los tickets
     const ventasPorZona = new Map<string, number>();
-    ticketsSnapshot.docs.forEach(doc => {
-      const ticket = doc.data() as Ticket;
-      const zonaCount = ventasPorZona.get(ticket.zona) || 0;
-      ventasPorZona.set(ticket.zona, zonaCount + 1);
+    ticketSnapshots.forEach(snapshot => {
+      snapshot.docs.forEach(doc => {
+        const ticket = doc.data() as Ticket;
+        const zonaCount = ventasPorZona.get(ticket.zona) || 0;
+        ventasPorZona.set(ticket.zona, zonaCount + 1);
+      });
     });
 
     const ventasPorZonaArray = Array.from(ventasPorZona.entries()).map(([zona, cantidad]) => ({
@@ -463,7 +490,7 @@ export async function getDashboardStats(startDate: Date, endDate: Date): Promise
       cantidad
     }));
 
-    const boletosVendidos = ticketsSnapshot.size;
+    const boletosVendidos = ticketIds.length;
 
     // Ventas por tipo de pago
     const ventasPorTipoPago = {
@@ -528,6 +555,29 @@ export async function getDashboardStats(startDate: Date, endDate: Date): Promise
       }))
       .sort((a, b) => a.date.localeCompare(b.date));
 
+    // Contadores para boletos por tipo de pago
+    const boletosPorTipoPago = {
+      efectivo: 0,
+      tarjeta: 0,
+      cortesia: 0
+    };
+
+    // Crear un mapa de movimiento a tipo de pago
+    const movementPaymentTypes = new Map(
+      movements.map(mov => [mov.id, mov.tipo_pago])
+    );
+
+    // Contar boletos por tipo de pago usando los movement_tickets
+    movementTicketsSnapshots.forEach(snapshot => {
+      snapshot.docs.forEach(doc => {
+        const movementTicket = doc.data();
+        const tipoPago = movementPaymentTypes.get(movementTicket.movimiento_id);
+        if (tipoPago) {
+          boletosPorTipoPago[tipoPago]++;
+        }
+      });
+    });
+
     return {
       ventasTotales,
       boletosVendidos,
@@ -537,7 +587,8 @@ export async function getDashboardStats(startDate: Date, endDate: Date): Promise
       ventasPorMes: ventasPorMesArray,
       ventasPorDia: ventasPorDiaArray,
       ventasPorTipoPago,
-      ventasPorZona: ventasPorZonaArray
+      ventasPorZona: ventasPorZonaArray,
+      boletosPorTipoPago
     };
   } catch (error) {
     console.error('Error getting dashboard stats:', error);
