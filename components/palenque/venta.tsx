@@ -20,6 +20,8 @@ import { storage } from '@/lib/firebase/config'
 import { ref, getDownloadURL, uploadString } from 'firebase/storage'
 import { dazzleUnicase, gontserrat } from '@/lib/fonts'
 import { createSale, Movement, Ticket } from '@/lib/firebase/transactions'
+import Stars from './stars'
+import SeparationLines from './separationLines'
 
 interface VenueConfigSeat {
     id: string
@@ -314,12 +316,6 @@ export function Venta({ generalTickets, selectedSeats }: VentaProps) {
         }
     }
 
-    function borderLine() {
-        return (
-            <div className="w-12 h-[1px] bg-black mt-1"></div>
-        )
-    }
-
     return (
         <div className={`max-w-4xl mx-auto p-6 ${dazzleUnicase.variable} ${gontserrat.variable}`}>
             <h2 className="text-2xl font-bold mb-6">Detalles de la Venta</h2>
@@ -507,104 +503,129 @@ export function Venta({ generalTickets, selectedSeats }: VentaProps) {
                                             >
                                                 {/* Contenido principal del boleto */}
                                                 <div className={`flex w-full ${dazzleUnicase.variable} ${gontserrat.variable}`}>
-                                                    {/* Columna izquierda */}
-                                                    <div className="w-32 border-r border-black p-2 font-gontserrat">
+                                                    {/* Columna izquierda para boletos numerados */}
+                                                    <div className="w-24 p-3 font-gontserrat">
                                                         <div className="space-y-2 text-center">
                                                             <div className="flex flex-col items-center">
-                                                                <div className={`text-xs font-[7px] ${gontserrat.className}`}>PRECIO</div>
-                                                                <div className={`text-[13px] ${gontserrat.className}`}>$ {paymentMethod === 'courtesy' ? '0.00' : ticket.price}</div>
-                                                                {borderLine()}
-                                                            </div>
-                                                            <div className="flex flex-col items-center">
-                                                                <div className={`text-xs font-[7px] ${gontserrat.className}`}>TIPO</div>
-                                                                <div className={`text-[13px] ${gontserrat.className}`}>
-                                                                    {paymentMethod === 'courtesy' ? 'CORTESIA' : 'GENERAL'}
+                                                                <div className={`text-xs font-[5px] ${gontserrat.className}`}>PRECIO</div>
+                                                                <div className={`text-[11px] ${gontserrat.className}`}>$ {paymentMethod === 'courtesy' ? '0.00' : ticket.price}</div>
+                                                                <div className="py-1">
+                                                                    <SeparationLines />
                                                                 </div>
-                                                                {borderLine()}
                                                             </div>
                                                             <div className="flex flex-col items-center">
-                                                                <div className={`text-xs font-[7px] ${gontserrat.className}`}>ORDEN</div>
-                                                                <div className={`text-[13px] ${gontserrat.className}`}>{ticketId.slice(8, 14)}</div>
-                                                                {borderLine()}
+                                                                <div className={`text-xs font-[5px] ${gontserrat.className}`}>TIPO</div>
+                                                                <div className={`text-[11px] ${gontserrat.className}`}>
+                                                                    {paymentMethod === 'courtesy' ? 'CORTESIA' : 'NUMERADO'}
+                                                                </div>
+                                                                <div className="py-1">
+                                                                    <SeparationLines />
+                                                                </div>
                                                             </div>
                                                             <div className="flex flex-col items-center">
-                                                                <div className={`text-xs font-[7px] ${gontserrat.className}`}>SECCIÓN</div>
-                                                                <div className={`text-[13px] ${gontserrat.className}`}>{ticket.zoneName}</div>
-                                                                {borderLine()}
+                                                                <div className={`text-xs font-[5px] ${gontserrat.className}`}>ORDEN</div>
+                                                                <div className={`text-[11px] ${gontserrat.className}`}>{ticketId.slice(-6)}</div>
+                                                                <div className="py-1">
+                                                                    <SeparationLines />
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex flex-col items-center">
+                                                                <div className={`text-xs font-[5px] ${gontserrat.className}`}>SECCIÓN</div>
+                                                                <div className={`text-[11px] ${gontserrat.className}`}>{ticket.zoneName}</div>
+                                                                <div className="py-1">
+                                                                    <SeparationLines />
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </div>
 
+                                                    <div className="flex items-center">
+                                                        <Stars />
+                                                    </div>
+
                                                     {/* Contenido central */}
-                                                    <div className="flex-grow p-4 flex flex-col relative">
+                                                    <div className="flex-grow p-[0.6rem] flex flex-col relative">
                                                         {/* Título del evento y recinto */}
                                                         <div className={`text-2xl font-bold mb-2 ${dazzleUnicase.className}`}>
                                                             ACORDEONAZO
-                                                            <div className={`text-xl ${dazzleUnicase.className}`}>CENTRO DE ESPECTACULOS</div>
+                                                            <div className={`text-[14px] ${dazzleUnicase.className}`}>CENTRO DE ESPECTACULOS</div>
+                                                            <div className={`text-[14px] ${dazzleUnicase.className} mt-[-12px]`}>VICTORIA</div>
                                                         </div>
 
                                                         {/* Fecha, hora y ciudad */}
-                                                        <div className={`text-md mb-10 text-[11.7px] ${gontserrat.className}`}>
-                                                            19 DE JUNIO 2025
+                                                        <div className={`text-md mb-6 text-[11.7px] ${gontserrat.className}`}>
+                                                            19 DE JULIO 2025
                                                             <div className={`${gontserrat.className}`}>20:00 hrs.</div>
-                                                            <div className={`${gontserrat.className}`}>CD. VICTORIA, TAM</div>
+                                                            <div className={`${gontserrat.className}`}>CD. VICTORIA, TAMPS</div>
                                                         </div>
 
                                                         {/* Detalles del boleto con separadores */}
-                                                        <div className={`flex items-center space-x-[13.5px] ${gontserrat.className}`}>
+                                                        <div className={`flex items-center space-x-[8px] ${gontserrat.className}`}>
                                                             <div className="text-center">
-                                                                <div className={`text-[8.5px] ${gontserrat.className}`}>PRECIO</div>
+                                                                <div className={`text-[12px] ${gontserrat.className}`}>PRECIO</div>
                                                                 <div className={`text-sm ${gontserrat.className}`}>$ {paymentMethod === 'courtesy' ? '0.00' : ticket.price}</div>
                                                             </div>
                                                             <div className="h-8 w-px bg-black"></div>
                                                             <div className="text-center">
-                                                                <div className={`text-[8.5px] ${gontserrat.className}`}>TIPO</div>
+                                                                <div className={`text-[12px] ${gontserrat.className}`}>TIPO</div>
                                                                 <div className={`text-sm ${gontserrat.className}`}>
-                                                                    {paymentMethod === 'courtesy' ? 'CORTESIA' : 'GENERAL'}
+                                                                    {paymentMethod === 'courtesy' ? 'CORTESIA' : 'NUMERADO'}
                                                                 </div>
                                                             </div>
                                                             <div className="h-8 w-px bg-black"></div>
                                                             <div className="text-center">
-                                                                <div className={`text-[8.5px] ${gontserrat.className}`}>ORDEN</div>
-                                                                <div className={`text-sm ${gontserrat.className}`}>{ticketId.slice(8, 14)}</div>
+                                                                <div className={`text-[12px] ${gontserrat.className}`}>ORDEN</div>
+                                                                <div className={`text-sm ${gontserrat.className}`}>{ticketId.slice(-6)}</div>
                                                             </div>
                                                             <div className="h-8 w-px bg-black"></div>
                                                             <div className="text-center">
-                                                                <div className={`text-[8.5px] ${gontserrat.className}`}>SECCIÓN</div>
+                                                                <div className={`text-[12px] ${gontserrat.className}`}>SECCIÓN</div>
                                                                 <div className={`text-sm ${gontserrat.className}`}>{ticket.zoneName}</div>
                                                             </div>
                                                         </div>
 
                                                         {/* Logo */}
-                                                        <div className="absolute top-28 right-6 w-24">
+                                                        <div className="absolute top-[132px] right-6 w-24">
                                                             <Logo />
                                                         </div>
                                                     </div>
 
-                                                    {/* Columna derecha */}
-                                                    <div className="w-32 border-l border-black p-2 font-gontserrat">
+                                                    <div className="flex items-center">
+                                                        <Stars />
+                                                    </div>
+
+                                                    {/* Columna derecha para boletos numerados */}
+                                                    <div className="w-24 p-3 font-gontserrat">
                                                         <div className="space-y-2 text-center">
                                                             <div className="flex flex-col items-center">
-                                                                <div className={`text-xs font-[7px] ${gontserrat.className}`}>PRECIO</div>
-                                                                <div className={`text-[13px] ${gontserrat.className}`}>$ {paymentMethod === 'courtesy' ? '0.00' : ticket.price}</div>
-                                                                {borderLine()}
-                                                            </div>
-                                                            <div className="flex flex-col items-center">
-                                                                <div className={`text-xs font-[7px] ${gontserrat.className}`}>TIPO</div>
-                                                                <div className={`text-[13px] ${gontserrat.className}`}>
-                                                                    {paymentMethod === 'courtesy' ? 'CORTESIA' : 'GENERAL'}
+                                                                <div className={`text-xs font-[5px] ${gontserrat.className}`}>PRECIO</div>
+                                                                <div className={`text-[11px] ${gontserrat.className}`}>$ {paymentMethod === 'courtesy' ? '0.00' : ticket.price}</div>
+                                                                <div className="py-1">
+                                                                    <SeparationLines />
                                                                 </div>
-                                                                {borderLine()}
                                                             </div>
                                                             <div className="flex flex-col items-center">
-                                                                <div className={`text-xs font-[7px] ${gontserrat.className}`}>ORDEN</div>
-                                                                <div className={`text-[13px] ${gontserrat.className}`}>{ticketId.slice(8, 14)}</div>
-                                                                {borderLine()}
+                                                                <div className={`text-xs font-[5px] ${gontserrat.className}`}>TIPO</div>
+                                                                <div className={`text-[11px] ${gontserrat.className}`}>
+                                                                    {paymentMethod === 'courtesy' ? 'CORTESIA' : 'NUMERADO'}
+                                                                </div>
+                                                                <div className="py-1">
+                                                                    <SeparationLines />
+                                                                </div>
                                                             </div>
                                                             <div className="flex flex-col items-center">
-                                                                <div className={`text-xs font-[7px] ${gontserrat.className}`}>SECCIÓN</div>
-                                                                <div className={`text-[13px] ${gontserrat.className}`}>{ticket.zoneName}</div>
-                                                                {borderLine()}
+                                                                <div className={`text-xs font-[5px] ${gontserrat.className}`}>ORDEN</div>
+                                                                <div className={`text-[11px] ${gontserrat.className}`}>{ticketId.slice(-6)}</div>
+                                                                <div className="py-1">
+                                                                    <SeparationLines />
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex flex-col items-center">
+                                                                <div className={`text-xs font-[5px] ${gontserrat.className}`}>SECCIÓN</div>
+                                                                <div className={`text-[11px] ${gontserrat.className}`}>{ticket.zoneName}</div>
+                                                                <div className="py-1">
+                                                                    <SeparationLines />
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -657,118 +678,142 @@ export function Venta({ generalTickets, selectedSeats }: VentaProps) {
                                         >
                                             {/* Contenido principal del boleto */}
                                             <div className={`flex w-full ${dazzleUnicase.variable} ${gontserrat.variable}`}>
-                                                {/* Columna izquierda */}
-                                                <div className="w-28 border-r border-black p-2 font-gontserrat">
-                                                    <div className="space-y-[3px] text-center">
+                                                {/* Columna izquierda para boletos numerados */}
+                                                <div className="w-24 p-[5px] font-gontserrat">
+                                                    <div className="space-y-0 text-center">
                                                         <div className="flex flex-col items-center">
-                                                            <div className={`text-xs font-[7px] ${gontserrat.className}`}>PRECIO</div>
-                                                            <div className={`text-[13px] ${gontserrat.className}`}>$ {paymentMethod === 'courtesy' ? '0.00' : seat.price}</div>
-                                                            {borderLine()}
+                                                            <div className={`text-xs font-[5px] ${gontserrat.className}`}>PRECIO</div>
+                                                            <div className={`text-[11px] ${gontserrat.className}`}>$ {paymentMethod === 'courtesy' ? '0.00' : seat.price}</div>
+                                                            <div className="py-1">
+                                                                <SeparationLines />
+                                                            </div>
                                                         </div>
                                                         <div className="flex flex-col items-center">
-                                                            <div className={`text-xs font-[7px] ${gontserrat.className}`}>TIPO</div>
-                                                            <div className={`text-[13px] ${gontserrat.className}`}>
+                                                            <div className={`text-xs font-[5px] ${gontserrat.className}`}>TIPO</div>
+                                                            <div className={`text-[11px] ${gontserrat.className}`}>
                                                                 {paymentMethod === 'courtesy' ? 'CORTESIA' : 'NUMERADO'}
                                                             </div>
-                                                            {borderLine()}
+                                                            <div className="py-1">
+                                                                <SeparationLines />
+                                                            </div>
                                                         </div>
                                                         <div className="flex flex-col items-center">
-                                                            <div className={`text-xs font-[7px] ${gontserrat.className}`}>ORDEN</div>
-                                                            <div className={`text-[13px] ${gontserrat.className}`}>{seat.id.slice(8, 14)}</div>
-                                                            {borderLine()}
+                                                            <div className={`text-xs font-[5px] ${gontserrat.className}`}>ORDEN</div>
+                                                            <div className={`text-[11px] ${gontserrat.className}`}>{seat.id.slice(8, 14)}</div>
+                                                            <div className="py-1">
+                                                                <SeparationLines />
+                                                            </div>
                                                         </div>
                                                         <div className="flex flex-col items-center">
-                                                            <div className={`text-xs font-[7px] ${gontserrat.className}`}>SECCIÓN</div>
-                                                            <div className={`text-[13px] ${gontserrat.className}`}>{seat.zoneName}</div>
-                                                            {borderLine()}
+                                                            <div className={`text-xs font-[5px] ${gontserrat.className}`}>SECCIÓN</div>
+                                                            <div className={`text-[11px] ${gontserrat.className}`}>{seat.zoneName}</div>
+                                                            <div className="py-1">
+                                                                <SeparationLines />
+                                                            </div>
                                                         </div>
-                                                        <div className="flex flex-col items-center">
-                                                            <div className={`text-xs font-[7px] ${gontserrat.className}`}>ASIENTO</div>
-                                                            <div className={`text-[13px] ${gontserrat.className}`}>{seat.rowLetter}{seat.seatNumber}</div>
+                                                        <div className="flex flex-col items-center gap-0px">
+                                                            <div className={`text-xs font-[5px] ${gontserrat.className}`}>ASIENTO</div>
+                                                            <div className={`text-[11px] ${gontserrat.className}`}>{seat.rowLetter}{seat.seatNumber}</div>
                                                         </div>
                                                     </div>
                                                 </div>
 
+                                                <div className="flex items-center">
+                                                    <Stars />
+                                                </div>
+
                                                 {/* Contenido central */}
-                                                <div className="flex-grow p-4 flex flex-col relative">
+                                                <div className="flex-grow p-[0.6rem] flex flex-col relative">
                                                     {/* Título del evento y recinto */}
                                                     <div className={`text-2xl font-bold mb-2 ${dazzleUnicase.className}`}>
                                                         ACORDEONAZO
-                                                        <div className={`text-xl ${dazzleUnicase.className}`}>CENTRO DE ESPECTACULOS</div>
+                                                        <div className={`text-[14px] ${dazzleUnicase.className}`}>CENTRO DE ESPECTACULOS</div>
+                                                        <div className={`text-[14px] ${dazzleUnicase.className} mt-[-12px]`}>VICTORIA</div>
                                                     </div>
 
                                                     {/* Fecha, hora y ciudad */}
-                                                    <div className={`text-md mb-10 text-[11.7px] ${gontserrat.className}`}>
-                                                        19 DE JUNIO 2025
+                                                    <div className={`text-md mb-6 text-[11.7px] ${gontserrat.className}`}>
+                                                        19 DE JULIO 2025
                                                         <div className={`${gontserrat.className}`}>20:00 hrs.</div>
-                                                        <div className={`${gontserrat.className}`}>CD. VICTORIA, TAM</div>
+                                                        <div className={`${gontserrat.className}`}>CD. VICTORIA, TAMPS</div>
                                                     </div>
 
                                                     {/* Detalles del boleto con separadores */}
                                                     <div className={`flex items-center space-x-[8px] ${gontserrat.className}`}>
                                                         <div className="text-center">
-                                                            <div className={`text-[8px] ${gontserrat.className}`}>PRECIO</div>
+                                                            <div className={`text-[12px] ${gontserrat.className}`}>PRECIO</div>
                                                             <div className={`text-sm ${gontserrat.className}`}>$ {paymentMethod === 'courtesy' ? '0.00' : seat.price}</div>
                                                         </div>
                                                         <div className="h-8 w-px bg-black"></div>
                                                         <div className="text-center">
-                                                            <div className={`text-[8.5px] ${gontserrat.className}`}>TIPO</div>
+                                                            <div className={`text-[12px] ${gontserrat.className}`}>TIPO</div>
                                                             <div className={`text-sm ${gontserrat.className}`}>
                                                                 {paymentMethod === 'courtesy' ? 'CORTESIA' : 'NUMERADO'}
                                                             </div>
                                                         </div>
                                                         <div className="h-8 w-px bg-black"></div>
                                                         <div className="text-center">
-                                                            <div className={`text-[8.5px] ${gontserrat.className}`}>ORDEN</div>
+                                                            <div className={`text-[12px] ${gontserrat.className}`}>ORDEN</div>
                                                             <div className={`text-sm ${gontserrat.className}`}>{seat.id.slice(8, 14)}</div>
                                                         </div>
                                                         <div className="h-8 w-px bg-black"></div>
                                                         <div className="text-center">
-                                                            <div className={`text-[8.5px] ${gontserrat.className}`}>SECCIÓN</div>
+                                                            <div className={`text-[12px] ${gontserrat.className}`}>SECCIÓN</div>
                                                             <div className={`text-sm ${gontserrat.className}`}>{seat.zoneName}</div>
                                                         </div>
                                                         <div className="h-8 w-px bg-black"></div>
                                                         <div className="text-center">
-                                                            <div className={`text-[8.5px] ${gontserrat.className}`}>ASIENTO</div>
+                                                            <div className={`text-[12px] ${gontserrat.className}`}>ASIENTO</div>
                                                             <div className={`text-sm ${gontserrat.className}`}>{seat.rowLetter}{seat.seatNumber}</div>
                                                         </div>
                                                     </div>
 
                                                     {/* Logo */}
-                                                    <div className="absolute top-28 right-6 w-24">
+                                                    <div className="absolute top-[132px] right-6 w-24">
                                                         <Logo />
                                                     </div>
                                                 </div>
 
-                                                {/* Columna derecha */}
-                                                <div className="w-32 border-l border-black p-2 font-gontserrat">
-                                                    <div className="space-y-[3px] text-center">
+                                                <div className="flex items-center">
+                                                    <Stars />
+                                                </div>
+
+                                                {/* Columna derecha para boletos numerados */}
+                                                <div className="w-24 p-2 font-gontserrat">
+                                                    <div className="space-y-0 text-center">
                                                         <div className="flex flex-col items-center">
-                                                            <div className={`text-xs font-[7px] ${gontserrat.className}`}>PRECIO</div>
-                                                            <div className={`text-[13px] ${gontserrat.className}`}>$ {paymentMethod === 'courtesy' ? '0.00' : seat.price}</div>
-                                                            {borderLine()}
+                                                            <div className={`text-xs font-[5px] ${gontserrat.className}`}>PRECIO</div>
+                                                            <div className={`text-[11px] ${gontserrat.className}`}>$ {paymentMethod === 'courtesy' ? '0.00' : seat.price}</div>
+                                                            <div className="py-1">
+                                                                <SeparationLines />
+                                                            </div>
                                                         </div>
                                                         <div className="flex flex-col items-center">
-                                                            <div className={`text-xs font-[7px] ${gontserrat.className}`}>TIPO</div>
-                                                            <div className={`text-[13px] ${gontserrat.className}`}>
+                                                            <div className={`text-xs font-[5px] ${gontserrat.className}`}>TIPO</div>
+                                                            <div className={`text-[11px] ${gontserrat.className}`}>
                                                                 {paymentMethod === 'courtesy' ? 'CORTESIA' : 'NUMERADO'}
                                                             </div>
-                                                            {borderLine()}
+                                                            <div className="py-1">
+                                                                <SeparationLines />
+                                                            </div>
                                                         </div>
                                                         <div className="flex flex-col items-center">
-                                                            <div className={`text-xs font-[7px] ${gontserrat.className}`}>ORDEN</div>
-                                                            <div className={`text-[13px] ${gontserrat.className}`}>{seat.id.slice(8, 14)}</div>
-                                                            {borderLine()}
+                                                            <div className={`text-xs font-[5px] ${gontserrat.className}`}>ORDEN</div>
+                                                            <div className={`text-[11px] ${gontserrat.className}`}>{seat.id.slice(8, 14)}</div>
+                                                            <div className="py-1">
+                                                                <SeparationLines />
+                                                            </div>
                                                         </div>
                                                         <div className="flex flex-col items-center">
-                                                            <div className={`text-xs font-[7px] ${gontserrat.className}`}>SECCIÓN</div>
-                                                            <div className={`text-[13px] ${gontserrat.className}`}>{seat.zoneName}</div>
-                                                            {borderLine()}
+                                                            <div className={`text-xs font-[5px] ${gontserrat.className}`}>SECCIÓN</div>
+                                                            <div className={`text-[11px] ${gontserrat.className}`}>{seat.zoneName}</div>
+                                                            <div className="py-1">
+                                                                <SeparationLines />
+                                                            </div>
                                                         </div>
                                                         <div className="flex flex-col items-center">
-                                                            <div className={`text-xs font-[7px] ${gontserrat.className}`}>ASIENTO</div>
-                                                            <div className={`text-[13px] ${gontserrat.className}`}>{seat.rowLetter}{seat.seatNumber}</div>
-                                                        
+                                                            <div className={`text-xs font-[5px] ${gontserrat.className}`}>ASIENTO</div>
+                                                            <div className={`text-[11px] ${gontserrat.className}`}>{seat.rowLetter}{seat.seatNumber}</div>
                                                         </div>
                                                     </div>
                                                 </div>
