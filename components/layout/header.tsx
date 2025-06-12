@@ -23,7 +23,8 @@ export function Header({ activePage }: HeaderProps) {
   const navItems = [
     { name: "Inicio", href: "/" },
     { name: "Eventos", href: "/eventos" },
-    { name: "Mapas De Asientos", href: "/mapas-asientos" }
+    { name: "Mapas De Asientos", href: "/mapas-asientos" },
+    { name: "Boletos Pruebas", href: "/boletos-pruebas" }
   ]
 
   return (
