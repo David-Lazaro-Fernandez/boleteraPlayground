@@ -10,8 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { FileText, Printer, Download, Settings } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Logo} from "@/components/prueba-boleto/logo"
-import  Stars  from "@/components/palenque/stars"
+import { Logo } from "@/components/prueba-boleto/logo"
+import Stars from "@/components/palenque/stars"
 import { dazzleUnicase, gontserrat } from "@/lib/fonts"
 import SeparationLines from '@/components/palenque/separationLines'
 interface TicketData {
@@ -58,6 +58,8 @@ const TIPOS_BOLETO = [
   { value: "NUMERADO", label: "Numerado" },
   { value: "CORTESIA", label: "Cortesía" },
 ]
+
+const FILAS = Array.from({ length: 17 }, (_, i) => String.fromCharCode(65 + i)) // A-Q
 
 function generateRandomOrder() {
   // Generate a random 8-character alphanumeric string
@@ -552,7 +554,7 @@ export default function PruebaBoletoPage() {
                       value={ticketData.precio}
                       onChange={(e) => handleTicketDataChange("precio", e.target.value)}
                       placeholder="300"
-                      disabled={true} // Siempre deshabilitado ya que ahora es automático
+                      disabled={true}
                     />
                   </div>
                   <div className="space-y-2">
@@ -604,8 +606,8 @@ export default function PruebaBoletoPage() {
                         readOnly
                         className="flex-1"
                       />
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         onClick={() => handleTicketDataChange('orden', '')}
                         className="shrink-0"
                       >
@@ -631,24 +633,36 @@ export default function PruebaBoletoPage() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="fila">Fila</Label>
-                    <Input
-                      id="fila"
-                      value={ticketData.fila}
-                      onChange={(e) => handleTicketDataChange("fila", e.target.value)}
-                      placeholder="5"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="asiento">Asiento</Label>
-                    <Input
-                      id="asiento"
-                      value={ticketData.asiento}
-                      onChange={(e) => handleTicketDataChange("asiento", e.target.value)}
-                      placeholder="12"
-                    />
-                  </div>
+                  {/* Fila y Asiento solo si no es GENERAL */}
+                  {ticketData.tipo !== 'GENERAL' && (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="fila">Fila</Label>
+                        <Select
+                          value={ticketData.fila}
+                          onValueChange={(value) => handleTicketDataChange("fila", value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {FILAS.map((letra) => (
+                              <SelectItem key={letra} value={letra}>{letra}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="asiento">Asiento</Label>
+                        <Input
+                          id="asiento"
+                          value={ticketData.asiento}
+                          onChange={(e) => handleTicketDataChange("asiento", e.target.value)}
+                          placeholder="12"
+                        />
+                      </div>
+                    </>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -798,43 +812,43 @@ export default function PruebaBoletoPage() {
                   <div className="flex w-full">
                     {/* Columna izquierda */}
                     <div className="w-24 p-[5px] font-gontserrat">
-                                                    <div className="space-y-0 text-center">
-                                                        <div className="flex flex-col items-center">
-                                                            <div className={`text-xs font-[5px] ${gontserrat.className}`}>PRECIO</div>
-                                                            <div className={`text-[11px] ${gontserrat.className}`}>$ {paymentMethod === 'courtesy' ? '0.00' : ticketData.precio}</div>
-                                                            <div className="py-1">
-                                                                <SeparationLines />
-                                                            </div>
-                                                        </div>
-                                                        <div className="flex flex-col items-center">
-                                                            <div className={`text-xs font-[5px] ${gontserrat.className}`}>TIPO</div>
-                                                            <div className={`text-[11px] ${gontserrat.className}`}>
-                                                                {ticketData.tipo === 'CORTESIA' ? 'CORTESIA' : ticketData.tipo}
-                                                            </div>
-                                                            <div className="py-1">
-                                                                <SeparationLines />
-                                                            </div>
-                                                        </div>
-                                                        <div className="flex flex-col items-center">
-                                                            <div className={`text-xs font-[5px] ${gontserrat.className}`}>ORDEN</div>
-                                                            <div className={`text-[11px] ${gontserrat.className}`}>{ticketData.orden}</div>
-                                                            <div className="py-1">
-                                                                <SeparationLines />
-                                                            </div>
-                                                        </div>
-                                                        <div className="flex flex-col items-center">
-                                                            <div className={`text-xs font-[5px] ${gontserrat.className}`}>SECCIÓN</div>
-                                                            <div className={`text-[11px] ${gontserrat.className}`}>{ticketData.seccion}</div>
-                                                            <div className="py-1">
-                                                                <SeparationLines />
-                                                            </div>
-                                                        </div>
-                                                        <div className="flex flex-col items-center gap-0px">
-                                                            <div className={`text-xs font-[5px] ${gontserrat.className}`}>ASIENTO</div>
-                                                            <div className={`text-[11px] ${gontserrat.className}`}>{ticketData.fila}{ticketData.asiento}</div>
-                                                        </div>
-                                                    </div>
-                                                </div>
+                      <div className="space-y-0 text-center">
+                        <div className="flex flex-col items-center">
+                          <div className={`text-xs font-[5px] ${gontserrat.className}`}>PRECIO</div>
+                          <div className={`text-[11px] ${gontserrat.className}`}>$ {paymentMethod === 'courtesy' ? '0.00' : ticketData.precio}</div>
+                          <div className="py-1">
+                            <SeparationLines />
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-center">
+                          <div className={`text-xs font-[5px] ${gontserrat.className}`}>TIPO</div>
+                          <div className={`text-[11px] ${gontserrat.className}`}>
+                            {ticketData.tipo === 'CORTESIA' ? 'CORTESIA' : ticketData.tipo}
+                          </div>
+                          <div className="py-1">
+                            <SeparationLines />
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-center">
+                          <div className={`text-xs font-[5px] ${gontserrat.className}`}>ORDEN</div>
+                          <div className={`text-[11px] ${gontserrat.className}`}>{ticketData.orden}</div>
+                          <div className="py-1">
+                            <SeparationLines />
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-center">
+                          <div className={`text-xs font-[5px] ${gontserrat.className}`}>SECCIÓN</div>
+                          <div className={`text-[11px] ${gontserrat.className}`}>{ticketData.seccion}</div>
+                          <div className="py-1">
+                            <SeparationLines />
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-center gap-0px">
+                          <div className={`text-xs font-[5px] ${gontserrat.className}`}>ASIENTO</div>
+                          <div className={`text-[11px] ${gontserrat.className}`}>{ticketData.fila}{ticketData.asiento}</div>
+                        </div>
+                      </div>
+                    </div>
 
                     <div className="flex items-center">
                       <Stars />
@@ -847,7 +861,7 @@ export default function PruebaBoletoPage() {
                         {ticketData.evento}
                         <div className="mt-1">
                           {ticketData.lugar.split(" CD ").map((part, index) => (
-                            <div 
+                            <div
                               key={index}
                               className={`text-[14px] leading-[1.1] ${dazzleUnicase.className}`}
                             >
@@ -858,7 +872,7 @@ export default function PruebaBoletoPage() {
                       </div>
 
                       {/* Fecha, hora y ciudad */}
-                      <div className={`text-md mb-6 text-[11.7px] ${gontserrat.className}`}>
+                      <div className={`text-md mb-8 text-[11.7px] ${gontserrat.className}`}>
                         {ticketData.fecha}
                         <div className={gontserrat.className}>{ticketData.hora} hrs.</div>
                         <div className={gontserrat.className}>{ticketData.ciudad}</div>
@@ -867,24 +881,32 @@ export default function PruebaBoletoPage() {
                       {/* Detalles del boleto con separadores */}
                       <div className={`flex items-center space-x-[8px] ${gontserrat.className}`}>
                         <div className="text-center">
-                          <div className="text-[12px]">PRECIO</div>
-                          <div className="text-sm">$ {ticketData.precio}</div>
+                          <div className="text-[11px]">PRECIO</div>
+                          <div className="text-xs">$ {ticketData.precio}</div>
                         </div>
                         <div className="h-8 w-px bg-black"></div>
                         <div className="text-center">
-                          <div className="text-[12px]">TIPO</div>
-                          <div className="text-sm">{ticketData.tipo === 'CORTESIA' ? 'CORTESIA' : ticketData.tipo}</div>
+                          <div className="text-[11px]">TIPO</div>
+                          <div className="text-xs">{ticketData.tipo === 'CORTESIA' ? 'CORTESIA' : ticketData.tipo}</div>
                         </div>
                         <div className="h-8 w-px bg-black"></div>
                         <div className="text-center">
-                          <div className="text-[12px]">ORDEN</div>
-                          <div className="text-sm">{ticketData.orden}</div>
+                          <div className="text-[11px]">ORDEN</div>
+                          <div className="text-xs">{ticketData.orden}</div>
                         </div>
                         <div className="h-8 w-px bg-black"></div>
                         <div className="text-center">
-                          <div className="text-[12px]">SECCIÓN</div>
-                          <div className="text-sm">{ticketData.seccion}</div>
+                          <div className="text-[11px]">SECCIÓN</div>
+                          <div className="text-xs">{ticketData.seccion}</div>
                         </div>
+                        {/* Solo mostrar fila y asiento si no es GENERAL */}
+                        {ticketData.tipo !== 'GENERAL' && <>
+                          <div className="h-8 w-px bg-black"></div>
+                          <div className="text-center">
+                            <div className="text-[11px]">ASIENTO</div>
+                            <div className="text-xs">{ticketData.asiento}</div>
+                          </div>
+                        </>}
                       </div>
 
                       {/* Logo */}
@@ -899,43 +921,43 @@ export default function PruebaBoletoPage() {
 
                     {/* Columna derecha */}
                     <div className="w-24 p-[5px] font-gontserrat">
-                                                    <div className="space-y-0 text-center">
-                                                        <div className="flex flex-col items-center">
-                                                            <div className={`text-xs font-[5px] ${gontserrat.className}`}>PRECIO</div>
-                                                            <div className={`text-[11px] ${gontserrat.className}`}>$ {paymentMethod === 'courtesy' ? '0.00' : ticketData.precio}</div>
-                                                            <div className="py-1">
-                                                                <SeparationLines />
-                                                            </div>
-                                                        </div>
-                                                        <div className="flex flex-col items-center">
-                                                            <div className={`text-xs font-[5px] ${gontserrat.className}`}>TIPO</div>
-                                                            <div className={`text-[11px] ${gontserrat.className}`}>
-                                                                {ticketData.tipo === 'CORTESIA' ? 'CORTESIA' : ticketData.tipo}
-                                                            </div>
-                                                            <div className="py-1">
-                                                                <SeparationLines />
-                                                            </div>
-                                                        </div>
-                                                        <div className="flex flex-col items-center">
-                                                            <div className={`text-xs font-[5px] ${gontserrat.className}`}>ORDEN</div>
-                                                            <div className={`text-[11px] ${gontserrat.className}`}>{ticketData.orden}</div>
-                                                            <div className="py-1">
-                                                                <SeparationLines />
-                                                            </div>
-                                                        </div>
-                                                        <div className="flex flex-col items-center">
-                                                            <div className={`text-xs font-[5px] ${gontserrat.className}`}>SECCIÓN</div>
-                                                            <div className={`text-[11px] ${gontserrat.className}`}>{ticketData.seccion}</div>
-                                                            <div className="py-1">
-                                                                <SeparationLines />
-                                                            </div>
-                                                        </div>
-                                                        <div className="flex flex-col items-center gap-0px">
-                                                            <div className={`text-xs font-[5px] ${gontserrat.className}`}>ASIENTO</div>
-                                                            <div className={`text-[11px] ${gontserrat.className}`}>{ticketData.fila}{ticketData.asiento}</div>
-                                                        </div>
-                                                    </div>
-                                                </div>
+                      <div className="space-y-0 text-center">
+                        <div className="flex flex-col items-center">
+                          <div className={`text-xs font-[5px] ${gontserrat.className}`}>PRECIO</div>
+                          <div className={`text-[11px] ${gontserrat.className}`}>$ {paymentMethod === 'courtesy' ? '0.00' : ticketData.precio}</div>
+                          <div className="py-1">
+                            <SeparationLines />
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-center">
+                          <div className={`text-xs font-[5px] ${gontserrat.className}`}>TIPO</div>
+                          <div className={`text-[11px] ${gontserrat.className}`}>
+                            {ticketData.tipo === 'CORTESIA' ? 'CORTESIA' : ticketData.tipo}
+                          </div>
+                          <div className="py-1">
+                            <SeparationLines />
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-center">
+                          <div className={`text-xs font-[5px] ${gontserrat.className}`}>ORDEN</div>
+                          <div className={`text-[11px] ${gontserrat.className}`}>{ticketData.orden}</div>
+                          <div className="py-1">
+                            <SeparationLines />
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-center">
+                          <div className={`text-xs font-[5px] ${gontserrat.className}`}>SECCIÓN</div>
+                          <div className={`text-[11px] ${gontserrat.className}`}>{ticketData.seccion}</div>
+                          <div className="py-1">
+                            <SeparationLines />
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-center gap-0px">
+                          <div className={`text-xs font-[5px] ${gontserrat.className}`}>ASIENTO</div>
+                          <div className={`text-[11px] ${gontserrat.className}`}>{ticketData.fila}{ticketData.asiento}</div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
