@@ -37,6 +37,32 @@ interface PrintConfig {
   dpi: string
 }
 
+const ZONAS = [
+  { value: "GENERAL", label: "General" },
+  { value: "ORO-1", label: "Oro 1" },
+  { value: "ORO-2", label: "Oro 2" },
+  { value: "ORO-3", label: "Oro 3" },
+  { value: "ORO-4", label: "Oro 4" },
+  { value: "ORO-5", label: "Oro 5" },
+  { value: "ORO-6", label: "Oro 6" },
+  { value: "ORO-7", label: "Oro 7" },
+  { value: "ORO-8", label: "Oro 8" },
+  { value: "VIP-1", label: "VIP 1" },
+  { value: "VIP-2", label: "VIP 2" },
+  { value: "VIP-3", label: "VIP 3" },
+  { value: "VIP-4", label: "VIP 4" },
+]
+
+function generateRandomOrder() {
+  // Generate a random 8-character alphanumeric string
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+  let result = ''
+  for (let i = 0; i < 8; i++) {
+    result += characters.charAt(Math.floor(Math.random() * characters.length))
+  }
+  return result
+}
+
 function borderLine() {
   return (
     <div className="w-12 h-[1px] bg-black mt-1"></div>
@@ -49,16 +75,16 @@ export default function PruebaBoletoPage() {
 
   const [ticketData, setTicketData] = useState<TicketData>({
     seccion: "GENERAL",
-    orden: "A1B2C3D4",
+    orden: generateRandomOrder(),
     precio: "300",
     tipo: "PREVENTA",
     fila: "5",
     asiento: "12",
-    evento: "GLORIA TREVI",
-    fecha: "29 DE MARZO 2025",
-    hora: "21:00",
-    lugar: "ARENA POTOSI",
-    ciudad: "SAN LUIS POTOSÍ, SLP",
+    evento: "ACORDEONAZO",
+    fecha: "19 DE JULIO 2025",
+    hora: "20:00",
+    lugar: "CENTRO DE ESPECTACULOS CD VICTORIA",
+    ciudad: "CD. VICTORIA, TAMPS",
   })
 
   const [printConfig, setPrintConfig] = useState<PrintConfig>({
@@ -71,10 +97,18 @@ export default function PruebaBoletoPage() {
   })
 
   const handleTicketDataChange = (field: keyof TicketData, value: string) => {
-    setTicketData((prev) => ({
-      ...prev,
-      [field]: value,
-    }))
+    if (field === 'orden') {
+      // Generate new random order instead of using manual input
+      setTicketData((prev) => ({
+        ...prev,
+        orden: generateRandomOrder(),
+      }))
+    } else {
+      setTicketData((prev) => ({
+        ...prev,
+        [field]: value,
+      }))
+    }
   }
 
   const handlePrintConfigChange = (field: keyof PrintConfig, value: string | boolean) => {
@@ -464,6 +498,7 @@ export default function PruebaBoletoPage() {
                       value={ticketData.evento}
                       onChange={(e) => handleTicketDataChange("evento", e.target.value)}
                       placeholder="Nombre del evento"
+                      disabled
                     />
                   </div>
                   <div className="space-y-2">
@@ -481,7 +516,8 @@ export default function PruebaBoletoPage() {
                       id="fecha"
                       value={ticketData.fecha}
                       onChange={(e) => handleTicketDataChange("fecha", e.target.value)}
-                      placeholder="29 DE MARZO 2025"
+                      placeholder="19 DE JULIO 2025"
+                      disabled
                     />
                   </div>
                   <div className="space-y-2">
@@ -490,7 +526,8 @@ export default function PruebaBoletoPage() {
                       id="hora"
                       value={ticketData.hora}
                       onChange={(e) => handleTicketDataChange("hora", e.target.value)}
-                      placeholder="21:00"
+                      placeholder="20:00"
+                      disabled
                     />
                   </div>
                   <div className="space-y-2">
@@ -499,7 +536,8 @@ export default function PruebaBoletoPage() {
                       id="lugar"
                       value={ticketData.lugar}
                       onChange={(e) => handleTicketDataChange("lugar", e.target.value)}
-                      placeholder="ARENA POTOSI"
+                      placeholder="CENTRO DE EVENTOS CD VICTORIA"
+                      disabled
                     />
                   </div>
                   <div className="space-y-2">
@@ -508,17 +546,27 @@ export default function PruebaBoletoPage() {
                       id="ciudad"
                       value={ticketData.ciudad}
                       onChange={(e) => handleTicketDataChange("ciudad", e.target.value)}
-                      placeholder="SAN LUIS POTOSÍ, SLP"
+                      placeholder="CD. VICTORIA, TAMPS"
+                      disabled
                     />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="orden">Orden</Label>
-                    <Input
-                      id="orden"
-                      value={ticketData.orden}
-                      onChange={(e) => handleTicketDataChange("orden", e.target.value)}
-                      placeholder="A1B2C3D4"
-                    />
+                    <div className="flex gap-2">
+                      <Input
+                        id="orden"
+                        value={ticketData.orden}
+                        readOnly
+                        className="flex-1"
+                      />
+                      <Button 
+                        variant="outline" 
+                        onClick={() => handleTicketDataChange('orden', '')}
+                        className="shrink-0"
+                      >
+                        Regenerar
+                      </Button>
+                    </div>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="seccion">Sección</Label>
@@ -530,10 +578,11 @@ export default function PruebaBoletoPage() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="GENERAL">GENERAL</SelectItem>
-                        <SelectItem value="VIP">VIP</SelectItem>
-                        <SelectItem value="PALCO">PALCO</SelectItem>
-                        <SelectItem value="PREFERENTE">PREFERENTE</SelectItem>
+                        {ZONAS.map((zona) => (
+                          <SelectItem key={zona.value} value={zona.value}>
+                            {zona.label}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -743,9 +792,18 @@ export default function PruebaBoletoPage() {
                     {/* Contenido central */}
                     <div className={`flex-grow p-[0.6rem] flex flex-col relative ${dazzleUnicase.variable} ${gontserrat.variable}`}>
                       {/* Título del evento y recinto */}
-                      <div className={`text-2xl font-bold mb-2 ${dazzleUnicase.className}`}>
+                      <div className={`text-2xl font-bold mb-6 ${dazzleUnicase.className}`}>
                         {ticketData.evento}
-                        <div className={`text-[14px] ${dazzleUnicase.className}`}>{ticketData.lugar}</div>
+                        <div className="mt-1">
+                          {ticketData.lugar.split(" CD ").map((part, index) => (
+                            <div 
+                              key={index}
+                              className={`text-[14px] leading-[1.1] ${dazzleUnicase.className}`}
+                            >
+                              {index === 0 ? part : `CD ${part}`}
+                            </div>
+                          ))}
+                        </div>
                       </div>
 
                       {/* Fecha, hora y ciudad */}
@@ -779,7 +837,7 @@ export default function PruebaBoletoPage() {
                       </div>
 
                       {/* Logo */}
-                      <div className="absolute top-[132px] right-6 w-24">
+                      <div className="absolute top-[132px] right-4 w-24">
                         <Logo />
                       </div>
                     </div>
