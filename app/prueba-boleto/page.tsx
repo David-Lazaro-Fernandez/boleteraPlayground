@@ -53,6 +53,12 @@ const ZONAS = [
   { value: "VIP-4", label: "VIP 4" },
 ]
 
+const TIPOS_BOLETO = [
+  { value: "GENERAL", label: "General" },
+  { value: "NUMERADO", label: "Numerado" },
+  { value: "CORTESIA", label: "Cortesía" },
+]
+
 function generateRandomOrder() {
   // Generate a random 8-character alphanumeric string
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
@@ -77,7 +83,7 @@ export default function PruebaBoletoPage() {
     seccion: "GENERAL",
     orden: generateRandomOrder(),
     precio: "300",
-    tipo: "PREVENTA",
+    tipo: "NUMERADO",
     fila: "5",
     asiento: "12",
     evento: "ACORDEONAZO",
@@ -115,6 +121,14 @@ export default function PruebaBoletoPage() {
     setPrintConfig((prev) => ({
       ...prev,
       [field]: value,
+    }))
+  }
+
+  const handleTicketTypeChange = (value: string) => {
+    setTicketData(prev => ({
+      ...prev,
+      tipo: value,
+      precio: value === "CORTESIA" ? "0" : "300"
     }))
   }
 
@@ -502,12 +516,31 @@ export default function PruebaBoletoPage() {
                     />
                   </div>
                   <div className="space-y-2">
+                    <Label htmlFor="tipo">Tipo de Boleto</Label>
+                    <Select
+                      value={ticketData.tipo}
+                      onValueChange={handleTicketTypeChange}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {TIPOS_BOLETO.map((tipo) => (
+                          <SelectItem key={tipo.value} value={tipo.value}>
+                            {tipo.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
                     <Label htmlFor="precio">Precio</Label>
                     <Input
                       id="precio"
                       value={ticketData.precio}
                       onChange={(e) => handleTicketDataChange("precio", e.target.value)}
                       placeholder="300"
+                      disabled={ticketData.tipo === "CORTESIA"}
                     />
                   </div>
                   <div className="space-y-2">
@@ -764,7 +797,7 @@ export default function PruebaBoletoPage() {
                                                         <div className="flex flex-col items-center">
                                                             <div className={`text-xs font-[5px] ${gontserrat.className}`}>TIPO</div>
                                                             <div className={`text-[11px] ${gontserrat.className}`}>
-                                                                {paymentMethod === 'courtesy' ? 'CORTESIA' : 'NUMERADO'}
+                                                                {ticketData.tipo === 'CORTESIA' ? 'CORTESIA' : ticketData.tipo}
                                                             </div>
                                                             <div className="py-1">
                                                                 <SeparationLines />
@@ -828,7 +861,7 @@ export default function PruebaBoletoPage() {
                         <div className="h-8 w-px bg-black"></div>
                         <div className="text-center">
                           <div className="text-[12px]">TIPO</div>
-                          <div className="text-sm">{ticketData.tipo}</div>
+                          <div className="text-sm">{ticketData.tipo === 'CORTESIA' ? 'CORTESIA' : ticketData.tipo}</div>
                         </div>
                         <div className="h-8 w-px bg-black"></div>
                         <div className="text-center">
@@ -865,7 +898,7 @@ export default function PruebaBoletoPage() {
                                                         <div className="flex flex-col items-center">
                                                             <div className={`text-xs font-[5px] ${gontserrat.className}`}>TIPO</div>
                                                             <div className={`text-[11px] ${gontserrat.className}`}>
-                                                                {paymentMethod === 'courtesy' ? 'CORTESIA' : 'NUMERADO'}
+                                                                {ticketData.tipo === 'CORTESIA' ? 'CORTESIA' : ticketData.tipo}
                                                             </div>
                                                             <div className="py-1">
                                                                 <SeparationLines />
