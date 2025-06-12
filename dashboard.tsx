@@ -16,7 +16,7 @@ export default function Dashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [dateRange, setDateRange] = useState({
-    start: new Date(new Date().setDate(new Date().getDate() - 30)), // últimos 30 días
+    start: new Date(new Date().setDate(new Date().getDate() - 15)), // últimos 15 días
     end: new Date()
   })
 
@@ -143,16 +143,35 @@ export default function Dashboard() {
                   }}
                   className="h-[350px]"
                 >
-                  <BarChart data={stats?.ventasPorMes || []}>
-                    <XAxis dataKey="month" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
+                  <BarChart data={stats?.ventasPorDia || []}>
+                    <XAxis 
+                      dataKey="date" 
+                      stroke="#888888" 
+                      fontSize={12} 
+                      tickLine={false} 
+                      axisLine={false}
+                      tickFormatter={(value) => format(new Date(value), "dd MMM")}
+                    />
                     <YAxis
                       stroke="#888888"
                       fontSize={12}
                       tickLine={false}
                       axisLine={false}
-                      tickFormatter={(value) => `$${value}`}
+                      tickFormatter={(value) => typeof value === 'number' ? formatCurrency(value) : ''}
                     />
-                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <ChartTooltip 
+                      content={({ active, payload }) => {
+                        if (active && payload && payload.length) {
+                          return (
+                            <div className="bg-white p-2 border rounded shadow">
+                              <p className="text-sm">{format(new Date(payload[0].payload.date), "dd MMM yyyy")}</p>
+                              <p className="text-sm font-bold">{formatCurrency(Number(payload[0].value) || 0)}</p>
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
+                    />
                     <Bar dataKey="sales" fill="#3B82F6" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ChartContainer>

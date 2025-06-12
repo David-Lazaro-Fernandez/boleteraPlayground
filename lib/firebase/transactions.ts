@@ -91,6 +91,10 @@ export interface DashboardStats {
     month: string;
     sales: number;
   }[];
+  ventasPorDia: {
+    date: string;
+    sales: number;
+  }[];
 }
 
 // Funciones para Movimientos
@@ -463,13 +467,32 @@ export async function getDashboardStats(startDate: Date, endDate: Date): Promise
       sales: ventasPorMes.get(month) || 0
     }));
 
+    // Ventas por día
+    const ventasPorDia = new Map<string, number>();
+    
+    movements.forEach(mov => {
+      const fecha = mov.fecha;
+      const dateKey = fecha.toISOString().split('T')[0]; // YYYY-MM-DD format
+      const currentAmount = ventasPorDia.get(dateKey) || 0;
+      ventasPorDia.set(dateKey, currentAmount + mov.total);
+    });
+
+    // Convertir el Map a un array ordenado por fecha
+    const ventasPorDiaArray = Array.from(ventasPorDia.entries())
+      .map(([date, sales]) => ({
+        date,
+        sales
+      }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+
     return {
       ventasTotales,
       boletosVendidos,
       totalMovimientos,
       activosAhora,
       ventasRecientes,
-      ventasPorMes: ventasPorMesArray
+      ventasPorMes: ventasPorMesArray,
+      ventasPorDia: ventasPorDiaArray
     };
   } catch (error) {
     console.error('Error getting dashboard stats:', error);
