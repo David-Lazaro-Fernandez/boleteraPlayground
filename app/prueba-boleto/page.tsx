@@ -11,6 +11,8 @@ import { FileText, Printer, Download, Settings } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Logo} from "@/components/prueba-boleto/logo"
+import  Stars  from "@/components/palenque/stars"
+import { dazzleUnicase, gontserrat } from "@/lib/fonts"
 
 interface TicketData {
   seccion: string
@@ -699,83 +701,123 @@ export default function PruebaBoletoPage() {
                   }}
                 >
                   {/* Contenido principal del boleto */}
-                  <div className="flex-grow flex relative">
+                  <div className="flex w-full">
+                    {/* Columna izquierda */}
+                    <div className={`w-24 p-3 ${gontserrat.variable} font-gontserrat`}>
+                      <div className="space-y-2 text-center">
+                        <div className="flex flex-col items-center">
+                          <div className="text-xs font-[5px]">PRECIO</div>
+                          <div className="text-[11px]">$ {ticketData.precio}</div>
+                          <div className="py-1">
+                            {borderLine()}
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-center">
+                          <div className="text-xs font-[5px]">TIPO</div>
+                          <div className="text-[11px]">{ticketData.tipo}</div>
+                          <div className="py-1">
+                            {borderLine()}
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-center">
+                          <div className="text-xs font-[5px]">ORDEN</div>
+                          <div className="text-[11px]">{ticketData.orden}</div>
+                          <div className="py-1">
+                            {borderLine()}
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-center">
+                          <div className="text-xs font-[5px]">SECCIÓN</div>
+                          <div className="text-[11px]">{ticketData.seccion}</div>
+                          <div className="py-1">
+                            {borderLine()}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center">
+                      <Stars />
+                    </div>
+
                     {/* Contenido central */}
-                    <div className="flex-grow p-4 flex flex-col">
+                    <div className={`flex-grow p-[0.6rem] flex flex-col relative ${dazzleUnicase.variable} ${gontserrat.variable}`}>
                       {/* Título del evento y recinto */}
-                      <div className="text-3xl font-bold mb-2">
+                      <div className={`text-2xl font-bold mb-2 ${dazzleUnicase.className}`}>
                         {ticketData.evento}
-                        <div className="text-2xl">{ticketData.lugar}</div>
+                        <div className={`text-[14px] ${dazzleUnicase.className}`}>{ticketData.lugar}</div>
                       </div>
 
                       {/* Fecha, hora y ciudad */}
-                      <div className="text-md mb-8 text-[12.7px]">
+                      <div className={`text-md mb-6 text-[11.7px] ${gontserrat.className}`}>
                         {ticketData.fecha}
-                        <div>{ticketData.hora} hrs.</div>
-                        <div>{ticketData.ciudad}</div>
+                        <div className={gontserrat.className}>{ticketData.hora} hrs.</div>
+                        <div className={gontserrat.className}>{ticketData.ciudad}</div>
                       </div>
 
                       {/* Detalles del boleto con separadores */}
-                      <div className="flex items-center space-x-[13.5px]">
+                      <div className={`flex items-center space-x-[8px] ${gontserrat.className}`}>
                         <div className="text-center">
-                          <div className="text-[9.5px]">PRECIO</div>
-                          <div className="text-base">$ {ticketData.precio}</div>
+                          <div className="text-[12px]">PRECIO</div>
+                          <div className="text-sm">$ {ticketData.precio}</div>
                         </div>
                         <div className="h-8 w-px bg-black"></div>
                         <div className="text-center">
-                          <div className="text-[9.5px]">TIPO</div>
-                          <div className="text-base">{ticketData.tipo}</div>
+                          <div className="text-[12px]">TIPO</div>
+                          <div className="text-sm">{ticketData.tipo}</div>
                         </div>
                         <div className="h-8 w-px bg-black"></div>
                         <div className="text-center">
-                          <div className="text-[9.5px]">ORDEN</div>
-                          <div className="text-base">{ticketData.orden}</div>
+                          <div className="text-[12px]">ORDEN</div>
+                          <div className="text-sm">{ticketData.orden}</div>
                         </div>
                         <div className="h-8 w-px bg-black"></div>
                         <div className="text-center">
-                          <div className="text-[9.5px]">SECCIÓN</div>
-                          <div className="text-base">{ticketData.seccion}</div>
-                        </div>
-                        <div className="h-8 w-px bg-black"></div>
-                        <div className="text-center">
-                          <div className="text-[9.5px]">ASIENTO</div>
-                          <div className="text-base">{ticketData.asiento}</div>
+                          <div className="text-[12px]">SECCIÓN</div>
+                          <div className="text-sm">{ticketData.seccion}</div>
                         </div>
                       </div>
 
                       {/* Logo */}
-                      <div className="absolute top-32 right-36 w-24">
+                      <div className="absolute top-[132px] right-6 w-24">
                         <Logo />
                       </div>
                     </div>
 
+                    <div className="flex items-center">
+                      <Stars />
+                    </div>
+
                     {/* Columna derecha */}
-                    <div className="w-32 border-l border-black p-2">
+                    <div className={`w-24 p-3 ${gontserrat.variable} font-gontserrat`}>
                       <div className="space-y-2 text-center">
                         <div className="flex flex-col items-center">
-                          <div className="text-xs font-[8px]">PRECIO</div>
-                          <div className="text-sm">$ {ticketData.precio}</div>
-                          {borderLine()}
+                          <div className="text-xs font-[5px]">PRECIO</div>
+                          <div className="text-[11px]">$ {ticketData.precio}</div>
+                          <div className="py-1">
+                            {borderLine()}
+                          </div>
                         </div>
                         <div className="flex flex-col items-center">
-                          <div className="text-xs font-[8px]">TIPO</div>
-                          <div className="text-sm">{ticketData.tipo}</div>
-                          {borderLine()}
+                          <div className="text-xs font-[5px]">TIPO</div>
+                          <div className="text-[11px]">{ticketData.tipo}</div>
+                          <div className="py-1">
+                            {borderLine()}
+                          </div>
                         </div>
                         <div className="flex flex-col items-center">
-                          <div className="text-xs font-[8px]">ORDEN</div>
-                          <div className="text-sm">{ticketData.orden}</div>
-                          {borderLine()}
+                          <div className="text-xs font-[5px]">ORDEN</div>
+                          <div className="text-[11px]">{ticketData.orden}</div>
+                          <div className="py-1">
+                            {borderLine()}
+                          </div>
                         </div>
                         <div className="flex flex-col items-center">
-                          <div className="text-xs font-[8px]">SECCIÓN</div>
-                          <div className="text-sm">{ticketData.seccion}</div>
-                          {borderLine()}
-                        </div>
-                        <div className="flex flex-col items-center" >
-                          <div className="text-xs font-[8px]">ASIENTO</div>
-                          <div className="text-sm">{ticketData.asiento}</div>
-                          
+                          <div className="text-xs font-[5px]">SECCIÓN</div>
+                          <div className="text-[11px]">{ticketData.seccion}</div>
+                          <div className="py-1">
+                            {borderLine()}
+                          </div>
                         </div>
                       </div>
                     </div>
