@@ -6,28 +6,35 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { CalendarIcon, DollarSignIcon, TicketIcon, UsersIcon, TrendingUpIcon, DownloadIcon } from "lucide-react"
-import { Bar, BarChart, XAxis, YAxis } from "recharts"
+import { Bar, BarChart, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { MainLayout } from "@/components/layout/main-layout"
 import { getDashboardStats, DashboardStats } from "@/lib/firebase/transactions"
-import { format } from "date-fns"
+import { format, startOfDay, endOfDay } from "date-fns"
+import { Calendar } from "@/components/ui/calendar"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { cn } from "@/lib/utils"
 
 export default function Dashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [dateRange, setDateRange] = useState({
-    start: new Date(new Date().setDate(new Date().getDate() - 15)), // últimos 15 días
-    end: new Date()
-  })
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date())
 
   useEffect(() => {
     loadDashboardData()
-  }, [dateRange])
+  }, [selectedDate])
 
   const loadDashboardData = async () => {
     try {
       setIsLoading(true)
-      const data = await getDashboardStats(dateRange.start, dateRange.end)
+      const data = await getDashboardStats(
+        startOfDay(selectedDate),
+        endOfDay(selectedDate)
+      )
       setStats(data)
     } catch (error) {
       console.error('Error loading dashboard data:', error)
@@ -49,12 +56,28 @@ export default function Dashboard() {
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <CalendarIcon className="h-4 w-4" />
-            <span>
-              {format(dateRange.start, "MMM dd, yyyy")} - {format(dateRange.end, "MMM dd, yyyy")}
-            </span>
-          </div>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant={"outline"}
+                className={cn(
+                  "justify-start text-left font-normal",
+                  !selectedDate && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {selectedDate ? format(selectedDate, "PPP") : <span>Seleccionar fecha</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={(date) => date && setSelectedDate(date)}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
           <Button className="bg-blue-600 hover:bg-blue-700">
             <DownloadIcon className="h-4 w-4 mr-2" />
             Descargar
@@ -131,7 +154,7 @@ export default function Dashboard() {
             {/* Chart */}
             <Card className="col-span-4">
               <CardHeader>
-                <CardTitle>Resumen</CardTitle>
+                <CardTitle>Resumen de Ventas</CardTitle>
               </CardHeader>
               <CardContent className="pl-2">
                 <ChartContainer
@@ -200,13 +223,121 @@ export default function Dashboard() {
                         </AvatarFallback>
                       </Avatar>
                       <div className="ml-4 space-y-1">
-                        <p className="text-sm font-medium leading-none">Boleto vendido de forma presencial</p>
-                        <p className="text-sm text-gray-500">Venta Fisica</p>
+                        <p className="text-sm font-medium leading-none">
+                          Venta {venta.tipo_pago === 'cortesia' ? 'de cortesía' : `en ${venta.tipo_pago}`}
+                        </p>
+                        <p className="text-sm text-gray-500">{format(venta.fecha, "dd MMM yyyy HH:mm")}</p>
                       </div>
                       <div className="ml-auto font-medium">{formatCurrency(venta.monto)}</div>
                     </div>
                   ))}
                 </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Nuevos gráficos */}
+          <div className="grid gap-6 md:grid-cols-2 mt-6">
+            {/* Corte al Día */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Corte al Día - {format(selectedDate, "dd MMM yyyy")}</CardTitle>
+                <CardDescription>Ventas por tipo de pago</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {isLoading ? (
+                  <div className="h-[300px] flex items-center justify-center">
+                    <p>Cargando datos...</p>
+                  </div>
+                ) : stats?.ventasPorTipoPago && (
+                  <div className="h-[300px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={[
+                            { name: 'Efectivo', value: stats.ventasPorTipoPago.efectivo },
+                            { name: 'Tarjeta', value: stats.ventasPorTipoPago.tarjeta },
+                            { name: 'Cortesía', value: stats.ventasPorTipoPago.cortesia }
+                          ]}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={({ name, value }) => `${name}: ${formatCurrency(value)}`}
+                          outerRadius={80}
+                          fill="#8884d8"
+                          dataKey="value"
+                        >
+                          <Cell fill="#22c55e" />
+                          <Cell fill="#3b82f6" />
+                          <Cell fill="#f59e0b" />
+                        </Pie>
+                        <Tooltip
+                          content={({ active, payload }) => {
+                            if (active && payload && payload.length) {
+                              return (
+                                <div className="bg-white p-2 border rounded shadow">
+                                  <p className="text-sm font-bold">{payload[0].name}</p>
+                                  <p className="text-sm">{formatCurrency(Number(payload[0].value) || 0)}</p>
+                                </div>
+                              );
+                            }
+                            return null;
+                          }}
+                        />
+                        <Legend />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Boletos por Zona */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Boletos por Zona - {format(selectedDate, "dd MMM yyyy")}</CardTitle>
+                <CardDescription>Cantidad de boletos vendidos por zona</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {isLoading ? (
+                  <div className="h-[300px] flex items-center justify-center">
+                    <p>Cargando datos...</p>
+                  </div>
+                ) : (
+                  <div className="h-[300px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={stats?.ventasPorZona || []}>
+                        <XAxis
+                          dataKey="zona"
+                          stroke="#888888"
+                          fontSize={12}
+                          tickLine={false}
+                          axisLine={false}
+                        />
+                        <YAxis
+                          stroke="#888888"
+                          fontSize={12}
+                          tickLine={false}
+                          axisLine={false}
+                        />
+                        <Tooltip
+                          content={({ active, payload }) => {
+                            if (active && payload && payload.length) {
+                              return (
+                                <div className="bg-white p-2 border rounded shadow">
+                                  <p className="text-sm font-bold">{payload[0].payload.zona}</p>
+                                  <p className="text-sm">{payload[0].value} boletos</p>
+                                </div>
+                              );
+                            }
+                            return null;
+                          }}
+                        />
+                        <Bar dataKey="cantidad" fill="#3B82F6" radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>

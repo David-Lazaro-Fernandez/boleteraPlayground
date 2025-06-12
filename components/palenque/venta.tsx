@@ -251,7 +251,9 @@ export function Venta({ generalTickets, selectedSeats }: VentaProps) {
                         total: paymentMethod === 'courtesy' ? 0 : total,
                         subtotal: paymentMethod === 'courtesy' ? 0 : subtotal,
                         cargo_servicio: paymentMethod === 'courtesy' ? 0 : serviceCharge,
-                        fecha: new Date()
+                        fecha: new Date(),
+                        tipo_pago: paymentMethod === 'courtesy' ? 'cortesia' : 
+                                 paymentMethod === 'card' ? 'tarjeta' : 'efectivo'
                     }
 
                     // Prepare tickets data

@@ -12,7 +12,8 @@ import {
   DocumentData,
   orderBy,
   updateDoc,
-  limit
+  limit,
+  deleteDoc
 } from 'firebase/firestore';
 import { db } from './config';
 
@@ -23,6 +24,7 @@ interface BaseMovement {
   email?: string;
   subtotal?: number;
   cargo_servicio?: number;
+  tipo_pago: 'efectivo' | 'tarjeta' | 'cortesia';
 }
 
 // Interfaz para datos en Firestore
@@ -86,6 +88,7 @@ export interface DashboardStats {
     email: string;
     monto: number;
     fecha: Date;
+    tipo_pago: 'efectivo' | 'tarjeta' | 'cortesia';
   }[];
   ventasPorMes: {
     month: string;
@@ -94,6 +97,15 @@ export interface DashboardStats {
   ventasPorDia: {
     date: string;
     sales: number;
+  }[];
+  ventasPorTipoPago: {
+    efectivo: number;
+    tarjeta: number;
+    cortesia: number;
+  };
+  ventasPorZona: {
+    zona: string;
+    cantidad: number;
   }[];
 }
 
@@ -395,6 +407,7 @@ export async function getDashboardStats(startDate: Date, endDate: Date): Promise
     const startTimestamp = Timestamp.fromDate(startDate);
     const endTimestamp = Timestamp.fromDate(endDate);
     
+    // 1. Obtener movimientos del día seleccionado
     const movementsQuery = query(
       movementsRef,
       where('fecha', '>=', startTimestamp),
@@ -415,10 +428,49 @@ export async function getDashboardStats(startDate: Date, endDate: Date): Promise
     // Calcular ventas totales
     const ventasTotales = movements.reduce((total, mov) => total + mov.total, 0);
 
-    // Obtener boletos vendidos
+    // 2. Obtener los IDs de los movimientos del día
+    const movementIds = movements.map(mov => mov.id);
+
+    // 3. Obtener los tickets relacionados con estos movimientos
     const movementTicketsRef = collection(db, 'movement_tickets');
-    const ticketsSnapshot = await getDocs(movementTicketsRef);
+    const ticketsForDayQuery = query(
+      movementTicketsRef,
+      where('movimiento_id', 'in', movementIds.length > 0 ? movementIds : ['no-movements'])
+    );
+    const movementTicketsSnapshot = await getDocs(ticketsForDayQuery);
+    
+    // 4. Obtener los IDs de los boletos
+    const ticketIds = movementTicketsSnapshot.docs.map(doc => doc.data().boleto_id);
+
+    // 5. Obtener los boletos completos
+    const ticketsRef = collection(db, 'tickets');
+    const ticketsQuery = query(
+      ticketsRef,
+      where('__name__', 'in', ticketIds.length > 0 ? ticketIds : ['no-tickets'])
+    );
+    const ticketsSnapshot = await getDocs(ticketsQuery);
+
+    // Contar boletos por zona
+    const ventasPorZona = new Map<string, number>();
+    ticketsSnapshot.docs.forEach(doc => {
+      const ticket = doc.data() as Ticket;
+      const zonaCount = ventasPorZona.get(ticket.zona) || 0;
+      ventasPorZona.set(ticket.zona, zonaCount + 1);
+    });
+
+    const ventasPorZonaArray = Array.from(ventasPorZona.entries()).map(([zona, cantidad]) => ({
+      zona,
+      cantidad
+    }));
+
     const boletosVendidos = ticketsSnapshot.size;
+
+    // Ventas por tipo de pago
+    const ventasPorTipoPago = {
+      efectivo: movements.reduce((sum, mov) => mov.tipo_pago === 'efectivo' ? sum + mov.total : sum, 0),
+      tarjeta: movements.reduce((sum, mov) => mov.tipo_pago === 'tarjeta' ? sum + mov.total : sum, 0),
+      cortesia: movements.reduce((sum, mov) => mov.tipo_pago === 'cortesia' ? sum + mov.total : sum, 0)
+    };
 
     // Total de movimientos
     const totalMovimientos = movements.length;
@@ -435,23 +487,15 @@ export async function getDashboardStats(startDate: Date, endDate: Date): Promise
     const activosAhora = activosSnapshot.size;
 
     // Ventas recientes
-    const ventasRecientesQuery = query(
-      movementsRef,
-      orderBy('fecha', 'desc'),
-      limit(5)
-    );
-    const ventasRecientesSnapshot = await getDocs(ventasRecientesQuery);
-    const ventasRecientes = ventasRecientesSnapshot.docs.map(doc => {
-      const data = doc.data();
-      return {
-        nombre: data.nombre || 'Usuario',
-        email: data.email || 'email@example.com',
-        monto: data.total,
-        fecha: data.fecha.toDate()
-      };
-    });
+    const ventasRecientes = movements.slice(0, 5).map(mov => ({
+      nombre: mov.nombre || 'Usuario',
+      email: mov.email || 'email@example.com',
+      monto: mov.total,
+      fecha: mov.fecha,
+      tipo_pago: mov.tipo_pago
+    }));
 
-    // Ventas por mes
+    // Ventas por mes (mantenemos esto para compatibilidad)
     const ventasPorMes = new Map<string, number>();
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     
@@ -472,12 +516,11 @@ export async function getDashboardStats(startDate: Date, endDate: Date): Promise
     
     movements.forEach(mov => {
       const fecha = mov.fecha;
-      const dateKey = fecha.toISOString().split('T')[0]; // YYYY-MM-DD format
+      const dateKey = fecha.toISOString().split('T')[0];
       const currentAmount = ventasPorDia.get(dateKey) || 0;
       ventasPorDia.set(dateKey, currentAmount + mov.total);
     });
 
-    // Convertir el Map a un array ordenado por fecha
     const ventasPorDiaArray = Array.from(ventasPorDia.entries())
       .map(([date, sales]) => ({
         date,
@@ -492,10 +535,51 @@ export async function getDashboardStats(startDate: Date, endDate: Date): Promise
       activosAhora,
       ventasRecientes,
       ventasPorMes: ventasPorMesArray,
-      ventasPorDia: ventasPorDiaArray
+      ventasPorDia: ventasPorDiaArray,
+      ventasPorTipoPago,
+      ventasPorZona: ventasPorZonaArray
     };
   } catch (error) {
     console.error('Error getting dashboard stats:', error);
+    throw error;
+  }
+}
+
+export async function cleanAllCollections(): Promise<void> {
+  try {
+    const collections = ['movements', 'tickets', 'movement_tickets', 'venues', 'events'];
+    
+    for (const collectionName of collections) {
+      const collectionRef = collection(db, collectionName);
+      const snapshot = await getDocs(collectionRef);
+      
+      // Delete documents in batches
+      const batchSize = 500;
+      const batches = [];
+      let batch = [];
+
+      for (const doc of snapshot.docs) {
+        batch.push(doc.ref);
+        
+        if (batch.length === batchSize) {
+          batches.push(batch);
+          batch = [];
+        }
+      }
+      
+      if (batch.length > 0) {
+        batches.push(batch);
+      }
+
+      // Execute deletion in parallel for each batch
+      await Promise.all(
+        batches.map(async (batchDocs) => {
+          await Promise.all(batchDocs.map((docRef) => deleteDoc(docRef)));
+        })
+      );
+    }
+  } catch (error) {
+    console.error('Error cleaning collections:', error);
     throw error;
   }
 } 

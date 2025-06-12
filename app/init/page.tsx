@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { createVenue, createEvent, createTicket, createSale } from '@/lib/firebase/transactions'
+import { createVenue, createEvent, createTicket, createSale, cleanAllCollections } from '@/lib/firebase/transactions'
 
 export default function InitPage() {
   const [loading, setLoading] = useState(false)
+  const [cleaningData, setCleaningData] = useState(false)
   const [log, setLog] = useState<string[]>([])
 
   const addLog = (message: string) => {
@@ -109,7 +110,8 @@ export default function InitPage() {
           fecha: new Date(),
           subtotal: 1500,
           cargo_servicio: 150,
-          total: 1650
+          total: 1650,
+          tipo_pago: 'efectivo'
         },
         [
           {
@@ -141,17 +143,43 @@ export default function InitPage() {
     }
   }
 
+  const cleanData = async () => {
+    try {
+      setCleaningData(true)
+      addLog('Iniciando limpieza de datos...')
+      
+      await cleanAllCollections()
+      
+      addLog('¡Limpieza de datos completada con éxito!')
+    } catch (error) {
+      console.error('Error durante la limpieza:', error)
+      addLog(`Error: ${error instanceof Error ? error.message : 'Error desconocido'}`)
+    } finally {
+      setCleaningData(false)
+    }
+  }
+
   return (
     <div className="p-8">
       <h1 className="text-2xl font-bold mb-4">Inicialización de Base de Datos</h1>
       
-      <Button 
-        onClick={initializeData} 
-        disabled={loading}
-        className="mb-8"
-      >
-        {loading ? 'Inicializando...' : 'Inicializar Datos'}
-      </Button>
+      <div className="flex gap-4 mb-8">
+        <Button 
+          onClick={initializeData} 
+          disabled={loading || cleaningData}
+          className="bg-blue-600 hover:bg-blue-700"
+        >
+          {loading ? 'Inicializando...' : 'Inicializar Datos'}
+        </Button>
+
+        <Button 
+          onClick={cleanData} 
+          disabled={loading || cleaningData}
+          variant="destructive"
+        >
+          {cleaningData ? 'Limpiando...' : 'Limpiar Datos'}
+        </Button>
+      </div>
 
       <div className="bg-gray-100 p-4 rounded-lg">
         <h2 className="font-semibold mb-2">Log de operaciones:</h2>
