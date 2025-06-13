@@ -843,10 +843,12 @@ export default function PruebaBoletoPage() {
                             <SeparationLines />
                           </div>
                         </div>
-                        <div className="flex flex-col items-center gap-0px">
-                          <div className={`text-xs font-[5px] ${gontserrat.className}`}>ASIENTO</div>
-                          <div className={`text-[11px] ${gontserrat.className}`}>{ticketData.fila}{ticketData.asiento}</div>
-                        </div>
+                        {ticketData.tipo !== 'GENERAL' && (
+                          <div className="flex flex-col items-center gap-0px">
+                            <div className={`text-xs font-[5px] ${gontserrat.className}`}>ASIENTO</div>
+                            <div className={`text-[11px] ${gontserrat.className}`}>{ticketData.fila}{ticketData.asiento}</div>
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -899,14 +901,15 @@ export default function PruebaBoletoPage() {
                           <div className="text-[11px]">SECCIÓN</div>
                           <div className="text-xs">{ticketData.seccion}</div>
                         </div>
-                        {/* Solo mostrar fila y asiento si no es GENERAL */}
-                        {ticketData.tipo !== 'GENERAL' && <>
-                          <div className="h-8 w-px bg-black"></div>
-                          <div className="text-center">
-                            <div className="text-[11px]">ASIENTO</div>
-                            <div className="text-xs">{ticketData.asiento}</div>
-                          </div>
-                        </>}
+                        {ticketData.tipo !== 'GENERAL' && (
+                          <>
+                            <div className="h-8 w-px bg-black"></div>
+                            <div className="text-center">
+                              <div className="text-[11px]">ASIENTO</div>
+                              <div className="text-xs">{ticketData.fila}{ticketData.asiento}</div>
+                            </div>
+                          </>
+                        )}
                       </div>
 
                       {/* Logo */}
@@ -952,10 +955,12 @@ export default function PruebaBoletoPage() {
                             <SeparationLines />
                           </div>
                         </div>
-                        <div className="flex flex-col items-center gap-0px">
-                          <div className={`text-xs font-[5px] ${gontserrat.className}`}>ASIENTO</div>
-                          <div className={`text-[11px] ${gontserrat.className}`}>{ticketData.fila}{ticketData.asiento}</div>
-                        </div>
+                        {ticketData.tipo !== 'GENERAL' && (
+                          <div className="flex flex-col items-center gap-0px">
+                            <div className={`text-xs font-[5px] ${gontserrat.className}`}>ASIENTO</div>
+                            <div className={`text-[11px] ${gontserrat.className}`}>{ticketData.fila}{ticketData.asiento}</div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>

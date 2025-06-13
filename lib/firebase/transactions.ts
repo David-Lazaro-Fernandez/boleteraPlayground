@@ -22,15 +22,14 @@ import { db } from './config';
 // Interfaces base
 interface BaseMovement {
   total: number;
-  nombre?: string;
-  email?: string;
-  subtotal?: number;
-  cargo_servicio?: number;
+  subtotal: number;
+  cargo_servicio: number;
   tipo_pago: 'efectivo' | 'tarjeta' | 'cortesia';
 }
 
 // Interfaz para datos en Firestore
 export interface FirestoreMovement extends BaseMovement {
+  id: string;
   fecha: Timestamp;
 }
 
@@ -91,6 +90,9 @@ export interface DashboardStats {
     monto: number;
     fecha: Date;
     tipo_pago: 'efectivo' | 'tarjeta' | 'cortesia';
+    numero_boletos: number;
+    subtotal: number;
+    cargo_servicio: number;
   }[];
   ventasPorMes: {
     month: string;
@@ -441,41 +443,81 @@ export async function getDashboardStats(startDate: Date, endDate: Date): Promise
 
     const movementsSnapshot = await getDocs(movementsQuery);
     const movements = movementsSnapshot.docs.map(doc => {
-      const data = doc.data() as FirestoreMovement;
+      const data = doc.data();
       return {
         id: doc.id,
-        ...data,
+        total: data.total,
+        subtotal: data.subtotal,
+        cargo_servicio: data.cargo_servicio,
+        tipo_pago: data.tipo_pago,
         fecha: data.fecha.toDate()
-      };
+      } as Movement;
     });
+
+    // Si no hay movimientos, retornar estadísticas vacías
+    if (movements.length === 0) {
+      return {
+        ventasTotales: 0,
+        boletosVendidos: 0,
+        totalMovimientos: 0,
+        activosAhora: 0,
+        ventasRecientes: [],
+        ventasPorMes: [],
+        ventasPorDia: [],
+        ventasPorTipoPago: {
+          efectivo: 0,
+          tarjeta: 0,
+          cortesia: 0
+        },
+        ventasPorZona: [],
+        boletosPorTipoPago: {
+          efectivo: 0,
+          tarjeta: 0,
+          cortesia: 0
+        }
+      };
+    }
 
     // Calcular ventas totales
     const ventasTotales = movements.reduce((total, mov) => total + mov.total, 0);
 
-    // 2. Obtener los IDs de los movimientos del día y procesarlos en lotes
-    const movementIds = movements.map(mov => mov.id);
-    const movementBatches = [];
-    
-    for (let i = 0; i < movementIds.length; i += 30) {
-      const batch = movementIds.slice(i, i + 30);
-      const movementTicketsRef = collection(db, 'movement_tickets');
-      const batchQuery = query(
-        movementTicketsRef,
-        where('movimiento_id', 'in', batch)
-      );
-      movementBatches.push(getDocs(batchQuery));
-    }
+    // 2. Obtener todos los movement_tickets para los movimientos del día
+    const movementTicketsRef = collection(db, 'movement_tickets');
+    const movementTicketsQuery = query(
+      movementTicketsRef,
+      where('movimiento_id', 'in', movements.map(m => m.id))
+    );
+    const movementTicketsSnapshot = await getDocs(movementTicketsQuery);
 
-    // 3. Obtener todos los movement_tickets
-    const movementTicketsSnapshots = await Promise.all(movementBatches);
-    const ticketIds = movementTicketsSnapshots
-      .flatMap(snapshot => snapshot.docs)
-      .map(doc => doc.data().boleto_id);
+    // Crear un mapa de movimiento_id a número de boletos y sus IDs
+    const boletosPorMovimiento = new Map<string, { count: number, ticketIds: string[] }>();
+    
+    movementTicketsSnapshot.docs.forEach(doc => {
+      const movementTicket = doc.data();
+      const movimientoId = movementTicket.movimiento_id;
+      const boletoId = movementTicket.boleto_id;
+      
+      const currentData = boletosPorMovimiento.get(movimientoId) || { count: 0, ticketIds: [] };
+      boletosPorMovimiento.set(movimientoId, {
+        count: currentData.count + 1,
+        ticketIds: [...currentData.ticketIds, boletoId]
+      });
+    });
+
+    // 3. Obtener todos los boletos únicos, excluyendo los de cortesía
+    const allTicketIds = Array.from(new Set(
+      Array.from(boletosPorMovimiento.entries())
+        .filter(([movId]) => {
+          const movement = movements.find(m => m.id === movId);
+          return movement && movement.tipo_pago !== 'cortesia';
+        })
+        .flatMap(([_, data]) => data.ticketIds)
+    ));
 
     // 4. Obtener los boletos en lotes
-    const ticketSnapshots = await getTicketsInBatches(ticketIds);
+    const ticketSnapshots = await getTicketsInBatches(allTicketIds);
 
-    // 5. Procesar todos los tickets
+    // 5. Procesar todos los tickets para estadísticas por zona
     const ventasPorZona = new Map<string, number>();
     ticketSnapshots.forEach(snapshot => {
       snapshot.docs.forEach(doc => {
@@ -490,7 +532,8 @@ export async function getDashboardStats(startDate: Date, endDate: Date): Promise
       cantidad
     }));
 
-    const boletosVendidos = ticketIds.length;
+    // Contar boletos vendidos excluyendo cortesías
+    const boletosVendidos = allTicketIds.length;
 
     // Ventas por tipo de pago
     const ventasPorTipoPago = {
@@ -513,16 +556,22 @@ export async function getDashboardStats(startDate: Date, endDate: Date): Promise
     const activosSnapshot = await getDocs(activosQuery);
     const activosAhora = activosSnapshot.size;
 
-    // Ventas recientes
-    const ventasRecientes = movements.slice(0, 5).map(mov => ({
-      nombre: mov.nombre || 'Usuario',
-      email: mov.email || 'email@example.com',
-      monto: mov.total,
-      fecha: mov.fecha,
-      tipo_pago: mov.tipo_pago
-    }));
+    // Ventas recientes con los datos correctos de la base de datos
+    const ventasRecientes = movements.slice(0, 5).map(mov => {
+      const boletosData = boletosPorMovimiento.get(mov.id) || { count: 0, ticketIds: [] };
+      return {
+        nombre: 'Usuario', // Campo por defecto ya que no existe en la base de datos
+        email: 'email@example.com', // Campo por defecto ya que no existe en la base de datos
+        monto: mov.total,
+        fecha: mov.fecha,
+        tipo_pago: mov.tipo_pago,
+        numero_boletos: boletosData.count,
+        subtotal: mov.subtotal,
+        cargo_servicio: mov.cargo_servicio
+      };
+    });
 
-    // Ventas por mes (mantenemos esto para compatibilidad)
+    // Ventas por mes
     const ventasPorMes = new Map<string, number>();
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     
@@ -562,20 +611,12 @@ export async function getDashboardStats(startDate: Date, endDate: Date): Promise
       cortesia: 0
     };
 
-    // Crear un mapa de movimiento a tipo de pago
-    const movementPaymentTypes = new Map(
-      movements.map(mov => [mov.id, mov.tipo_pago])
-    );
-
-    // Contar boletos por tipo de pago usando los movement_tickets
-    movementTicketsSnapshots.forEach(snapshot => {
-      snapshot.docs.forEach(doc => {
-        const movementTicket = doc.data();
-        const tipoPago = movementPaymentTypes.get(movementTicket.movimiento_id);
-        if (tipoPago) {
-          boletosPorTipoPago[tipoPago]++;
-        }
-      });
+    // Contar boletos por tipo de pago
+    movements.forEach(mov => {
+      const boletosData = boletosPorMovimiento.get(mov.id);
+      if (boletosData) {
+        boletosPorTipoPago[mov.tipo_pago] += boletosData.count;
+      }
     });
 
     return {
