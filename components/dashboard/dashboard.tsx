@@ -5,12 +5,15 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { CalendarIcon, DollarSignIcon, TicketIcon, UsersIcon, TrendingUpIcon, DownloadIcon } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { CalendarIcon, DollarSignIcon, TicketIcon, UsersIcon, TrendingUpIcon, DownloadIcon, WalletIcon, EditIcon, SaveIcon } from "lucide-react"
 import { Bar, BarChart, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { MainLayout } from "@/components/layout/main-layout"
-import { getDashboardStats, DashboardStats } from "@/lib/firebase/transactions"
+import { getDashboardStats, DashboardStats, getCashDrawerOpening, createCashDrawerOpening, updateCashDrawerOpening, CashDrawerOpening } from "@/lib/firebase/transactions"
 import { format, startOfDay, endOfDay } from "date-fns"
+import { es } from "date-fns/locale"
 import { Calendar } from "@/components/ui/calendar"
 import {
   Popover,
@@ -23,6 +26,10 @@ export default function Dashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
+  const [cashDrawer, setCashDrawer] = useState<CashDrawerOpening | null>(null)
+  const [isEditingCashDrawer, setIsEditingCashDrawer] = useState(false)
+  const [cashDrawerAmount, setCashDrawerAmount] = useState<string>("")
+  const [isSavingCashDrawer, setIsSavingCashDrawer] = useState(false)
 
   useEffect(() => {
     loadDashboardData()
@@ -31,11 +38,17 @@ export default function Dashboard() {
   const loadDashboardData = async () => {
     try {
       setIsLoading(true)
-      const data = await getDashboardStats(
-        startOfDay(selectedDate),
-        endOfDay(selectedDate)
-      )
+      const [data, cashDrawerData] = await Promise.all([
+        getDashboardStats(
+          startOfDay(selectedDate),
+          endOfDay(selectedDate)
+        ),
+        getCashDrawerOpening(selectedDate)
+      ])
       setStats(data)
+      setCashDrawer(cashDrawerData)
+      setCashDrawerAmount(cashDrawerData?.amount.toString() || "")
+      console.log(data)
     } catch (error) {
       console.error('Error loading dashboard data:', error)
     } finally {
@@ -48,6 +61,54 @@ export default function Dashboard() {
       style: 'currency',
       currency: 'MXN'
     }).format(amount)
+  }
+
+  const handleSaveCashDrawer = async () => {
+    try {
+      setIsSavingCashDrawer(true)
+      const amount = parseFloat(cashDrawerAmount) || 0
+      const userId = "current-user" // TODO: Obtener del contexto de usuario
+      
+      if (cashDrawer) {
+        // Actualizar fondo existente
+        await updateCashDrawerOpening(cashDrawer.id!, amount, userId)
+        setCashDrawer({ ...cashDrawer, amount, updated_at: new Date() })
+      } else {
+        // Crear nuevo fondo
+        const newCashDrawerId = await createCashDrawerOpening({
+          date: startOfDay(selectedDate),
+          user_id: userId,
+          amount: amount
+        })
+        const newCashDrawer: CashDrawerOpening = {
+          id: newCashDrawerId,
+          date: startOfDay(selectedDate),
+          user_id: userId,
+          amount: amount,
+          created_at: new Date(),
+          updated_at: new Date()
+        }
+        setCashDrawer(newCashDrawer)
+      }
+      
+      setIsEditingCashDrawer(false)
+      // Recargar datos para actualizar las métricas
+      await loadDashboardData()
+    } catch (error) {
+      console.error('Error saving cash drawer:', error)
+    } finally {
+      setIsSavingCashDrawer(false)
+    }
+  }
+
+  const handleEditCashDrawer = () => {
+    setIsEditingCashDrawer(true)
+    setCashDrawerAmount(cashDrawer?.amount.toString() || "0")
+  }
+
+  const handleCancelEdit = () => {
+    setIsEditingCashDrawer(false)
+    setCashDrawerAmount(cashDrawer?.amount.toString() || "")
   }
 
   return (
@@ -149,6 +210,86 @@ export default function Dashboard() {
             </Card>
           </div>
 
+          {/* Widget de Fondo de Caja */}
+          <Card className="mb-6">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <div>
+                <CardTitle className="text-lg font-medium text-gray-900">
+                  Fondo de Caja - {format(selectedDate, "dd MMM yyyy")}
+                </CardTitle>
+                <CardDescription>
+                  Dinero de cambio con el que inicia la caja cada día
+                </CardDescription>
+              </div>
+              <WalletIcon className="h-5 w-5 text-gray-400" />
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  {isEditingCashDrawer ? (
+                    <div className="flex items-center space-x-2">
+                      <Label htmlFor="cashDrawerAmount" className="text-sm font-medium">
+                        Monto:
+                      </Label>
+                      <Input
+                        id="cashDrawerAmount"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        className="w-32"
+                        value={cashDrawerAmount}
+                        onChange={(e) => setCashDrawerAmount(e.target.value)}
+                        placeholder="0.00"
+                      />
+                      <span className="text-sm text-gray-500">MXN</span>
+                    </div>
+                  ) : (
+                    <div>
+                      <div className="text-2xl font-bold">
+                        {formatCurrency(cashDrawer?.amount || 0)}
+                      </div>
+                      {cashDrawer && (
+                        <p className="text-xs text-gray-500">
+                          Última actualización: {format(cashDrawer.updated_at, "dd MMM yyyy HH:mm")}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+                <div className="flex space-x-2">
+                  {isEditingCashDrawer ? (
+                    <>
+                      <Button
+                        onClick={handleSaveCashDrawer}
+                        disabled={isSavingCashDrawer}
+                        className="bg-green-600 hover:bg-green-700"
+                      >
+                        <SaveIcon className="h-4 w-4 mr-2" />
+                        {isSavingCashDrawer ? "Guardando..." : "Guardar"}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={handleCancelEdit}
+                        disabled={isSavingCashDrawer}
+                      >
+                        Cancelar
+                      </Button>
+                    </>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      onClick={handleEditCashDrawer}
+                      className="border-blue-200 text-blue-600 hover:bg-blue-50"
+                    >
+                      <EditIcon className="h-4 w-4 mr-2" />
+                      {cashDrawer ? "Editar" : "Configurar"}
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Charts and Recent Sales */}
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
             {/* Chart */}
@@ -173,7 +314,11 @@ export default function Dashboard() {
                       fontSize={12} 
                       tickLine={false} 
                       axisLine={false}
-                      tickFormatter={(value) => format(new Date(value), "dd MMM")}
+                      tickFormatter={(value) => {
+                        const [year, month, day] = value.split("-");
+                        const localDate = new Date(Number(year), Number(month) - 1, Number(day)); // Mes se cuenta desde 0
+                        return format(localDate, "dd MMM", { locale: es });
+                      }}
                     />
                     <YAxis
                       stroke="#888888"
@@ -185,9 +330,14 @@ export default function Dashboard() {
                     <ChartTooltip 
                       content={({ active, payload }) => {
                         if (active && payload && payload.length) {
+                          const dateValue = payload[0].payload.date;
+                          const [year, month, day] = dateValue.split("-");
+                          const localDate = new Date(Number(year), Number(month) - 1, Number(day)); // Mes se cuenta desde 0
+                          const formattedDate = format(localDate, "dd MMM yyyy", { locale: es });
+                          
                           return (
                             <div className="bg-white p-2 border rounded shadow">
-                              <p className="text-sm">{format(new Date(payload[0].payload.date), "dd MMM yyyy")}</p>
+                              <p className="text-sm">{formattedDate}</p>
                               <p className="text-sm font-bold">{formatCurrency(Number(payload[0].value) || 0)}</p>
                             </div>
                           );
@@ -258,7 +408,7 @@ export default function Dashboard() {
                             { name: 'Efectivo', value: stats.ventasPorTipoPago.efectivo },
                             { name: 'Tarjeta', value: stats.ventasPorTipoPago.tarjeta },
                             { name: 'Cortesía', value: stats.ventasPorTipoPago.cortesia }
-                          ]}
+                          ].filter(item => item.value > 0)}
                           cx="50%"
                           cy="50%"
                           labelLine={false}

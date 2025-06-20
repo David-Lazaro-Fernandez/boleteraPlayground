@@ -84,6 +84,7 @@ export interface DashboardStats {
   boletosVendidos: number;
   totalMovimientos: number;
   activosAhora: number;
+  fondoCaja: number;
   ventasRecientes: {
     nombre: string;
     email: string;
@@ -116,6 +117,26 @@ export interface DashboardStats {
     tarjeta: number;
     cortesia: number;
   };
+}
+
+// Nueva interfaz para Fondo de Caja
+export interface CashDrawerOpening {
+  id?: string;
+  date: Date;
+  user_id: string;
+  amount: number;
+  created_at: Date;
+  updated_at: Date;
+}
+
+// Interfaz para datos en Firestore
+interface FirestoreCashDrawerOpening {
+  id: string;
+  date: Timestamp;
+  user_id: string;
+  amount: number;
+  created_at: Timestamp;
+  updated_at: Timestamp;
 }
 
 // Funciones para Movimientos
@@ -461,6 +482,7 @@ export async function getDashboardStats(startDate: Date, endDate: Date): Promise
         boletosVendidos: 0,
         totalMovimientos: 0,
         activosAhora: 0,
+        fondoCaja: 0,
         ventasRecientes: [],
         ventasPorMes: [],
         ventasPorDia: [],
@@ -592,17 +614,28 @@ export async function getDashboardStats(startDate: Date, endDate: Date): Promise
     
     movements.forEach(mov => {
       const fecha = mov.fecha;
+      // Usar la fecha directamente sin conversiones de timezone ya que se guarda correctamente
       const dateKey = fecha.toISOString().split('T')[0];
       const currentAmount = ventasPorDia.get(dateKey) || 0;
       ventasPorDia.set(dateKey, currentAmount + mov.total);
     });
 
-    const ventasPorDiaArray = Array.from(ventasPorDia.entries())
+    // Si estamos consultando un solo día (startDate y endDate son el mismo día),
+    // filtrar solo ese día específico
+    const isOneDayQuery = startDate.toDateString() === endDate.toDateString();
+    const targetDateKey = startDate.toISOString().split('T')[0];
+    
+    let ventasPorDiaArray = Array.from(ventasPorDia.entries())
       .map(([date, sales]) => ({
         date,
         sales
       }))
       .sort((a, b) => a.date.localeCompare(b.date));
+    
+    // Si es consulta de un solo día, filtrar solo ese día
+    if (isOneDayQuery) {
+      ventasPorDiaArray = ventasPorDiaArray.filter(item => item.date === targetDateKey);
+    }
 
     // Contadores para boletos por tipo de pago
     const boletosPorTipoPago = {
@@ -619,20 +652,102 @@ export async function getDashboardStats(startDate: Date, endDate: Date): Promise
       }
     });
 
+    // Obtener el fondo de caja del día seleccionado
+    const cashDrawer = await getCashDrawerOpening(startDate);
+    const fondoCaja = cashDrawer?.amount || 0;
+
+    // Ajustar las ventas totales y por tipo de pago restando el fondo de caja del efectivo
+    const ventasTotalesAjustadas = ventasTotales - fondoCaja;
+    const ventasPorTipoPagoAjustadas = {
+      efectivo: Math.max(0, ventasPorTipoPago.efectivo - fondoCaja),
+      tarjeta: ventasPorTipoPago.tarjeta,
+      cortesia: ventasPorTipoPago.cortesia
+    };
+
     return {
-      ventasTotales,
+      ventasTotales: ventasTotalesAjustadas,
       boletosVendidos,
       totalMovimientos,
       activosAhora,
+      fondoCaja,
       ventasRecientes,
       ventasPorMes: ventasPorMesArray,
       ventasPorDia: ventasPorDiaArray,
-      ventasPorTipoPago,
+      ventasPorTipoPago: ventasPorTipoPagoAjustadas,
       ventasPorZona: ventasPorZonaArray,
       boletosPorTipoPago
     };
   } catch (error) {
     console.error('Error getting dashboard stats:', error);
+    throw error;
+  }
+}
+
+// Funciones para Fondo de Caja
+export async function createCashDrawerOpening(cashDrawer: Omit<CashDrawerOpening, 'id' | 'created_at' | 'updated_at'>): Promise<string> {
+  try {
+    const cashDrawerRef = collection(db, 'cash_drawer_openings');
+    const now = new Date();
+    const docRef = await addDoc(cashDrawerRef, {
+      ...cashDrawer,
+      date: Timestamp.fromDate(cashDrawer.date),
+      created_at: Timestamp.fromDate(now),
+      updated_at: Timestamp.fromDate(now)
+    });
+    return docRef.id;
+  } catch (error) {
+    console.error('Error creating cash drawer opening:', error);
+    throw error;
+  }
+}
+
+export async function getCashDrawerOpening(date: Date): Promise<CashDrawerOpening | null> {
+  try {
+    const cashDrawerRef = collection(db, 'cash_drawer_openings');
+    const normalizedDate = new Date(date);
+    normalizedDate.setHours(0, 0, 0, 0);
+    const nextDay = new Date(normalizedDate);
+    nextDay.setDate(nextDay.getDate() + 1);
+    
+    const q = query(
+      cashDrawerRef,
+      where('date', '>=', Timestamp.fromDate(normalizedDate)),
+      where('date', '<', Timestamp.fromDate(nextDay)),
+      limit(1)
+    );
+    
+    const querySnapshot = await getDocs(q);
+    
+    if (!querySnapshot.empty) {
+      const doc = querySnapshot.docs[0];
+      const data = doc.data() as FirestoreCashDrawerOpening;
+      return {
+        id: doc.id,
+        date: data.date.toDate(),
+        user_id: data.user_id,
+        amount: data.amount,
+        created_at: data.created_at.toDate(),
+        updated_at: data.updated_at.toDate()
+      };
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error getting cash drawer opening:', error);
+    throw error;
+  }
+}
+
+export async function updateCashDrawerOpening(id: string, amount: number, userId: string): Promise<void> {
+  try {
+    const cashDrawerRef = doc(db, 'cash_drawer_openings', id);
+    await updateDoc(cashDrawerRef, {
+      amount: amount,
+      user_id: userId,
+      updated_at: Timestamp.fromDate(new Date())
+    });
+  } catch (error) {
+    console.error('Error updating cash drawer opening:', error);
     throw error;
   }
 }
