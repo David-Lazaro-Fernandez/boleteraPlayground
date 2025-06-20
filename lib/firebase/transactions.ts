@@ -652,20 +652,12 @@ export async function getDashboardStats(startDate: Date, endDate: Date): Promise
       }
     });
 
-    // Obtener el fondo de caja del día seleccionado
+    // Obtener el fondo de caja del día seleccionado (solo para mostrar, no afecta los cálculos)
     const cashDrawer = await getCashDrawerOpening(startDate);
     const fondoCaja = cashDrawer?.amount || 0;
 
-    // Ajustar las ventas totales y por tipo de pago restando el fondo de caja del efectivo
-    const ventasTotalesAjustadas = ventasTotales - fondoCaja;
-    const ventasPorTipoPagoAjustadas = {
-      efectivo: Math.max(0, ventasPorTipoPago.efectivo - fondoCaja),
-      tarjeta: ventasPorTipoPago.tarjeta,
-      cortesia: ventasPorTipoPago.cortesia
-    };
-
     return {
-      ventasTotales: ventasTotalesAjustadas,
+      ventasTotales,
       boletosVendidos,
       totalMovimientos,
       activosAhora,
@@ -673,7 +665,7 @@ export async function getDashboardStats(startDate: Date, endDate: Date): Promise
       ventasRecientes,
       ventasPorMes: ventasPorMesArray,
       ventasPorDia: ventasPorDiaArray,
-      ventasPorTipoPago: ventasPorTipoPagoAjustadas,
+      ventasPorTipoPago,
       ventasPorZona: ventasPorZonaArray,
       boletosPorTipoPago
     };
