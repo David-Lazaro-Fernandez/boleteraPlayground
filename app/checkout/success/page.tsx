@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -36,7 +36,7 @@ interface PaymentData {
   }
 }
 
-export default function CheckoutSuccess() {
+function CheckoutSuccessContent() {
   const searchParams = useSearchParams()
   const sessionId = searchParams.get('session_id')
   
@@ -351,27 +351,27 @@ export default function CheckoutSuccess() {
 
               <hr className="my-6" />
 
-                             {/* Tickets Breakdown */}
-               <div className="mb-6">
-                 <h3 className="font-semibold text-gray-800 mb-4">Tickets</h3>
-                 <div className="space-y-3">
-                   {Object.entries(groupedItems).map(([zoneName, zoneData]) => (
-                     <div key={zoneName} className="flex justify-between items-center">
-                       <div>
-                         <span className="text-gray-800">
-                           {zoneData.isGeneral ? 'General' : zoneName}:
-                         </span>
-                         <span className="text-gray-600 ml-2">
-                           ${zoneData.items[0].price.toFixed(2)} MXN x {zoneData.totalQuantity}
-                         </span>
-                       </div>
-                       <span className="font-medium text-gray-800">
-                         ${zoneData.totalPrice.toFixed(2)} MXN
-                       </span>
-                     </div>
-                   ))}
-                 </div>
-               </div>
+              {/* Tickets Breakdown */}
+              <div className="mb-6">
+                <h3 className="font-semibold text-gray-800 mb-4">Tickets</h3>
+                <div className="space-y-3">
+                  {Object.entries(groupedItems).map(([zoneName, zoneData]) => (
+                    <div key={zoneName} className="flex justify-between items-center">
+                      <div>
+                        <span className="text-gray-800">
+                          {zoneData.isGeneral ? 'General' : zoneName}:
+                        </span>
+                        <span className="text-gray-600 ml-2">
+                          ${zoneData.items[0].price.toFixed(2)} MXN x {zoneData.totalQuantity}
+                        </span>
+                      </div>
+                      <span className="font-medium text-gray-800">
+                        ${zoneData.totalPrice.toFixed(2)} MXN
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
 
               {/* Service Charge */}
               <div className="mb-6">
@@ -421,5 +421,28 @@ export default function CheckoutSuccess() {
 
       <Footer />
     </div>
+  )
+}
+
+function LoadingFallback() {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800">
+      <Header />
+      <div className="flex items-center justify-center py-20">
+        <div className="text-center text-white">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <p className="text-lg">Cargando...</p>
+        </div>
+      </div>
+      <Footer />
+    </div>
+  )
+}
+
+export default function CheckoutSuccess() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <CheckoutSuccessContent />
+    </Suspense>
   )
 } 
