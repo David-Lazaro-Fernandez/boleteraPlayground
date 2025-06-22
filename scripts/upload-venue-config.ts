@@ -23,4 +23,4 @@ async function uploadVenueConfig() {
   }
 }
 
-uploadVenueConfig(); 
+uploadVenueConfig();

@@ -10,4 +10,4 @@ export const gontserrat = localFont({
   src: "../fonts/Gontserrat-Regular.ttf",
   display: "swap",
   variable: '--font-gontserrat'
-}) 
+})

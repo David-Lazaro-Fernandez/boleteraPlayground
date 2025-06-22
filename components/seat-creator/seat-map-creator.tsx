@@ -46,7 +46,7 @@ interface PreviewSeat {
   index: number
 }
 
-type CreationMode = "single" | "line" | "select" | "edit"
+type CreationMode = "single" | "line" | "select"
 
 // Función de utilidad para verificar si un asiento está en el viewport
 const isSeatInViewport = (
@@ -80,21 +80,6 @@ export function SeatMapCreator() {
     palenqueData.zones && palenqueData.zones.length > 0 ? palenqueData.zones[0].id : "default",
   )
   const [selectedRowLetter, setSelectedRowLetter] = useState("A")
-
-  // Estados para modo edición
-  const [editingMode, setEditingMode] = useState<"seat" | "line" | null>(null)
-  const [editingSeat, setEditingSeat] = useState<CreatedSeat | null>(null)
-  const [editingLine, setEditingLine] = useState<SeatLine | null>(null)
-  const [editCoordinates, setEditCoordinates] = useState({
-    x: 0,
-    y: 0,
-    startX: 0,
-    startY: 0,
-    endX: 0,
-    endY: 0,
-    angle: 0,
-    seatCount: 5
-  })
 
   // Estados para modo línea con mouse
   const [lineStartPoint, setLineStartPoint] = useState<{ x: number; y: number } | null>(null)
@@ -541,40 +526,9 @@ export function SeatMapCreator() {
       event.stopPropagation()
       if (creationMode === "select") {
         setSelectedSeats((prev) => (prev.includes(seatId) ? prev.filter((id) => id !== seatId) : [...prev, seatId]))
-      } else if (creationMode === "edit") {
-        const seat = createdSeats.find(s => s.id === seatId)
-        if (seat) {
-          if (seat.lineId) {
-            // Es parte de una línea
-            const line = createdLines.find(l => l.id === seat.lineId)
-            if (line) {
-              setEditingMode("line")
-              setEditingLine(line)
-              setEditCoordinates({
-                x: seat.x,
-                y: seat.y,
-                startX: line.startX,
-                startY: line.startY,
-                endX: line.endX,
-                endY: line.endY,
-                angle: line.angle,
-                seatCount: line.seatCount
-              })
-            }
-          } else {
-            // Es un asiento individual
-            setEditingMode("seat")
-            setEditingSeat(seat)
-            setEditCoordinates({
-              ...editCoordinates,
-              x: seat.x,
-              y: seat.y
-            })
-          }
-        }
       }
     },
-    [creationMode, createdSeats, createdLines, editCoordinates],
+    [creationMode],
   )
 
   // Eliminar asientos seleccionados
@@ -659,112 +613,12 @@ export function SeatMapCreator() {
     reader.readAsText(file)
   }
 
-  // Funciones para modo edición
-  const updateSeatCoordinates = () => {
-    if (!editingSeat) return
-
-    if (!isValidPosition(editCoordinates.x, editCoordinates.y)) {
-      toast({
-        title: "Posición inválida",
-        description: "Las coordenadas están fuera del área permitida",
-        variant: "destructive",
-      })
-      return
-    }
-
-    setCreatedSeats(prev => 
-      prev.map(seat => 
-        seat.id === editingSeat.id 
-          ? { ...seat, x: editCoordinates.x, y: editCoordinates.y }
-          : seat
-      )
-    )
-
-    toast({
-      title: "Asiento actualizado",
-      description: `Asiento ${editingSeat.rowLetter}${editingSeat.seatNumber} movido a (${editCoordinates.x}, ${editCoordinates.y})`,
-    })
-
-    setEditingMode(null)
-    setEditingSeat(null)
-  }
-
-  const updateLineCoordinates = () => {
-    if (!editingLine) return
-
-    // Regenerar asientos en la línea con las nuevas coordenadas
-    const seats = generateCurvePreview(
-      { x: editCoordinates.startX, y: editCoordinates.startY },
-      { x: editCoordinates.endX, y: editCoordinates.endY },
-      editCoordinates.angle,
-      editCoordinates.seatCount
-    )
-
-    // Actualizar la línea
-    setCreatedLines(prev =>
-      prev.map(line =>
-        line.id === editingLine.id
-          ? {
-              ...line,
-              startX: editCoordinates.startX,
-              startY: editCoordinates.startY,
-              endX: editCoordinates.endX,
-              endY: editCoordinates.endY,
-              angle: editCoordinates.angle,
-              seatCount: editCoordinates.seatCount
-            }
-          : line
-      )
-    )
-
-    // Actualizar los asientos de la línea
-    const lineSeats = createdSeats.filter(seat => seat.lineId === editingLine.id)
-    const updatedSeats = seats.map((seat, index) => {
-      const originalSeat = lineSeats[index]
-      return originalSeat ? {
-        ...originalSeat,
-        x: seat.x,
-        y: seat.y
-      } : null
-    }).filter(Boolean) as CreatedSeat[]
-
-    setCreatedSeats(prev => [
-      ...prev.filter(seat => seat.lineId !== editingLine.id),
-      ...updatedSeats
-    ])
-
-    toast({
-      title: "Línea actualizada",
-      description: `Línea ${editingLine.name} actualizada con ${editCoordinates.seatCount} asientos`,
-    })
-
-    setEditingMode(null)
-    setEditingLine(null)
-  }
-
-  const cancelEdit = () => {
-    setEditingMode(null)
-    setEditingSeat(null)
-    setEditingLine(null)
-    setEditCoordinates({
-      x: 0,
-      y: 0,
-      startX: 0,
-      startY: 0,
-      endX: 0,
-      endY: 0,
-      angle: 0,
-      seatCount: 5
-    })
-  }
-
   // Limpiar todo
   const clearAll = () => {
     setCreatedSeats([])
     setCreatedLines([])
     setSelectedSeats([])
     resetLineCreation()
-    cancelEdit()
     toast({
       title: "Configuración limpiada",
       description: "Todos los asientos han sido eliminados.",
@@ -826,7 +680,6 @@ export function SeatMapCreator() {
               onClick={() => {
                 setCreationMode("single")
                 resetLineCreation()
-                cancelEdit()
               }}
               className="justify-start"
             >
@@ -838,7 +691,6 @@ export function SeatMapCreator() {
               onClick={() => {
                 setCreationMode("line")
                 setSelectedSeats([])
-                cancelEdit()
               }}
               className="justify-start"
             >
@@ -850,24 +702,11 @@ export function SeatMapCreator() {
               onClick={() => {
                 setCreationMode("select")
                 resetLineCreation()
-                cancelEdit()
               }}
               className="justify-start"
             >
               <Plus className="w-4 h-4 mr-2" />
               Seleccionar/Editar
-            </Button>
-            <Button
-              variant={creationMode === "edit" ? "default" : "outline"}
-              onClick={() => {
-                setCreationMode("edit")
-                resetLineCreation()
-                setSelectedSeats([])
-              }}
-              className="justify-start"
-            >
-              <MousePointer className="w-4 h-4 mr-2" />
-              Modo Edición
             </Button>
           </div>
 
@@ -878,144 +717,6 @@ export function SeatMapCreator() {
             </Button>
           )}
         </div>
-
-        {/* Modo Edición */}
-        {creationMode === "edit" && (
-          <div className="p-6 border-b">
-            <h3 className="font-semibold text-gray-800 mb-4">Modo Edición</h3>
-            
-            {editingMode === null && (
-              <div className="text-sm text-gray-600 p-3 bg-blue-50 rounded-lg">
-                Haz clic en un asiento para editarlo. Si pertenece a una línea, podrás editar toda la línea.
-              </div>
-            )}
-
-            {/* Editar Asiento Individual */}
-            {editingMode === "seat" && editingSeat && (
-              <div className="space-y-4">
-                <h4 className="font-medium text-gray-700">
-                  Editando Asiento {editingSeat.rowLetter}{editingSeat.seatNumber}
-                </h4>
-                
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-x">Coordenada X</Label>
-                    <Input
-                      id="edit-x"
-                      type="number"
-                      value={editCoordinates.x}
-                      onChange={(e) => setEditCoordinates(prev => ({ ...prev, x: Number(e.target.value) }))}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-y">Coordenada Y</Label>
-                    <Input
-                      id="edit-y"
-                      type="number"  
-                      value={editCoordinates.y}
-                      onChange={(e) => setEditCoordinates(prev => ({ ...prev, y: Number(e.target.value) }))}
-                    />
-                  </div>
-                </div>
-
-                <div className="flex gap-2">
-                  <Button onClick={updateSeatCoordinates} className="flex-1">
-                    Aplicar Cambios
-                  </Button>
-                  <Button variant="outline" onClick={cancelEdit} className="flex-1">
-                    Cancelar
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {/* Editar Línea de Asientos */}
-            {editingMode === "line" && editingLine && (
-              <div className="space-y-4">
-                <h4 className="font-medium text-gray-700">
-                  Editando {editingLine.name}
-                </h4>
-                
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-startX">Coordenada X Inicio</Label>
-                    <Input
-                      id="edit-startX"
-                      type="number"
-                      value={editCoordinates.startX}
-                      onChange={(e) => setEditCoordinates(prev => ({ ...prev, startX: Number(e.target.value) }))}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-startY">Coordenada Y Inicio</Label>
-                    <Input
-                      id="edit-startY"
-                      type="number"
-                      value={editCoordinates.startY}
-                      onChange={(e) => setEditCoordinates(prev => ({ ...prev, startY: Number(e.target.value) }))}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-endX">Coordenada X Fin</Label>
-                    <Input
-                      id="edit-endX"
-                      type="number"
-                      value={editCoordinates.endX}
-                      onChange={(e) => setEditCoordinates(prev => ({ ...prev, endX: Number(e.target.value) }))}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-endY">Coordenada Y Fin</Label>
-                    <Input
-                      id="edit-endY"
-                      type="number"
-                      value={editCoordinates.endY}
-                      onChange={(e) => setEditCoordinates(prev => ({ ...prev, endY: Number(e.target.value) }))}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-angle">Ángulo</Label>
-                    <Input
-                      id="edit-angle"
-                      type="number"
-                      min={-60}
-                      max={60}
-                      step="0.1"
-                      value={editCoordinates.angle}
-                      onChange={(e) => setEditCoordinates(prev => ({ ...prev, angle: Number(e.target.value) }))}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-seatCount">Número de Asientos</Label>
-                    <Input
-                      id="edit-seatCount"
-                      type="number"
-                      min="2"
-                      max="20"
-                      value={editCoordinates.seatCount}
-                      onChange={(e) => setEditCoordinates(prev => ({ ...prev, seatCount: Number(e.target.value) }))}
-                    />
-                  </div>
-                </div>
-
-                <div className="flex gap-2">
-                  <Button onClick={updateLineCoordinates} className="flex-1">
-                    Aplicar Cambios
-                  </Button>
-                  <Button variant="outline" onClick={cancelEdit} className="flex-1">
-                    Cancelar
-                  </Button>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
 
         {/* Configuración */}
         <div className="p-6 border-b">
@@ -1249,9 +950,7 @@ export function SeatMapCreator() {
                 height="100%"
                 viewBox={viewBox}
                 className={`border rounded-lg bg-gray-50 ${
-                  creationMode === "single" || creationMode === "line" 
-                    ? "cursor-crosshair" 
-                    : "cursor-pointer"
+                  creationMode !== "select" ? "cursor-crosshair" : "cursor-pointer"
                 }`}
                 onClick={handleCanvasClick}
                 onMouseDown={handleMouseDown}
@@ -1360,7 +1059,7 @@ export function SeatMapCreator() {
                       stroke={selectedSeats.includes(seat.id) ? "#BE185D" : "#374151"}
                       strokeWidth="1.5"
                       className={`transition-all duration-200 ${
-                        creationMode === "select" || creationMode === "edit"
+                        creationMode === "select"
                           ? "cursor-pointer hover:stroke-gray-400 hover:stroke-3"
                           : "pointer-events-none"
                       }`}

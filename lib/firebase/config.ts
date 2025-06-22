@@ -117,4 +117,4 @@ export async function getFileURL(path: string): Promise<string> {
   }
 }
 
-export { db, storage }; 
+export { db, storage };

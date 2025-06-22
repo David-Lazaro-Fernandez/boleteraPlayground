@@ -781,4 +781,4 @@ export async function cleanAllCollections(): Promise<void> {
     console.error('Error cleaning collections:', error);
     throw error;
   }
-} 
+}

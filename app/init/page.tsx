@@ -193,4 +193,4 @@ export default function InitPage() {
       </div>
     </div>
   )
-} 
+}
