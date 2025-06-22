@@ -95,6 +95,17 @@ interface GeneralTicket {
   quantity: number
 }
 
+interface EventInfo {
+  title: string
+  date: string
+  time: string
+  venue: string
+}
+
+interface PalenqueSeatMapProps {
+  eventInfo?: EventInfo
+}
+
 // Configuración de zonas con componentes
 const zoneConfig: Record<string, ZoneInfo> = {
   General: { name: "General", price: 300, color: "#10B981", selectable: false, component: GeneralSection },
@@ -144,7 +155,7 @@ const zoneCoordinates: Record<string, { x: number; y: number }> = {
   "General": { x: 400, y: 400 }
 }
 
-export function PalenqueSeatMap() {
+export function PalenqueSeatMap({ eventInfo: propEventInfo }: PalenqueSeatMapProps = {}) {
   const router = useRouter()
   const svgRef = useRef<SVGSVGElement>(null)
   
@@ -237,8 +248,8 @@ export function PalenqueSeatMap() {
     );
   }
 
-  // Información del evento
-  const eventInfo = {
+  // Información del evento (usar props si se proporciona, sino usar valores por defecto)
+  const eventInfo = propEventInfo || {
     title: "Acordéonazo",
     date: "Sábado, 19 de junio 2025",
     time: "20:00 hrs",

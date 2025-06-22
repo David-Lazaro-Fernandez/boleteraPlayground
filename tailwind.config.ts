@@ -55,17 +55,29 @@ const config: Config = {
   				'4': 'hsl(var(--chart-4))',
   				'5': 'hsl(var(--chart-5))'
   			},
-  			sidebar: {
-  				DEFAULT: 'hsl(var(--sidebar-background))',
-  				foreground: 'hsl(var(--sidebar-foreground))',
-  				primary: 'hsl(var(--sidebar-primary))',
-  				'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
-  				accent: 'hsl(var(--sidebar-accent))',
-  				'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
-  				border: 'hsl(var(--sidebar-border))',
-  				ring: 'hsl(var(--sidebar-ring))'
-  			}
-  		},
+  						sidebar: {
+				DEFAULT: 'hsl(var(--sidebar-background))',
+				foreground: 'hsl(var(--sidebar-foreground))',
+				primary: 'hsl(var(--sidebar-primary))',
+				'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
+				accent: 'hsl(var(--sidebar-accent))',
+				'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
+				border: 'hsl(var(--sidebar-border))',
+				ring: 'hsl(var(--sidebar-ring))'
+			},
+			// Landing page colors
+			'page-bg': '#FFFFFF',
+			'gradient-start': '#142A5D',
+			'gradient-end': '#405B9A',
+			'heading-text': '#1F204C',
+			'navbar-text': '#FFFFFF',
+			'text-light': '#FFFFFF',
+			'primary-button': '#F5167E',
+			'card-bg': '#23265D',
+			'input-border': '#7778B0',
+			'section-bg': '#242565',
+			'filter-bg': '#EEF2FF'
+		},
   		borderRadius: {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',

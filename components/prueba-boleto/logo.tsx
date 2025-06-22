@@ -1,12 +1,12 @@
 import React from 'react'
 
 interface LogoProps {
-  classNameName?: string
+  className?: string
 }
 
-export function Logo({ classNameName }: LogoProps) {
+export function Logo({ className }: LogoProps) {
   return (
-    <svg id="Layer_2" data-name="Layer 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 443.22 147.9">
+    <svg id="Layer_2" data-name="Layer 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 443.22 147.9" className={className}>
   <g id="Colores">
     <g>
       <g>

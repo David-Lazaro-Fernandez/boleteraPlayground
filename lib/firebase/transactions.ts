@@ -431,6 +431,36 @@ export async function getEventsByVenue(venueId: string): Promise<Event[]> {
   }
 }
 
+// Nueva función para obtener eventos activos o en preventa ordenados por fecha
+export async function getUpcomingEvents(limitCount: number = 6): Promise<Event[]> {
+  try {
+    const eventsRef = collection(db, 'events');
+    
+    const q = query(
+      eventsRef,
+      where('estado_venta', 'in', ['en_preventa', 'activo']),
+      orderBy('fecha', 'asc'),
+      limit(limitCount)
+    );
+    
+    const querySnapshot = await getDocs(q);
+    
+    return querySnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        fecha: (data.fecha as Timestamp).toDate(),
+        created_at: (data.created_at as Timestamp).toDate(),
+        updated_at: (data.updated_at as Timestamp).toDate()
+      } as Event;
+    });
+  } catch (error) {
+    console.error('Error getting upcoming events:', error);
+    throw error;
+  }
+}
+
 async function getTicketsInBatches(ticketIds: string[]): Promise<QuerySnapshot<DocumentData>[]> {
   const batchSize = 30;
   const batches = [];
