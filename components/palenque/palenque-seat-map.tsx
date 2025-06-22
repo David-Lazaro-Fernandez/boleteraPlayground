@@ -397,7 +397,13 @@ export function PalenqueSeatMap({ eventInfo: propEventInfo }: PalenqueSeatMapPro
       const searchParams = new URLSearchParams()
       searchParams.set('selectedSeats', JSON.stringify(selectedSeats))
       searchParams.set('generalTickets', JSON.stringify(generalTickets))
-      router.push(`/venta?${searchParams.toString()}`)
+      
+      // Extraer el eventId de la URL actual
+      const path = window.location.pathname
+      const eventIdMatch = path.match(/\/eventos\/([^\/]+)\/comprar/)
+      const eventId = eventIdMatch ? eventIdMatch[1] : 'unknown'
+      
+      router.push(`/eventos/${eventId}/checkout?${searchParams.toString()}`)
     }
   }
 

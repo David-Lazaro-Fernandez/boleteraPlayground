@@ -7,7 +7,10 @@ import { Venue, getVenue } from "@/lib/firebase/venues"
 import { PalenqueSeatMap } from "@/components/palenque/palenque-seat-map"
 
 // Componente que muestra el mapa de asientos con información del evento
-function EventSeatMap({ event, venue }: { event: Event; venue: Venue | null }) {
+function EventSeatMap({ event, venue }: { 
+  event: Event; 
+  venue: Venue | null;
+}) {
   const eventInfo = {
     title: event.nombre,
     date: event.fecha.toLocaleDateString('es-ES', {
@@ -31,7 +34,6 @@ export default function ComprarBoletosPage() {
   const [venue, setVenue] = useState<Venue | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-
   useEffect(() => {
     async function fetchEventDetails() {
       try {
