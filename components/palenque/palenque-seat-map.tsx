@@ -181,6 +181,7 @@ export function PalenqueSeatMap({ eventInfo: propEventInfo }: PalenqueSeatMapPro
   const [isDragging, setIsDragging] = useState(false)
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
   const [lastPan, setLastPan] = useState({ x: 0, y: 0 })
+  const [isPhysicalSale, setIsPhysicalSale] = useState(false)
 
   // Calculate viewBox string
   const adjustedWidth = svgWidth / zoomLevel
@@ -234,6 +235,13 @@ export function PalenqueSeatMap({ eventInfo: propEventInfo }: PalenqueSeatMapPro
     };
 
     fetchVenueConfig();
+  }, []);
+
+  // Detectar si estamos en página de venta física
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setIsPhysicalSale(window.location.pathname === '/mapas-asientos');
+    }
   }, []);
 
   // If loading or no venue config, show loading state
@@ -398,12 +406,17 @@ export function PalenqueSeatMap({ eventInfo: propEventInfo }: PalenqueSeatMapPro
       searchParams.set('selectedSeats', JSON.stringify(selectedSeats))
       searchParams.set('generalTickets', JSON.stringify(generalTickets))
       
-      // Extraer el eventId de la URL actual
-      const path = window.location.pathname
-      const eventIdMatch = path.match(/\/eventos\/([^\/]+)\/comprar/)
-      const eventId = eventIdMatch ? eventIdMatch[1] : 'unknown'
-      
-      router.push(`/eventos/${eventId}/checkout?${searchParams.toString()}`)
+      if (isPhysicalSale) {
+        // Redirigir a página de venta física
+        router.push(`/venta?${searchParams.toString()}`)
+      } else {
+        // Flujo de venta en línea - Extraer el eventId de la URL
+        const path = window.location.pathname
+        const eventIdMatch = path.match(/\/eventos\/([^\/]+)\/comprar/)
+        const eventId = eventIdMatch ? eventIdMatch[1] : 'unknown'
+        
+        router.push(`/eventos/${eventId}/checkout?${searchParams.toString()}`)
+      }
     }
   }
 
@@ -568,7 +581,10 @@ export function PalenqueSeatMap({ eventInfo: propEventInfo }: PalenqueSeatMapPro
                       className="bg-[#325CE5] text-white hover:bg-[#2849B3]"
                       onClick={handlePurchase}
                     >
-                      Comprar {selectedSeats.length + generalTickets.reduce((sum, ticket) => sum + ticket.quantity, 0)} boletos
+                      {isPhysicalSale 
+                        ? `Procesar Venta (${selectedSeats.length + generalTickets.reduce((sum, ticket) => sum + ticket.quantity, 0)} boletos)`
+                        : `Comprar ${selectedSeats.length + generalTickets.reduce((sum, ticket) => sum + ticket.quantity, 0)} boletos`
+                      }
                     </Button>
                   </div>
                 )}
