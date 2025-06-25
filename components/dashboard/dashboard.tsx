@@ -41,7 +41,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import { MainLayout } from "@/components/layout/main-layout";
+import { MainLayout } from "@/components/dashboardLayout/main-layout";
 import {
   getDashboardStats,
   DashboardStats,
@@ -147,7 +147,7 @@ export default function Dashboard() {
   };
 
   return (
-    <MainLayout activePage="inicio">
+    <div>
       {/* Page Header */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
@@ -751,6 +751,6 @@ export default function Dashboard() {
           </div>
         </TabsContent>
       </Tabs>
-    </MainLayout>
+    </div>
   );
 }

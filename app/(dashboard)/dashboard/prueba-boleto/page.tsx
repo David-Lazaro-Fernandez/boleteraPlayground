@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { MainLayout } from "@/components/layout/main-layout";
+import { MainLayout } from "@/components/dashboardLayout/main-layout";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -526,7 +526,7 @@ export default function PruebaBoletoPage() {
   };
 
   return (
-    <MainLayout activePage="prueba-boleto">
+    <div>
       <div className="max-w-4xl mx-auto">
         {/* Page Header */}
         <div className="text-center mb-8">
@@ -1175,6 +1175,6 @@ export default function PruebaBoletoPage() {
           </Card>
         </div>
       </div>
-    </MainLayout>
+  </div>
   );
 }

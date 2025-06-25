@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { MainLayout } from "@/components/layout/main-layout";
 import { EventTable } from "@/components/events/event-table";
 import { EventDrawer } from "@/components/events/event-drawer";
 import { Button } from "@/components/ui/button";
@@ -78,7 +77,7 @@ export default function EventsPage() {
   };
 
   return (
-    <MainLayout activePage="eventos">
+    <>
       {/* Page Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
@@ -156,6 +155,6 @@ export default function EventsPage() {
         venues={venues}
         onSuccess={handleRefresh}
       />
-    </MainLayout>
+    </>
   );
 }

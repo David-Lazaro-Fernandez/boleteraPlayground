@@ -334,7 +334,9 @@ export function PalenqueSeatMap({
   // Detectar si estamos en página de venta física
   useEffect(() => {
     if (typeof window !== "undefined") {
-      setIsPhysicalSale(window.location.pathname === "/dashboard/mapas-asientos");
+      setIsPhysicalSale(
+        window.location.pathname === "/dashboard/mapas-asientos",
+      );
     }
   }, []);
 
@@ -520,9 +522,7 @@ export function PalenqueSeatMap({
         const eventIdMatch = path.match(/\/eventos\/([^\/]+)\/comprar/);
         const eventId = eventIdMatch ? eventIdMatch[1] : "unknown";
 
-        router.push(
-          `/eventos/${eventId}/checkout?${searchParams.toString()}`,
-        );
+        router.push(`/eventos/${eventId}/checkout?${searchParams.toString()}`);
       }
     }
   };

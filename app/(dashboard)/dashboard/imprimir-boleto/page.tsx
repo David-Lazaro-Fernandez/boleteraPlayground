@@ -3,7 +3,6 @@
 import type React from "react";
 
 import { useState } from "react";
-import { MainLayout } from "@/components/layout/main-layout";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -147,7 +146,7 @@ export default function ImprimirBoletoPage() {
   );
 
   return (
-    <MainLayout activePage="imprimir-boleto">
+    <div>
       <div className="max-w-2xl mx-auto">
         {/* Page Header */}
         <div className="text-center mb-8">
@@ -437,6 +436,6 @@ export default function ImprimirBoletoPage() {
           </p>
         </div>
       </div>
-    </MainLayout>
+    </div>
   );
 }

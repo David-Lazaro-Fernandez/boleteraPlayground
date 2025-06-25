@@ -47,12 +47,12 @@ export function Header({ activePage }: HeaderProps) {
   };
 
   const navItems = [
-    { name: "Inicio", href: "/dashboard", key: "inicio" },
+    { name: "Inicio", href: "/dashboard", key: "dashboard" },
     { name: "Eventos", href: "/dashboard/eventos", key: "eventos" },
     {
       name: "Mapas De Asientos",
       href: "/dashboard/mapas-asientos",
-      key: "mapas-de-asientos",
+      key: "mapas-asientos",
     },
     {
       name: "Boletos Pruebas",
