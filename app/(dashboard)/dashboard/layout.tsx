@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { MainLayout } from "@/components/dashboardLayout/main-layout";
+import { ProtectedRoute } from "@/components/auth/protected-route";
 
 export default function DashboardLayout({
     children,
@@ -12,6 +13,8 @@ export default function DashboardLayout({
     const activePage = pathname.split("/").pop() || "";
     console.log(activePage);
     return (
-        <MainLayout activePage={activePage}>{children}</MainLayout>
+        <ProtectedRoute redirectTo="/auth/signin">
+            <MainLayout activePage={activePage}>{children}</MainLayout>
+        </ProtectedRoute>
     );
 }
