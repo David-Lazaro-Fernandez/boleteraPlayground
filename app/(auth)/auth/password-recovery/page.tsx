@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Mail, ArrowLeft, Key, CheckCircle } from 'lucide-react'
+import { resetPassword } from '@/lib/firebase/auth'
 
 export default function PasswordRecoveryPage() {
   const [email, setEmail] = useState('')
@@ -21,7 +22,7 @@ export default function PasswordRecoveryPage() {
     setError('')
 
     try {
-      // Aquí irá la lógica de recuperación de contraseña
+      // Validaciones básicas
       if (!email) {
         throw new Error('Por favor ingresa tu correo electrónico')
       }
@@ -30,8 +31,13 @@ export default function PasswordRecoveryPage() {
         throw new Error('Por favor ingresa un email válido')
       }
 
-      // Simular delay de envío de email
-      await new Promise(resolve => setTimeout(resolve, 2000))
+      // Enviar email de recuperación con Firebase Auth
+      const result = await resetPassword(email)
+      
+      if (result.error) {
+        setError(result.error)
+        return
+      }
 
       // Marcar como exitoso
       setIsSuccess(true)

@@ -9,9 +9,11 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Eye, EyeOff, Mail, Lock, LogIn } from 'lucide-react'
+import { useAuth } from '@/hooks/use-auth'
 
 export default function SignInPage() {
   const router = useRouter()
+  const { signIn } = useAuth()
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -26,8 +28,7 @@ export default function SignInPage() {
     setError('')
 
     try {
-      // Aquí irá la lógica de autenticación
-      // Por ahora simularemos una validación básica
+      // Validaciones básicas
       if (!formData.email || !formData.password) {
         throw new Error('Por favor completa todos los campos')
       }
@@ -36,11 +37,18 @@ export default function SignInPage() {
         throw new Error('Por favor ingresa un email válido')
       }
 
-      // Simular delay de autenticación
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      // Intentar iniciar sesión con Firebase Auth
+      const result = await signIn(formData.email, formData.password)
+      
+      if (result.error) {
+        setError(result.error)
+        return
+      }
 
-      // Por ahora redirigir al dashboard (esto se cambiará cuando implementes la auth real)
-      router.push('/dashboard')
+      // Si la autenticación fue exitosa, redirigir al dashboard
+      if (result.user) {
+        router.push('/dashboard')
+      }
       
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al iniciar sesión')
@@ -154,7 +162,7 @@ export default function SignInPage() {
         </Link>
         
         <div className="text-xs text-gray-500">
-          Sistema de Boletería - Acceso Administrativo
+          Astral Tickets - Acceso Administrativo
         </div>
       </CardFooter>
     </Card>

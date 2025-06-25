@@ -1,6 +1,7 @@
 import { initializeApp, getApps } from 'firebase/app';
 import { getFirestore, collection, doc, setDoc, getDoc, DocumentData } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { getAuth } from 'firebase/auth';
 
 const firebaseConfig = {
     apiKey: "AIzaSyBMO5JO_tSoxa1sYCIy7oubnXsh8YlhmuY",
@@ -16,8 +17,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const storage = getStorage(app);
-
-
+const auth = getAuth(app);
 
 // Helper function to read venue data from Firestore
 export async function readVenueData(venueId: string): Promise<DocumentData | null> {
@@ -117,4 +117,4 @@ export async function getFileURL(path: string): Promise<string> {
   }
 }
 
-export { db, storage };
+export { db, storage, auth };
