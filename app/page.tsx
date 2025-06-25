@@ -1,7 +1,5 @@
-"use client"
+import LandingPage from "./(client)/landing/page"
 
-import Dashboard from "../components/dashboard/dashboard"
-
-export default function Page() {
-  return <Dashboard />
+export default function ClientPage() {
+  return <LandingPage />
 }
