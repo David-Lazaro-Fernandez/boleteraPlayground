@@ -14,17 +14,43 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Settings, User, LogOut } from "lucide-react"
 import Link from "next/link"
+import { useAuth } from '@/hooks/use-auth'
+import { useRouter } from 'next/navigation'
 
 interface HeaderProps {
   activePage: string
 }
 
 export function Header({ activePage }: HeaderProps) {
+  const { user, signOut } = useAuth()
+  const router = useRouter()
+
+  const handleSignOut = async () => {
+    try {
+      await signOut()
+      router.push('/auth/signin')
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error)
+    }
+  }
+
+  // Obtener iniciales del usuario para el avatar
+  const getUserInitials = (email: string | null) => {
+    if (!email) return 'U'
+    return email.charAt(0).toUpperCase()
+  }
+
+  // Obtener nombre del usuario (por ahora del email)
+  const getUserDisplayName = (email: string | null) => {
+    if (!email) return 'Usuario'
+    return email.split('@')[0]
+  }
+
   const navItems = [
-    { name: "Inicio", href: "/" },
-    { name: "Eventos", href: "/eventos" },
-    { name: "Mapas De Asientos", href: "/mapas-asientos" },
-    { name: "Boletos Pruebas", href: "/prueba-boleto" }
+    { name: "Inicio", href: "/dashboard", key: "inicio" },
+    { name: "Eventos", href: "/dashboard/eventos", key: "eventos" },
+    { name: "Mapas De Asientos", href: "/dashboard/mapas-asientos", key: "mapas-de-asientos" },
+    { name: "Boletos Pruebas", href: "/dashboard/prueba-boleto", key: "boletos-pruebas" }
   ]
 
   return (
@@ -37,9 +63,13 @@ export function Header({ activePage }: HeaderProps) {
               <Button variant="ghost" className="flex items-center gap-2 hover:bg-gray-100">
                 <Avatar className="h-8 w-8">
                   <AvatarImage src="/placeholder.svg?height=32&width=32" />
-                  <AvatarFallback className="bg-red-100 text-red-600">GG</AvatarFallback>
+                  <AvatarFallback className="bg-blue-100 text-blue-600">
+                    {getUserInitials(user?.email || null)}
+                  </AvatarFallback>
                 </Avatar>
-                <span className="font-medium text-gray-900">Gerardo Gamez</span>
+                <span className="font-medium text-gray-900">
+                  {getUserDisplayName(user?.email || null)}
+                </span>
                 <ChevronDownIcon className="h-4 w-4 text-gray-500" />
               </Button>
             </DropdownMenuTrigger>
@@ -55,7 +85,7 @@ export function Header({ activePage }: HeaderProps) {
                 <span>Mi perfil</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-red-600">
+              <DropdownMenuItem className="text-red-600" onClick={handleSignOut}>
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Cerrar sesión</span>
               </DropdownMenuItem>
@@ -70,7 +100,7 @@ export function Header({ activePage }: HeaderProps) {
               key={item.name}
               href={item.href}
               className={`${
-                activePage === item.name.toLowerCase().replace(/\s+/g, "-")
+                activePage === item.key
                   ? "text-blue-600 font-medium border-b-2 border-blue-600"
                   : "text-gray-600 hover:text-gray-900"
               } pb-4 whitespace-nowrap`}
@@ -88,7 +118,9 @@ export function Header({ activePage }: HeaderProps) {
           </div>
           <Avatar className="h-8 w-8">
             <AvatarImage src="/placeholder.svg?height=32&width=32" />
-            <AvatarFallback className="bg-red-100 text-red-600">GG</AvatarFallback>
+            <AvatarFallback className="bg-blue-100 text-blue-600">
+              {getUserInitials(user?.email || null)}
+            </AvatarFallback>
           </Avatar>
         </div>
       </div>
