@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import { MainLayout } from "@/components/layout/main-layout"
-import { PalenqueSeatMap } from "@/components/palenque/palenque-seat-map"
+import { MainLayout } from "@/components/layout/main-layout";
+import { PalenqueSeatMap } from "@/components/palenque/palenque-seat-map";
 
 export default function MapasAsientosPage() {
   return (
@@ -10,5 +10,5 @@ export default function MapasAsientosPage() {
         <PalenqueSeatMap />
       </div>
     </MainLayout>
-  )
+  );
 }

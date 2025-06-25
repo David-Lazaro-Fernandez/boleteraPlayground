@@ -1,4 +1,4 @@
-export { GeneralSection } from "./general-section"
+export { GeneralSection } from "./general-section";
 export {
   Oro1Section,
   Oro2Section,
@@ -8,10 +8,10 @@ export {
   Oro6Section,
   Oro7Section,
   Oro8Section,
-} from "./oro-sections"
+} from "./oro-sections";
 export {
   VIP1Section,
   VIP2Section,
   VIP3Section,
   VIP4Section,
-} from "./vip-sections"
+} from "./vip-sections";

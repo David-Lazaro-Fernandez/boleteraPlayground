@@ -1,208 +1,260 @@
-'use client'
+"use client";
 
-import { useEffect, useState, Suspense } from 'react'
-import { useSearchParams } from 'next/navigation'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { CalendarIcon, ClockIcon, MapPinIcon, CheckCircleIcon, CreditCardIcon, UserIcon, TicketIcon } from 'lucide-react'
-import Link from 'next/link'
-import Image from 'next/image'
-import { verifyPayment } from '@/lib/stripe/checkout'
-import { getEvent, Event } from '@/lib/firebase/events'
-import { getVenue, Venue } from '@/lib/firebase/venues'
-import { Header } from '@/components/landing/header'
-import { Footer } from '@/components/landing/footer'
-import { CartItem } from '@/lib/stripe/types'
+import { useEffect, useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  CalendarIcon,
+  ClockIcon,
+  MapPinIcon,
+  CheckCircleIcon,
+  CreditCardIcon,
+  UserIcon,
+  TicketIcon,
+} from "lucide-react";
+import Link from "next/link";
+import Image from "next/image";
+import { verifyPayment } from "@/lib/stripe/checkout";
+import { getEvent, Event } from "@/lib/firebase/events";
+import { getVenue, Venue } from "@/lib/firebase/venues";
+import { Header } from "@/components/landing/header";
+import { Footer } from "@/components/landing/footer";
+import { CartItem } from "@/lib/stripe/types";
 
 interface PaymentData {
-  customerEmail: string
-  customerName: string
-  orderNumber: string
-  eventId: string
-  eventName: string
-  totalAmount: number
-  subtotal: number
-  serviceCharge: number
-  ticketCount: number
-  purchaseDate: string
-  cartItems: CartItem[]
+  customerEmail: string;
+  customerName: string;
+  orderNumber: string;
+  eventId: string;
+  eventName: string;
+  totalAmount: number;
+  subtotal: number;
+  serviceCharge: number;
+  ticketCount: number;
+  purchaseDate: string;
+  cartItems: CartItem[];
   paymentMethod?: {
-    type: string
+    type: string;
     card?: {
-      brand: string
-      last4: string
-    }
-  }
+      brand: string;
+      last4: string;
+    };
+  };
 }
 
 function CheckoutSuccessContent() {
-  const searchParams = useSearchParams()
-  const sessionId = searchParams.get('session_id')
-  
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [paymentData, setPaymentData] = useState<PaymentData | null>(null)
-  const [event, setEvent] = useState<Event | null>(null)
-  const [venue, setVenue] = useState<Venue | null>(null)
+  const searchParams = useSearchParams();
+  const sessionId = searchParams.get("session_id");
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [paymentData, setPaymentData] = useState<PaymentData | null>(null);
+  const [event, setEvent] = useState<Event | null>(null);
+  const [venue, setVenue] = useState<Venue | null>(null);
 
   useEffect(() => {
     if (sessionId) {
-      verifyPaymentAndLoadEvent()
+      verifyPaymentAndLoadEvent();
     } else {
-      setError('No se encontró información de la sesión de pago')
-      setLoading(false)
+      setError("No se encontró información de la sesión de pago");
+      setLoading(false);
     }
-  }, [sessionId])
+  }, [sessionId]);
 
   const verifyPaymentAndLoadEvent = async () => {
     try {
-      setLoading(true)
-      const result = await verifyPayment(sessionId!)
-      
+      setLoading(true);
+      const result = await verifyPayment(sessionId!);
+
       if (result.success && result.metadata) {
-        const metadata = result.metadata
-        
+        const metadata = result.metadata;
+
         // Obtener información del evento completa
-        const eventData = await getEvent(metadata.eventId)
-        
+        const eventData = await getEvent(metadata.eventId);
+
         // Obtener información del venue si el evento existe
-        let venueData = null
+        let venueData = null;
         if (eventData && eventData.lugar_id) {
-          venueData = await getVenue(eventData.lugar_id)
+          venueData = await getVenue(eventData.lugar_id);
         }
 
         // Parsear los items del carrito desde metadata
-        const cartItems: CartItem[] = metadata.cartItems ? JSON.parse(metadata.cartItems) : []
-        
+        const cartItems: CartItem[] = metadata.cartItems
+          ? JSON.parse(metadata.cartItems)
+          : [];
+
         setPaymentData({
-          customerEmail: result.customerDetails?.email || '',
-          customerName: result.customerDetails?.name || '',
-          orderNumber: result.sessionId?.slice(-8).toUpperCase() || 'N/A',
-          eventId: metadata.eventId || '',
-          eventName: metadata.eventName || '',
+          customerEmail: result.customerDetails?.email || "",
+          customerName: result.customerDetails?.name || "",
+          orderNumber: result.sessionId?.slice(-8).toUpperCase() || "N/A",
+          eventId: metadata.eventId || "",
+          eventName: metadata.eventName || "",
           totalAmount: result.amountTotal ? result.amountTotal / 100 : 0,
-          subtotal: parseFloat(metadata.subtotal || '0'),
-          serviceCharge: parseFloat(metadata.serviceCharge || '0'),
-          ticketCount: parseInt(metadata.ticketCount || '1'),
+          subtotal: parseFloat(metadata.subtotal || "0"),
+          serviceCharge: parseFloat(metadata.serviceCharge || "0"),
+          ticketCount: parseInt(metadata.ticketCount || "1"),
           cartItems: cartItems,
           paymentMethod: result.paymentMethod || undefined,
-          purchaseDate: new Date().toLocaleDateString('es-ES', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-          })
-        })
-        
-        setEvent(eventData)
-        setVenue(venueData)
+          purchaseDate: new Date().toLocaleDateString("es-ES", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+        });
+
+        setEvent(eventData);
+        setVenue(venueData);
       } else {
-        setError('No se pudo verificar el pago')
+        setError("No se pudo verificar el pago");
       }
     } catch (err) {
-      console.error('Error verifying payment:', err)
-      setError('Error al verificar el pago')
+      console.error("Error verifying payment:", err);
+      setError("Error al verificar el pago");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const formatEventDate = (date: Date, time: string) => {
-    const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
-    const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
-    
-    const dayName = days[date.getDay()]
-    const month = months[date.getMonth()]
-    const day = date.getDate()
-    const year = date.getFullYear()
-    
-    return `${dayName}, ${month} ${day}, ${year}, ${time}`
-  }
+    const days = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+    const months = [
+      "Ene",
+      "Feb",
+      "Mar",
+      "Abr",
+      "May",
+      "Jun",
+      "Jul",
+      "Ago",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dic",
+    ];
+
+    const dayName = days[date.getDay()];
+    const month = months[date.getMonth()];
+    const day = date.getDate();
+    const year = date.getFullYear();
+
+    return `${dayName}, ${month} ${day}, ${year}, ${time}`;
+  };
 
   const getVenueDisplayName = () => {
     if (venue) {
-      return `${venue.ciudad}, ${venue.estado} - ${venue.nombre}`
+      return `${venue.ciudad}, ${venue.estado} - ${venue.nombre}`;
     }
-    return 'Lugar por confirmar'
-  }
+    return "Lugar por confirmar";
+  };
 
   const getSeatsSummary = () => {
-    if (!paymentData?.cartItems.length) return 'Boletos generales'
-    
-    const seatItems = paymentData.cartItems.filter(item => item.type === 'seat')
-    const generalItems = paymentData.cartItems.filter(item => item.type === 'general')
-    
-    let summary: string[] = []
-    
+    if (!paymentData?.cartItems.length) return "Boletos generales";
+
+    const seatItems = paymentData.cartItems.filter(
+      (item) => item.type === "seat",
+    );
+    const generalItems = paymentData.cartItems.filter(
+      (item) => item.type === "general",
+    );
+
+    let summary: string[] = [];
+
     // Agrupar asientos por zona
-    const seatsByZone = seatItems.reduce((acc, item) => {
-      if (!acc[item.zoneName]) {
-        acc[item.zoneName] = []
-      }
-      acc[item.zoneName].push(item)
-      return acc
-    }, {} as Record<string, CartItem[]>)
+    const seatsByZone = seatItems.reduce(
+      (acc, item) => {
+        if (!acc[item.zoneName]) {
+          acc[item.zoneName] = [];
+        }
+        acc[item.zoneName].push(item);
+        return acc;
+      },
+      {} as Record<string, CartItem[]>,
+    );
 
     // Crear resumen para cada zona
     Object.entries(seatsByZone).forEach(([zoneName, seats]) => {
-      const sortedSeats = seats.sort((a, b) => (a.seatNumber || 0) - (b.seatNumber || 0))
-      const firstSeat = sortedSeats[0]
-      const lastSeat = sortedSeats[sortedSeats.length - 1]
-      
+      const sortedSeats = seats.sort(
+        (a, b) => (a.seatNumber || 0) - (b.seatNumber || 0),
+      );
+      const firstSeat = sortedSeats[0];
+      const lastSeat = sortedSeats[sortedSeats.length - 1];
+
       if (sortedSeats.length === 1) {
-        summary.push(`${zoneName}, Row ${firstSeat.rowLetter}, Seat ${firstSeat.seatNumber}`)
+        summary.push(
+          `${zoneName}, Row ${firstSeat.rowLetter}, Seat ${firstSeat.seatNumber}`,
+        );
       } else {
-        summary.push(`${zoneName}, Row ${firstSeat.rowLetter}, Seats ${firstSeat.seatNumber} - ${lastSeat.seatNumber}`)
+        summary.push(
+          `${zoneName}, Row ${firstSeat.rowLetter}, Seats ${firstSeat.seatNumber} - ${lastSeat.seatNumber}`,
+        );
       }
-    })
+    });
 
     // Agregar boletos generales
     if (generalItems.length > 0) {
-      const totalGeneralTickets = generalItems.reduce((acc, item) => acc + (item.quantity || 1), 0)
-      summary.push(`General (${totalGeneralTickets} boleto${totalGeneralTickets > 1 ? 's' : ''})`)
+      const totalGeneralTickets = generalItems.reduce(
+        (acc, item) => acc + (item.quantity || 1),
+        0,
+      );
+      summary.push(
+        `General (${totalGeneralTickets} boleto${totalGeneralTickets > 1 ? "s" : ""})`,
+      );
     }
 
-    return summary.length > 0 ? summary.join(', ') : 'Boletos generales'
-  }
+    return summary.length > 0 ? summary.join(", ") : "Boletos generales";
+  };
 
   const getCardBrand = (brand: string) => {
     switch (brand.toLowerCase()) {
-      case 'visa':
-        return 'Visa'
-      case 'mastercard':
-        return 'Mastercard'
-      case 'amex':
-        return 'American Express'
+      case "visa":
+        return "Visa";
+      case "mastercard":
+        return "Mastercard";
+      case "amex":
+        return "American Express";
       default:
-        return brand.charAt(0).toUpperCase() + brand.slice(1)
+        return brand.charAt(0).toUpperCase() + brand.slice(1);
     }
-  }
+  };
 
   const groupItemsByZone = () => {
-    if (!paymentData?.cartItems.length) return {}
-    
-    return paymentData.cartItems.reduce((acc, item) => {
-      // Para boletos generales, usar "General" como nombre de zona
-      const zoneName = item.type === 'general' ? 'General' : item.zoneName
-      
-      if (!acc[zoneName]) {
-        acc[zoneName] = {
-          items: [],
-          totalPrice: 0,
-          totalQuantity: 0,
-          isGeneral: item.type === 'general'
+    if (!paymentData?.cartItems.length) return {};
+
+    return paymentData.cartItems.reduce(
+      (acc, item) => {
+        // Para boletos generales, usar "General" como nombre de zona
+        const zoneName = item.type === "general" ? "General" : item.zoneName;
+
+        if (!acc[zoneName]) {
+          acc[zoneName] = {
+            items: [],
+            totalPrice: 0,
+            totalQuantity: 0,
+            isGeneral: item.type === "general",
+          };
         }
-      }
-      
-      acc[zoneName].items.push(item)
-      acc[zoneName].totalPrice += item.price * (item.quantity || 1)
-      acc[zoneName].totalQuantity += (item.quantity || 1)
-      
-      return acc
-    }, {} as Record<string, { items: CartItem[], totalPrice: number, totalQuantity: number, isGeneral: boolean }>)
-  }
+
+        acc[zoneName].items.push(item);
+        acc[zoneName].totalPrice += item.price * (item.quantity || 1);
+        acc[zoneName].totalQuantity += item.quantity || 1;
+
+        return acc;
+      },
+      {} as Record<
+        string,
+        {
+          items: CartItem[];
+          totalPrice: number;
+          totalQuantity: number;
+          isGeneral: boolean;
+        }
+      >,
+    );
+  };
 
   if (loading) {
     return (
@@ -216,7 +268,7 @@ function CheckoutSuccessContent() {
         </div>
         <Footer />
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -231,19 +283,19 @@ function CheckoutSuccessContent() {
                   <span className="text-2xl">❌</span>
                 </div>
               </div>
-              <h2 className="text-xl font-semibold mb-2">Error en la Verificación</h2>
+              <h2 className="text-xl font-semibold mb-2">
+                Error en la Verificación
+              </h2>
               <p className="text-gray-600 mb-4">{error}</p>
               <Link href="/eventos">
-                <Button className="w-full">
-                  Volver a Eventos
-                </Button>
+                <Button className="w-full">Volver a Eventos</Button>
               </Link>
             </CardContent>
           </Card>
         </div>
         <Footer />
       </div>
-    )
+    );
   }
 
   if (!paymentData || !event) {
@@ -257,15 +309,15 @@ function CheckoutSuccessContent() {
         </div>
         <Footer />
       </div>
-    )
+    );
   }
 
-  const groupedItems = groupItemsByZone()
+  const groupedItems = groupItemsByZone();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800">
       <Header />
-      
+
       <main className="container mx-auto px-4 py-8 max-w-6xl">
         {/* Header Success Message */}
         <div className="text-center mb-8">
@@ -297,14 +349,20 @@ function CheckoutSuccessContent() {
 
               {/* Seats Summary */}
               <div className="mb-6">
-                <h3 className="font-semibold text-gray-800 mb-2">Resumen de Asientos</h3>
+                <h3 className="font-semibold text-gray-800 mb-2">
+                  Resumen de Asientos
+                </h3>
                 <p className="text-gray-600">{getSeatsSummary()}</p>
               </div>
 
               {/* Event Date & Time */}
               <div className="mb-6">
-                <h3 className="font-semibold text-gray-800 mb-2">Fecha del Evento</h3>
-                <p className="text-gray-600">{formatEventDate(event.fecha, event.hora)}</p>
+                <h3 className="font-semibold text-gray-800 mb-2">
+                  Fecha del Evento
+                </h3>
+                <p className="text-gray-600">
+                  {formatEventDate(event.fecha, event.hora)}
+                </p>
               </div>
 
               {/* Location */}
@@ -321,7 +379,9 @@ function CheckoutSuccessContent() {
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Número de Orden:</span>
-                    <span className="font-mono font-medium">{paymentData.orderNumber}</span>
+                    <span className="font-mono font-medium">
+                      {paymentData.orderNumber}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Delivery:</span>
@@ -342,7 +402,8 @@ function CheckoutSuccessContent() {
                     <CreditCardIcon className="w-8 h-8 text-gray-600" />
                     <div>
                       <p className="font-medium text-gray-800">
-                        {getCardBrand(paymentData.paymentMethod.card.brand)} •••• {paymentData.paymentMethod.card.last4}
+                        {getCardBrand(paymentData.paymentMethod.card.brand)}{" "}
+                        •••• {paymentData.paymentMethod.card.last4}
                       </p>
                     </div>
                   </div>
@@ -356,13 +417,17 @@ function CheckoutSuccessContent() {
                 <h3 className="font-semibold text-gray-800 mb-4">Tickets</h3>
                 <div className="space-y-3">
                   {Object.entries(groupedItems).map(([zoneName, zoneData]) => (
-                    <div key={zoneName} className="flex justify-between items-center">
+                    <div
+                      key={zoneName}
+                      className="flex justify-between items-center"
+                    >
                       <div>
                         <span className="text-gray-800">
-                          {zoneData.isGeneral ? 'General' : zoneName}:
+                          {zoneData.isGeneral ? "General" : zoneName}:
                         </span>
                         <span className="text-gray-600 ml-2">
-                          ${zoneData.items[0].price.toFixed(2)} MXN x {zoneData.totalQuantity}
+                          ${zoneData.items[0].price.toFixed(2)} MXN x{" "}
+                          {zoneData.totalQuantity}
                         </span>
                       </div>
                       <span className="font-medium text-gray-800">
@@ -401,11 +466,18 @@ function CheckoutSuccessContent() {
 
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
-          <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 text-lg">
+          <Button
+            size="lg"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 text-lg"
+          >
             Ver y Guardar Boletos
           </Button>
           <Link href="/eventos">
-            <Button variant="outline" size="lg" className="w-full sm:w-auto bg-white text-blue-600 border-2 border-blue-600 hover:bg-blue-50 px-8 py-3 text-lg">
+            <Button
+              variant="outline"
+              size="lg"
+              className="w-full sm:w-auto bg-white text-blue-600 border-2 border-blue-600 hover:bg-blue-50 px-8 py-3 text-lg"
+            >
               Explorar Más Eventos
             </Button>
           </Link>
@@ -421,7 +493,7 @@ function CheckoutSuccessContent() {
 
       <Footer />
     </div>
-  )
+  );
 }
 
 function LoadingFallback() {
@@ -436,7 +508,7 @@ function LoadingFallback() {
       </div>
       <Footer />
     </div>
-  )
+  );
 }
 
 export default function CheckoutSuccess() {
@@ -444,5 +516,5 @@ export default function CheckoutSuccess() {
     <Suspense fallback={<LoadingFallback />}>
       <CheckoutSuccessContent />
     </Suspense>
-  )
-} 
+  );
+}

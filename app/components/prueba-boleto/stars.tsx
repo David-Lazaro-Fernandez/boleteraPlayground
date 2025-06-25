@@ -5,5 +5,5 @@ export function Stars() {
       <div className="text-xl">★</div>
       <div className="w-[1px] h-4 bg-black"></div>
     </div>
-  )
+  );
 }

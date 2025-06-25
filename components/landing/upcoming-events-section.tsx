@@ -1,68 +1,91 @@
-import { Button } from "@/components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Event, getUpcomingEvents } from "@/lib/firebase/events"
-import { getVenue, Venue } from "@/lib/firebase/venues"
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Event, getUpcomingEvents } from "@/lib/firebase/events";
+import { getVenue, Venue } from "@/lib/firebase/venues";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 export function UpcomingEventsSection() {
-  const router = useRouter()
-  const [events, setEvents] = useState<Event[]>([])
-  const [venues, setVenues] = useState<Record<string, Venue>>({})
-  const [loading, setLoading] = useState(true)
+  const router = useRouter();
+  const [events, setEvents] = useState<Event[]>([]);
+  const [venues, setVenues] = useState<Record<string, Venue>>({});
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchEvents() {
       try {
-        setLoading(true)
-        const upcomingEvents = await getUpcomingEvents()
-        setEvents(upcomingEvents)
+        setLoading(true);
+        const upcomingEvents = await getUpcomingEvents();
+        setEvents(upcomingEvents);
 
         // Obtener información de los venues
-        const venuePromises = upcomingEvents.map(event => getVenue(event.lugar_id))
-        const venueResults = await Promise.all(venuePromises)
-        
-        const venuesMap: Record<string, Venue> = {}
+        const venuePromises = upcomingEvents.map((event) =>
+          getVenue(event.lugar_id),
+        );
+        const venueResults = await Promise.all(venuePromises);
+
+        const venuesMap: Record<string, Venue> = {};
         venueResults.forEach((venue, index) => {
           if (venue) {
-            venuesMap[upcomingEvents[index].lugar_id] = venue
+            venuesMap[upcomingEvents[index].lugar_id] = venue;
           }
-        })
-        setVenues(venuesMap)
+        });
+        setVenues(venuesMap);
       } catch (error) {
-        console.error('Error fetching events:', error)
+        console.error("Error fetching events:", error);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
 
-    fetchEvents()
-  }, [])
+    fetchEvents();
+  }, []);
 
   const formatDate = (date: Date) => {
-    const months = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC']
+    const months = [
+      "ENE",
+      "FEB",
+      "MAR",
+      "ABR",
+      "MAY",
+      "JUN",
+      "JUL",
+      "AGO",
+      "SEP",
+      "OCT",
+      "NOV",
+      "DIC",
+    ];
     return {
       month: months[date.getMonth()],
-      day: date.getDate().toString().padStart(2, '0')
-    }
-  }
+      day: date.getDate().toString().padStart(2, "0"),
+    };
+  };
 
   const truncateDescription = (description: string, maxLength: number = 80) => {
-    if (description.length <= maxLength) return description
-    return description.substring(0, maxLength) + '...'
-  }
+    if (description.length <= maxLength) return description;
+    return description.substring(0, maxLength) + "...";
+  };
 
   const handleEventClick = (eventId: string) => {
-    router.push(`/eventos/${eventId}`)
-  }
+    router.push(`/eventos/${eventId}`);
+  };
 
   return (
     <section className="py-16 bg-page-bg">
       <div className="container mx-auto px-6 lg:px-8 max-w-7xl">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
-          <h2 className="text-3xl font-bold text-heading-text mb-4 md:mb-0">Próximos Eventos</h2>
+          <h2 className="text-3xl font-bold text-heading-text mb-4 md:mb-0">
+            Próximos Eventos
+          </h2>
 
           <div className="flex flex-wrap gap-4">
             <Select>
@@ -121,45 +144,54 @@ export function UpcomingEventsSection() {
                 No hay eventos próximos
               </h3>
               <p className="text-gray-600">
-                Actualmente no tenemos próximos eventos disponibles. ¡Mantente al pendiente para nuevas fechas!
+                Actualmente no tenemos próximos eventos disponibles. ¡Mantente
+                al pendiente para nuevas fechas!
               </p>
             </div>
           </div>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             {events.map((event, index) => {
-              const dateInfo = formatDate(event.fecha)
-              const venue = venues[event.lugar_id]
+              const dateInfo = formatDate(event.fecha);
+              const venue = venues[event.lugar_id];
               const gradients = [
-                'from-cyan-400 to-blue-500',
-                'from-orange-400 to-red-500',
-                'from-purple-400 to-pink-500',
-                'from-pink-400 to-purple-500',
-                'from-green-400 to-blue-500',
-                'from-blue-400 to-indigo-500'
-              ]
-              
+                "from-cyan-400 to-blue-500",
+                "from-orange-400 to-red-500",
+                "from-purple-400 to-pink-500",
+                "from-pink-400 to-purple-500",
+                "from-green-400 to-blue-500",
+                "from-blue-400 to-indigo-500",
+              ];
+
               return (
-                <Card 
-                  key={event.id} 
+                <Card
+                  key={event.id}
                   className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
                   onClick={() => handleEventClick(event.id!)}
                 >
-                  <div className={`aspect-video bg-gradient-to-r ${gradients[index % gradients.length]} relative`}>
-                    {event.imagen_url && event.imagen_url !== "https://picsum.photos/200" ? (
-                      <img 
-                        src={event.imagen_url} 
+                  <div
+                    className={`aspect-video bg-gradient-to-r ${gradients[index % gradients.length]} relative`}
+                  >
+                    {event.imagen_url &&
+                    event.imagen_url !== "https://picsum.photos/200" ? (
+                      <img
+                        src={event.imagen_url}
                         alt={event.nombre}
                         className="w-full h-full object-cover"
                       />
                     ) : null}
                     <div className="absolute top-4 left-4">
-                      <Badge variant="secondary" className="bg-white text-black">
+                      <Badge
+                        variant="secondary"
+                        className="bg-white text-black"
+                      >
                         {dateInfo.month}
                       </Badge>
-                      <div className="text-white font-bold text-2xl">{dateInfo.day}</div>
+                      <div className="text-white font-bold text-2xl">
+                        {dateInfo.day}
+                      </div>
                     </div>
-                    {event.estado_venta === 'en_preventa' && (
+                    {event.estado_venta === "en_preventa" && (
                       <div className="absolute top-4 right-4">
                         <Badge className="bg-yellow-500 text-black">
                           Preventa
@@ -182,19 +214,22 @@ export function UpcomingEventsSection() {
                     </p>
                   </CardContent>
                 </Card>
-              )
+              );
             })}
           </div>
         )}
 
         {!loading && events.length > 0 && (
           <div className="text-center">
-            <Button variant="outline" className="border-heading-text text-heading-text hover:bg-heading-text hover:text-white">
+            <Button
+              variant="outline"
+              className="border-heading-text text-heading-text hover:bg-heading-text hover:text-white"
+            >
               Ver más
             </Button>
           </div>
         )}
       </div>
     </section>
-  )
-} 
+  );
+}

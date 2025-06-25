@@ -1,10 +1,10 @@
-import type React from "react"
-import { Header } from "./header"
-import { Toaster } from "@/components/ui/toaster"
+import type React from "react";
+import { Header } from "./header";
+import { Toaster } from "@/components/ui/toaster";
 
 interface MainLayoutProps {
-  children: React.ReactNode
-  activePage: string
+  children: React.ReactNode;
+  activePage: string;
 }
 
 export function MainLayout({ children, activePage }: MainLayoutProps) {
@@ -14,5 +14,5 @@ export function MainLayout({ children, activePage }: MainLayoutProps) {
       <main className="p-6">{children}</main>
       <Toaster />
     </div>
-  )
+  );
 }

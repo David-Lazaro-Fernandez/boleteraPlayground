@@ -1,42 +1,42 @@
-'use client'
+"use client";
 
-import { useEffect } from 'react'
-import { useCart } from '@/hooks/use-cart'
-import { CartSummaryComponent } from './cart-summary'
-import { CheckoutButton } from './checkout-button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { EventInfo } from '@/lib/stripe/types'
+import { useEffect } from "react";
+import { useCart } from "@/hooks/use-cart";
+import { CartSummaryComponent } from "./cart-summary";
+import { CheckoutButton } from "./checkout-button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EventInfo } from "@/lib/stripe/types";
 
 interface StripeCheckoutSectionProps {
-  selectedSeats: any[]
-  generalTickets: any[]
-  eventInfo: EventInfo
-  className?: string
+  selectedSeats: any[];
+  generalTickets: any[];
+  eventInfo: EventInfo;
+  className?: string;
 }
 
 export function StripeCheckoutSection({
   selectedSeats,
   generalTickets,
   eventInfo,
-  className = ''
+  className = "",
 }: StripeCheckoutSectionProps) {
   const {
     cartSummary,
     removeItem,
     updateQuantity,
     loadFromExistingData,
-    setEvent
-  } = useCart()
+    setEvent,
+  } = useCart();
 
   // Cargar datos cuando cambien los asientos seleccionados o boletos generales
   useEffect(() => {
-    loadFromExistingData(selectedSeats, generalTickets)
-  }, [selectedSeats, generalTickets, loadFromExistingData])
+    loadFromExistingData(selectedSeats, generalTickets);
+  }, [selectedSeats, generalTickets, loadFromExistingData]);
 
   // Establecer información del evento
   useEffect(() => {
-    setEvent(eventInfo)
-  }, [eventInfo, setEvent])
+    setEvent(eventInfo);
+  }, [eventInfo, setEvent]);
 
   return (
     <div className={`space-y-6 ${className}`}>
@@ -63,7 +63,7 @@ export function StripeCheckoutSection({
                       Pago Seguro con Stripe
                     </h4>
                     <p className="text-sm text-blue-700">
-                      Procesamos tu pago de forma segura utilizando Stripe. 
+                      Procesamos tu pago de forma segura utilizando Stripe.
                       Acepta tarjetas de crédito y débito.
                     </p>
                   </div>
@@ -78,8 +78,9 @@ export function StripeCheckoutSection({
                       Cargo por Servicio
                     </h4>
                     <p className="text-sm text-amber-700">
-                      Se aplicará un cargo por servicio del 18% sobre el subtotal. 
-                      Este cargo cubre los costos de procesamiento y emisión de boletos.
+                      Se aplicará un cargo por servicio del 18% sobre el
+                      subtotal. Este cargo cubre los costos de procesamiento y
+                      emisión de boletos.
                     </p>
                   </div>
                 </div>
@@ -95,5 +96,5 @@ export function StripeCheckoutSection({
         </Card>
       )}
     </div>
-  )
-} 
+  );
+}

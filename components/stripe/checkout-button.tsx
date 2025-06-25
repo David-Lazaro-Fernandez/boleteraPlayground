@@ -1,51 +1,51 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { useToast } from '@/hooks/use-toast'
-import { CartSummary, EventInfo, CustomerData } from '@/lib/stripe/types'
-import { createCheckoutSession } from '@/lib/stripe/checkout'
-import { Loader2, CreditCard } from 'lucide-react'
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+import { CartSummary, EventInfo, CustomerData } from "@/lib/stripe/types";
+import { createCheckoutSession } from "@/lib/stripe/checkout";
+import { Loader2, CreditCard } from "lucide-react";
 
 interface CheckoutButtonProps {
-  cartSummary: CartSummary
-  eventInfo: EventInfo
-  disabled?: boolean
-  className?: string
-  onSuccess?: () => void
-  onError?: (error: string) => void
-  customerData?: CustomerData
+  cartSummary: CartSummary;
+  eventInfo: EventInfo;
+  disabled?: boolean;
+  className?: string;
+  onSuccess?: () => void;
+  onError?: (error: string) => void;
+  customerData?: CustomerData;
 }
 
 export function CheckoutButton({
   cartSummary,
   eventInfo,
   disabled = false,
-  className = '',
+  className = "",
   onSuccess,
   onError,
-  customerData
+  customerData,
 }: CheckoutButtonProps) {
-  const [isLoading, setIsLoading] = useState(false)
-  const { toast } = useToast()
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
   const handleCheckout = async () => {
     if (cartSummary.items.length === 0) {
       toast({
         title: "Carrito vacío",
         description: "Selecciona al menos un boleto para continuar",
-        variant: "destructive"
-      })
-      return
+        variant: "destructive",
+      });
+      return;
     }
 
-    setIsLoading(true)
+    setIsLoading(true);
 
     try {
       // URLs de éxito y cancelación
-      const baseUrl = window.location.origin
-      const successUrl = `${baseUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`
-      const cancelUrl = `${baseUrl}/eventos/${eventInfo.id}/comprar`
+      const baseUrl = window.location.origin;
+      const successUrl = `${baseUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`;
+      const cancelUrl = `${baseUrl}/eventos/${eventInfo.id}/comprar`;
 
       // Crear sesión de checkout
       const { url } = await createCheckoutSession(
@@ -53,32 +53,32 @@ export function CheckoutButton({
         eventInfo,
         successUrl,
         cancelUrl,
-        customerData
-      )
+        customerData,
+      );
 
       // Redirigir a Stripe Checkout
       if (url) {
-        window.location.href = url
-        onSuccess?.()
+        window.location.href = url;
+        onSuccess?.();
       } else {
-        throw new Error('No se pudo obtener la URL de checkout')
+        throw new Error("No se pudo obtener la URL de checkout");
       }
-
     } catch (error) {
-      console.error('Error al iniciar checkout:', error)
-      const errorMessage = error instanceof Error ? error.message : 'Error desconocido'
-      
+      console.error("Error al iniciar checkout:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Error desconocido";
+
       toast({
         title: "Error al procesar pago",
         description: errorMessage,
-        variant: "destructive"
-      })
+        variant: "destructive",
+      });
 
-      onError?.(errorMessage)
+      onError?.(errorMessage);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <Button
@@ -99,5 +99,5 @@ export function CheckoutButton({
         </>
       )}
     </Button>
-  )
-} 
+  );
+}

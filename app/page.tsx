@@ -1,5 +1,5 @@
-import LandingPage from "./(client)/landing/page"
+import LandingPage from "./(client)/landing/page";
 
 export default function ClientPage() {
-  return <LandingPage />
+  return <LandingPage />;
 }

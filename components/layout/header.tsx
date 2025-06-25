@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { ChevronDownIcon, SearchIcon } from "lucide-react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ChevronDownIcon, SearchIcon } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,47 +11,55 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Settings, User, LogOut } from "lucide-react"
-import Link from "next/link"
-import { useAuth } from '@/hooks/use-auth'
-import { useRouter } from 'next/navigation'
+} from "@/components/ui/dropdown-menu";
+import { Settings, User, LogOut } from "lucide-react";
+import Link from "next/link";
+import { useAuth } from "@/hooks/use-auth";
+import { useRouter } from "next/navigation";
 
 interface HeaderProps {
-  activePage: string
+  activePage: string;
 }
 
 export function Header({ activePage }: HeaderProps) {
-  const { user, signOut } = useAuth()
-  const router = useRouter()
+  const { user, signOut } = useAuth();
+  const router = useRouter();
 
   const handleSignOut = async () => {
     try {
-      await signOut()
-      router.push('/auth/signin')
+      await signOut();
+      router.push("/auth/signin");
     } catch (error) {
-      console.error('Error al cerrar sesión:', error)
+      console.error("Error al cerrar sesión:", error);
     }
-  }
+  };
 
   // Obtener iniciales del usuario para el avatar
   const getUserInitials = (email: string | null) => {
-    if (!email) return 'U'
-    return email.charAt(0).toUpperCase()
-  }
+    if (!email) return "U";
+    return email.charAt(0).toUpperCase();
+  };
 
   // Obtener nombre del usuario (por ahora del email)
   const getUserDisplayName = (email: string | null) => {
-    if (!email) return 'Usuario'
-    return email.split('@')[0]
-  }
+    if (!email) return "Usuario";
+    return email.split("@")[0];
+  };
 
   const navItems = [
     { name: "Inicio", href: "/dashboard", key: "inicio" },
     { name: "Eventos", href: "/dashboard/eventos", key: "eventos" },
-    { name: "Mapas De Asientos", href: "/dashboard/mapas-asientos", key: "mapas-de-asientos" },
-    { name: "Boletos Pruebas", href: "/dashboard/prueba-boleto", key: "boletos-pruebas" }
-  ]
+    {
+      name: "Mapas De Asientos",
+      href: "/dashboard/mapas-asientos",
+      key: "mapas-de-asientos",
+    },
+    {
+      name: "Boletos Pruebas",
+      href: "/dashboard/prueba-boleto",
+      key: "boletos-pruebas",
+    },
+  ];
 
   return (
     <header className="border-b bg-white sticky top-0 z-50">
@@ -60,7 +68,10 @@ export function Header({ activePage }: HeaderProps) {
         <div className="mr-8">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="flex items-center gap-2 hover:bg-gray-100">
+              <Button
+                variant="ghost"
+                className="flex items-center gap-2 hover:bg-gray-100"
+              >
                 <Avatar className="h-8 w-8">
                   <AvatarImage src="/placeholder.svg?height=32&width=32" />
                   <AvatarFallback className="bg-blue-100 text-blue-600">
@@ -85,7 +96,10 @@ export function Header({ activePage }: HeaderProps) {
                 <span>Mi perfil</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-red-600" onClick={handleSignOut}>
+              <DropdownMenuItem
+                className="text-red-600"
+                onClick={handleSignOut}
+              >
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Cerrar sesión</span>
               </DropdownMenuItem>
@@ -125,5 +139,5 @@ export function Header({ activePage }: HeaderProps) {
         </div>
       </div>
     </header>
-  )
+  );
 }

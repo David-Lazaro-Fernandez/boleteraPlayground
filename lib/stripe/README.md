@@ -69,7 +69,7 @@ npm install @stripe/stripe-js stripe
 ### Integración en la Página de Compra
 
 ```tsx
-import { StripeCheckoutSection } from '@/components/stripe/stripe-checkout-section'
+import { StripeCheckoutSection } from "@/components/stripe/stripe-checkout-section";
 
 function ComprarPage() {
   return (
@@ -78,25 +78,19 @@ function ComprarPage() {
       generalTickets={generalTickets}
       eventInfo={eventInfo}
     />
-  )
+  );
 }
 ```
 
 ### Hook del Carrito
 
 ```tsx
-import { useCart } from '@/hooks/use-cart'
+import { useCart } from "@/hooks/use-cart";
 
 function MyComponent() {
-  const {
-    items,
-    cartSummary,
-    addItem,
-    removeItem,
-    updateQuantity,
-    clearCart
-  } = useCart()
-  
+  const { items, cartSummary, addItem, removeItem, updateQuantity, clearCart } =
+    useCart();
+
   // Usar funciones del carrito
 }
 ```
@@ -115,19 +109,21 @@ function MyComponent() {
 
 ```typescript
 // Ejemplo de cálculo
-const subtotal = 1000 // MXN
-const serviceCharge = subtotal * 0.18 // 18% = 180 MXN
-const total = subtotal + serviceCharge // 1180 MXN
+const subtotal = 1000; // MXN
+const serviceCharge = subtotal * 0.18; // 18% = 180 MXN
+const total = subtotal + serviceCharge; // 1180 MXN
 ```
 
 ## Tipos de Boletos
 
 ### Asientos Numerados
+
 - Fila y número de asiento específico
 - Precio individual
 - Un boleto por asiento
 
 ### Boletos Generales
+
 - Sin asiento asignado
 - Precio individual
 - Cantidad variable
@@ -181,4 +177,4 @@ export async function POST(request: Request) {
 - Actualizar regularmente las dependencias de Stripe
 - Monitorear el dashboard de Stripe para transacciones
 - Revisar logs de errores
-- Mantener respaldos de configuración 
+- Mantener respaldos de configuración

@@ -1,18 +1,23 @@
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 
 export function HeroSection() {
   const categories = [
     { name: "Deportes", icon: "⚽" },
     { name: "Teatro", icon: "🎭" },
-    { name: "Conciertos", icon: "🎵" }
-  ]
+    { name: "Conciertos", icon: "🎵" },
+  ];
 
   const inputs = [
-    { name: "Busca tu evento", placeholder: "Cartel De Santa", type: "text", key: "event" },
-    { name: "Lugar", placeholder: "Monterrey", type: "text", key: "location" }
-  ]
+    {
+      name: "Busca tu evento",
+      placeholder: "Cartel De Santa",
+      type: "text",
+      key: "event",
+    },
+    { name: "Lugar", placeholder: "Monterrey", type: "text", key: "location" },
+  ];
 
   return (
     <section className="bg-gradient-to-br from-gradient-end to-gradient-start text-white py-12">
@@ -20,7 +25,11 @@ export function HeroSection() {
         {/* Category Buttons */}
         <div className="flex flex-wrap gap-4 mb-8">
           {categories.map((category) => (
-            <SectionButton key={category.name} name={category.name} icon={category.icon} />
+            <SectionButton
+              key={category.name}
+              name={category.name}
+              icon={category.icon}
+            />
           ))}
         </div>
 
@@ -52,11 +61,14 @@ export function HeroSection() {
         </div>
       </div>
     </section>
-  )
+  );
 }
 
-
-function InputElement({ input }: { input: { name: string, placeholder: string, type: string, key: string } }) {
+function InputElement({
+  input,
+}: {
+  input: { name: string; placeholder: string; type: string; key: string };
+}) {
   return (
     <div>
       <label className="block text-sm font-medium mb-2">{input.name}</label>
@@ -73,10 +85,10 @@ function InputElement({ input }: { input: { name: string, placeholder: string, t
           `)}
       />
     </div>
-  )
+  );
 }
 
-function SectionButton({ name, icon }: { name: string, icon: string }) {
+function SectionButton({ name, icon }: { name: string; icon: string }) {
   return (
     <Button
       variant="outline"
@@ -88,5 +100,5 @@ function SectionButton({ name, icon }: { name: string, icon: string }) {
       <span className="mr-3">{icon}</span>
       {name}
     </Button>
-  )
+  );
 }

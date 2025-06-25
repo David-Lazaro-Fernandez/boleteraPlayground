@@ -1,5 +1,11 @@
-import { CartSummary, EventInfo, CheckoutSession, PaymentResult, CustomerData } from './types'
-import { STRIPE_CONFIG } from './config'
+import {
+  CartSummary,
+  EventInfo,
+  CheckoutSession,
+  PaymentResult,
+  CustomerData,
+} from "./types";
+import { STRIPE_CONFIG } from "./config";
 
 /**
  * Crea una sesión de checkout en Stripe
@@ -9,13 +15,13 @@ export async function createCheckoutSession(
   eventInfo: EventInfo,
   successUrl: string,
   cancelUrl: string,
-  customerData?: CustomerData
+  customerData?: CustomerData,
 ): Promise<CheckoutSession> {
   try {
-    const response = await fetch('/api/stripe/create-checkout-session', {
-      method: 'POST',
+    const response = await fetch("/api/stripe/create-checkout-session", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
         items: cartSummary.items,
@@ -26,23 +32,25 @@ export async function createCheckoutSession(
         customerData,
         successUrl,
         cancelUrl,
-        currency: STRIPE_CONFIG.currency
+        currency: STRIPE_CONFIG.currency,
       }),
-    })
+    });
 
     if (!response.ok) {
-      const errorData = await response.json()
-      throw new Error(errorData.error || 'Error al crear la sesión de checkout')
+      const errorData = await response.json();
+      throw new Error(
+        errorData.error || "Error al crear la sesión de checkout",
+      );
     }
 
-    const data = await response.json()
+    const data = await response.json();
     return {
       sessionId: data.sessionId,
-      url: data.url
-    }
+      url: data.url,
+    };
   } catch (error) {
-    console.error('Error creating checkout session:', error)
-    throw error
+    console.error("Error creating checkout session:", error);
+    throw error;
   }
 }
 
@@ -52,19 +60,19 @@ export async function createCheckoutSession(
 export async function verifyPayment(sessionId: string): Promise<PaymentResult> {
   try {
     const response = await fetch(`/api/stripe/verify-payment`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({ sessionId }),
-    })
+    });
 
     if (!response.ok) {
-      const errorData = await response.json()
-      throw new Error(errorData.error || 'Error al verificar el pago')
+      const errorData = await response.json();
+      throw new Error(errorData.error || "Error al verificar el pago");
     }
 
-    const data = await response.json()
+    const data = await response.json();
     return {
       success: data.success,
       sessionId: data.sessionId,
@@ -75,23 +83,26 @@ export async function verifyPayment(sessionId: string): Promise<PaymentResult> {
       amountTotal: data.amountTotal,
       currency: data.currency,
       paymentMethod: data.paymentMethod,
-      error: data.error
-    }
+      error: data.error,
+    };
   } catch (error) {
-    console.error('Error verifying payment:', error)
+    console.error("Error verifying payment:", error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Error desconocido'
-    }
+      error: error instanceof Error ? error.message : "Error desconocido",
+    };
   }
 }
 
 /**
  * Formatea el precio para mostrar en la UI
  */
-export function formatPrice(amount: number, currency: string = STRIPE_CONFIG.currency): string {
+export function formatPrice(
+  amount: number,
+  currency: string = STRIPE_CONFIG.currency,
+): string {
   return new Intl.NumberFormat(STRIPE_CONFIG.locale, {
-    style: 'currency',
-    currency: currency.toUpperCase()
-  }).format(amount)
-} 
+    style: "currency",
+    currency: currency.toUpperCase(),
+  }).format(amount);
+}

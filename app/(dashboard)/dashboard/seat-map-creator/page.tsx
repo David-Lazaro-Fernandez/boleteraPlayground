@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import { MainLayout } from "@/components/layout/main-layout"
-import { SeatMapCreator } from "@/components/seat-creator/seat-map-creator"
+import { MainLayout } from "@/components/layout/main-layout";
+import { SeatMapCreator } from "@/components/seat-creator/seat-map-creator";
 
 export default function SeatMapCreatorPage() {
   return (
@@ -10,5 +10,5 @@ export default function SeatMapCreatorPage() {
         <SeatMapCreator />
       </div>
     </MainLayout>
-  )
+  );
 }

@@ -1,70 +1,68 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useParams } from "next/navigation"
-import { Event, getEvent } from "@/lib/firebase/events"
-import { Venue, getVenue } from "@/lib/firebase/venues"
-import { PalenqueSeatMap } from "@/components/palenque/palenque-seat-map"
+import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
+import { Event, getEvent } from "@/lib/firebase/events";
+import { Venue, getVenue } from "@/lib/firebase/venues";
+import { PalenqueSeatMap } from "@/components/palenque/palenque-seat-map";
 
 // Componente que muestra el mapa de asientos con información del evento
-function EventSeatMap({ event, venue }: { 
-  event: Event; 
-  venue: Venue | null;
-}) {
+function EventSeatMap({ event, venue }: { event: Event; venue: Venue | null }) {
   const eventInfo = {
     title: event.nombre,
-    date: event.fecha.toLocaleDateString('es-ES', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
+    date: event.fecha.toLocaleDateString("es-ES", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     }),
     time: event.hora,
-    venue: venue ? `${venue.nombre}, ${venue.ciudad}` : "Ubicación por confirmar"
-  }
+    venue: venue
+      ? `${venue.nombre}, ${venue.ciudad}`
+      : "Ubicación por confirmar",
+  };
 
-  return <PalenqueSeatMap eventInfo={eventInfo} />
+  return <PalenqueSeatMap eventInfo={eventInfo} />;
 }
 
 export default function ComprarBoletosPage() {
-  const params = useParams()
-  const eventId = params.id as string
-  
-  const [event, setEvent] = useState<Event | null>(null)
-  const [venue, setVenue] = useState<Venue | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const params = useParams();
+  const eventId = params.id as string;
+
+  const [event, setEvent] = useState<Event | null>(null);
+  const [venue, setVenue] = useState<Venue | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   useEffect(() => {
     async function fetchEventDetails() {
       try {
-        setLoading(true)
-        setError(null)
-        
+        setLoading(true);
+        setError(null);
+
         // Obtener el evento
-        const eventData = await getEvent(eventId)
+        const eventData = await getEvent(eventId);
         if (!eventData) {
-          setError("Evento no encontrado")
-          return
+          setError("Evento no encontrado");
+          return;
         }
-        
-        setEvent(eventData)
-        
+
+        setEvent(eventData);
+
         // Obtener información del venue
-        const venueData = await getVenue(eventData.lugar_id)
-        setVenue(venueData)
-        
+        const venueData = await getVenue(eventData.lugar_id);
+        setVenue(venueData);
       } catch (err) {
-        console.error('Error fetching event details:', err)
-        setError("Error al cargar los detalles del evento")
+        console.error("Error fetching event details:", err);
+        setError("Error al cargar los detalles del evento");
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
 
     if (eventId) {
-      fetchEventDetails()
+      fetchEventDetails();
     }
-  }, [eventId])
+  }, [eventId]);
 
   if (loading) {
     return (
@@ -74,7 +72,7 @@ export default function ComprarBoletosPage() {
           <p className="text-gray-600">Cargando información del evento...</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (error || !event) {
@@ -88,7 +86,7 @@ export default function ComprarBoletosPage() {
           <p className="text-gray-600 mb-4">
             Lo sentimos, no pudimos cargar la información de este evento.
           </p>
-          <button 
+          <button
             onClick={() => window.history.back()}
             className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
           >
@@ -96,24 +94,26 @@ export default function ComprarBoletosPage() {
           </button>
         </div>
       </div>
-    )
+    );
   }
 
   // Verificar si el evento permite compra
-  if (event.estado_venta === 'agotado' || event.estado_venta === 'finalizado') {
+  if (event.estado_venta === "agotado" || event.estado_venta === "finalizado") {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <div className="text-6xl mb-4">🎫</div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            {event.estado_venta === 'agotado' ? 'Evento Agotado' : 'Evento Finalizado'}
+            {event.estado_venta === "agotado"
+              ? "Evento Agotado"
+              : "Evento Finalizado"}
           </h1>
           <p className="text-gray-600 mb-4">
-            {event.estado_venta === 'agotado' 
-              ? 'Lo sentimos, todos los boletos para este evento han sido vendidos.' 
-              : 'Este evento ya ha finalizado.'}
+            {event.estado_venta === "agotado"
+              ? "Lo sentimos, todos los boletos para este evento han sido vendidos."
+              : "Este evento ya ha finalizado."}
           </p>
-          <button 
+          <button
             onClick={() => window.history.back()}
             className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
           >
@@ -121,8 +121,8 @@ export default function ComprarBoletosPage() {
           </button>
         </div>
       </div>
-    )
+    );
   }
 
-  return <EventSeatMap event={event} venue={venue} />
-} 
+  return <EventSeatMap event={event} venue={venue} />;
+}

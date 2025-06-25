@@ -1,70 +1,76 @@
-"use client"
+"use client";
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Eye, EyeOff, Mail, Lock, LogIn } from 'lucide-react'
-import { useAuth } from '@/hooks/use-auth'
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Eye, EyeOff, Mail, Lock, LogIn } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function SignInPage() {
-  const router = useRouter()
-  const { signIn } = useAuth()
+  const router = useRouter();
+  const { signIn } = useAuth();
   const [formData, setFormData] = useState({
-    email: '',
-    password: ''
-  })
-  const [showPassword, setShowPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState('')
+    email: "",
+    password: "",
+  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setError('')
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
 
     try {
       // Validaciones básicas
       if (!formData.email || !formData.password) {
-        throw new Error('Por favor completa todos los campos')
+        throw new Error("Por favor completa todos los campos");
       }
 
-      if (!formData.email.includes('@')) {
-        throw new Error('Por favor ingresa un email válido')
+      if (!formData.email.includes("@")) {
+        throw new Error("Por favor ingresa un email válido");
       }
 
       // Intentar iniciar sesión con Firebase Auth
-      const result = await signIn(formData.email, formData.password)
-      
+      const result = await signIn(formData.email, formData.password);
+
       if (result.error) {
-        setError(result.error)
-        return
+        setError(result.error);
+        return;
       }
 
       // Si la autenticación fue exitosa, redirigir al dashboard
       if (result.user) {
-        router.push('/dashboard')
+        router.push("/dashboard");
       }
-      
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al iniciar sesión')
+      setError(err instanceof Error ? err.message : "Error al iniciar sesión");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [e.target.name]: e.target.value
-    }))
+      [e.target.name]: e.target.value,
+    }));
     // Limpiar error cuando el usuario empiece a escribir
-    if (error) setError('')
-  }
+    if (error) setError("");
+  };
 
   return (
     <Card className="w-full shadow-xl border-0">
@@ -79,7 +85,7 @@ export default function SignInPage() {
           Ingresa tus credenciales para acceder al sistema
         </CardDescription>
       </CardHeader>
-      
+
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
@@ -87,7 +93,7 @@ export default function SignInPage() {
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
-          
+
           <div className="space-y-2">
             <Label htmlFor="email">Correo Electrónico</Label>
             <div className="relative">
@@ -105,7 +111,7 @@ export default function SignInPage() {
               />
             </div>
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="password">Contraseña</Label>
             <div className="relative">
@@ -113,7 +119,7 @@ export default function SignInPage() {
               <Input
                 id="password"
                 name="password"
-                type={showPassword ? 'text' : 'password'}
+                type={showPassword ? "text" : "password"}
                 placeholder="Ingresa tu contraseña"
                 value={formData.password}
                 onChange={handleChange}
@@ -135,10 +141,10 @@ export default function SignInPage() {
               </button>
             </div>
           </div>
-          
-          <Button 
-            type="submit" 
-            className="w-full bg-blue-600 hover:bg-blue-700" 
+
+          <Button
+            type="submit"
+            className="w-full bg-blue-600 hover:bg-blue-700"
             disabled={isLoading}
           >
             {isLoading ? (
@@ -147,24 +153,24 @@ export default function SignInPage() {
                 Iniciando sesión...
               </>
             ) : (
-              'Iniciar Sesión'
+              "Iniciar Sesión"
             )}
           </Button>
         </form>
       </CardContent>
-      
+
       <CardFooter className="flex flex-col space-y-4 text-center">
-        <Link 
-          href="/auth/password-recovery" 
+        <Link
+          href="/auth/password-recovery"
           className="text-sm text-blue-600 hover:text-blue-800 transition-colors"
         >
           ¿Olvidaste tu contraseña?
         </Link>
-        
+
         <div className="text-xs text-gray-500">
           Astral Tickets - Acceso Administrativo
         </div>
       </CardFooter>
     </Card>
-  )
+  );
 }

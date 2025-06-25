@@ -1,18 +1,41 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Badge } from "@/components/ui/badge"
-import { Switch } from "@/components/ui/switch"
-import { Button } from "@/components/ui/button"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { MoreVertical, MapPin, Copy, Trash2, Map } from "lucide-react"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { format } from "date-fns"
-import { es } from "date-fns/locale"
-import { Event, getActiveEvents, getEvent, Venue, getVenue } from "@/lib/firebase/transactions"
+import { useState, useEffect } from "react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { MoreVertical, MapPin, Copy, Trash2, Map } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
+import {
+  Event,
+  getActiveEvents,
+  getEvent,
+  Venue,
+  getVenue,
+} from "@/lib/firebase/transactions";
 
 interface EventTableProps {
   onEdit: (id: string) => void;
@@ -26,86 +49,86 @@ interface EventWithVenue extends Event {
 const getStatusColor = (status: string) => {
   switch (status) {
     case "en_preventa":
-      return "bg-blue-100 text-blue-800 hover:bg-blue-200"
+      return "bg-blue-100 text-blue-800 hover:bg-blue-200";
     case "activo":
-      return "bg-green-100 text-green-800 hover:bg-green-200"
+      return "bg-green-100 text-green-800 hover:bg-green-200";
     case "agotado":
-      return "bg-amber-100 text-amber-800 hover:bg-amber-200"
+      return "bg-amber-100 text-amber-800 hover:bg-amber-200";
     case "finalizado":
-      return "bg-gray-100 text-gray-800 hover:bg-gray-200"
+      return "bg-gray-100 text-gray-800 hover:bg-gray-200";
     default:
-      return "bg-gray-100 text-gray-800 hover:bg-gray-200"
+      return "bg-gray-100 text-gray-800 hover:bg-gray-200";
   }
-}
+};
 
 const getStatusText = (status: string) => {
   switch (status) {
     case "en_preventa":
-      return "En preventa"
+      return "En preventa";
     case "activo":
-      return "Activo"
+      return "Activo";
     case "agotado":
-      return "Agotado"
+      return "Agotado";
     case "finalizado":
-      return "Finalizado"
+      return "Finalizado";
     default:
-      return status
+      return status;
   }
-}
+};
 
 export function EventTable({ onEdit, venueFilter }: EventTableProps) {
-  const [selectedEvents, setSelectedEvents] = useState<string[]>([])
-  const [events, setEvents] = useState<EventWithVenue[]>([])
-  const [loading, setLoading] = useState(true)
+  const [selectedEvents, setSelectedEvents] = useState<string[]>([]);
+  const [events, setEvents] = useState<EventWithVenue[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadEvents()
-  }, [venueFilter])
+    loadEvents();
+  }, [venueFilter]);
 
   const loadEvents = async () => {
     try {
-      setLoading(true)
-      const eventsList = await getActiveEvents()
-      
+      setLoading(true);
+      const eventsList = await getActiveEvents();
+
       // Cargar la información del venue para cada evento
       const eventsWithVenue = await Promise.all(
         eventsList.map(async (event) => {
-          const venue = await getVenue(event.lugar_id)
+          const venue = await getVenue(event.lugar_id);
           return {
             ...event,
-            venue
-          } as EventWithVenue
-        })
-      )
-      
+            venue,
+          } as EventWithVenue;
+        }),
+      );
+
       // Aplicar filtro de venue si existe
-      const filteredEvents = venueFilter 
-        ? eventsWithVenue.filter(event => event.lugar_id === venueFilter)
-        : eventsWithVenue
-      
-      setEvents(filteredEvents)
+      const filteredEvents = venueFilter
+        ? eventsWithVenue.filter((event) => event.lugar_id === venueFilter)
+        : eventsWithVenue;
+
+      setEvents(filteredEvents);
     } catch (error) {
-      console.error('Error loading events:', error)
+      console.error("Error loading events:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const toggleSelectAll = () => {
     if (selectedEvents.length === events.length) {
-      setSelectedEvents([])
+      setSelectedEvents([]);
     } else {
-      setSelectedEvents(events.map((event) => event.id!))
+      setSelectedEvents(events.map((event) => event.id!));
     }
-  }
+  };
 
   const toggleSelect = (id: string) => {
     if (selectedEvents.includes(id)) {
-      setSelectedEvents(selectedEvents.filter((eventId) => eventId !== id))
+      setSelectedEvents(selectedEvents.filter((eventId) => eventId !== id));
     } else {
-      setSelectedEvents([...selectedEvents, id])
+      setSelectedEvents([...selectedEvents, id]);
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -115,7 +138,7 @@ export function EventTable({ onEdit, venueFilter }: EventTableProps) {
           <span className="ml-3">Cargando eventos...</span>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -125,7 +148,9 @@ export function EventTable({ onEdit, venueFilter }: EventTableProps) {
           <TableRow>
             <TableHead className="w-12">
               <Checkbox
-                checked={selectedEvents.length === events.length && events.length > 0}
+                checked={
+                  selectedEvents.length === events.length && events.length > 0
+                }
                 onCheckedChange={toggleSelectAll}
               />
             </TableHead>
@@ -143,22 +168,35 @@ export function EventTable({ onEdit, venueFilter }: EventTableProps) {
           {events.map((event) => (
             <TableRow key={event.id} className="hover:bg-gray-50">
               <TableCell>
-                <Checkbox checked={selectedEvents.includes(event.id!)} onCheckedChange={() => toggleSelect(event.id!)} />
+                <Checkbox
+                  checked={selectedEvents.includes(event.id!)}
+                  onCheckedChange={() => toggleSelect(event.id!)}
+                />
               </TableCell>
               <TableCell>
                 <Avatar className="h-10 w-10 rounded-md">
-                  <AvatarImage src={event.imagen_url || "/placeholder.svg"} alt={event.nombre} />
-                  <AvatarFallback className="rounded-md bg-gray-100">EV</AvatarFallback>
+                  <AvatarImage
+                    src={event.imagen_url || "/placeholder.svg"}
+                    alt={event.nombre}
+                  />
+                  <AvatarFallback className="rounded-md bg-gray-100">
+                    EV
+                  </AvatarFallback>
                 </Avatar>
               </TableCell>
               <TableCell className="font-medium">
                 <div className="flex items-center gap-2">
-                  <span className="cursor-pointer hover:text-blue-600" onClick={() => onEdit(event.id!)}>
+                  <span
+                    className="cursor-pointer hover:text-blue-600"
+                    onClick={() => onEdit(event.id!)}
+                  >
                     {event.nombre}
                   </span>
                 </div>
               </TableCell>
-              <TableCell>{format(event.fecha, "dd MMM yyyy", { locale: es })}</TableCell>
+              <TableCell>
+                {format(event.fecha, "dd MMM yyyy", { locale: es })}
+              </TableCell>
               <TableCell>{event.hora}</TableCell>
               <TableCell>
                 <TooltipProvider>
@@ -177,7 +215,9 @@ export function EventTable({ onEdit, venueFilter }: EventTableProps) {
                 </TooltipProvider>
               </TableCell>
               <TableCell>
-                <Badge className={getStatusColor(event.estado_venta)}>{getStatusText(event.estado_venta)}</Badge>
+                <Badge className={getStatusColor(event.estado_venta)}>
+                  {getStatusText(event.estado_venta)}
+                </Badge>
               </TableCell>
               <TableCell>
                 <Switch checked={event.venta_en_linea} />
@@ -208,7 +248,9 @@ export function EventTable({ onEdit, venueFilter }: EventTableProps) {
 
       {selectedEvents.length > 0 && (
         <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-white border rounded-lg shadow-lg px-4 py-3 flex items-center gap-4">
-          <span className="text-sm font-medium">{selectedEvents.length} eventos seleccionados</span>
+          <span className="text-sm font-medium">
+            {selectedEvents.length} eventos seleccionados
+          </span>
           <Button variant="outline" size="sm">
             <Copy className="h-4 w-4 mr-2" />
             Duplicar
@@ -223,5 +265,5 @@ export function EventTable({ onEdit, venueFilter }: EventTableProps) {
         </div>
       )}
     </div>
-  )
+  );
 }

@@ -1,13 +1,16 @@
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/hooks/use-auth';
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/hooks/use-auth";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
   redirectTo?: string;
 }
 
-export function ProtectedRoute({ children, redirectTo = '/auth/signin' }: ProtectedRouteProps) {
+export function ProtectedRoute({
+  children,
+  redirectTo = "/auth/signin",
+}: ProtectedRouteProps) {
   const { user, loading } = useAuth();
   const router = useRouter();
 
@@ -33,4 +36,4 @@ export function ProtectedRoute({ children, redirectTo = '/auth/signin' }: Protec
 
   // Si hay usuario autenticado, mostrar el contenido protegido
   return <>{children}</>;
-} 
+}

@@ -1,7 +1,7 @@
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Facebook, Twitter, Linkedin } from "lucide-react"
-import { Logo } from "@/components/prueba-boleto/logo"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Facebook, Twitter, Linkedin } from "lucide-react";
+import { Logo } from "@/components/prueba-boleto/logo";
 export function Footer() {
   return (
     <footer className="bg-card-bg text-text-light py-12">
@@ -13,9 +13,10 @@ export function Footer() {
               <Logo className="w-24 fill-white" />
             </div>
             <p className="text-text-light/80 text-sm w-48">
-              Astral Tickets es una plataforma nacional de venta de boletos de autoservicio para espectáculos en vivo que
-              permite a cualquier persona crear, compartir, encontrar y asistir a eventos que alimenten sus pasiones y
-              enriquezcan sus vidas.
+              Astral Tickets es una plataforma nacional de venta de boletos de
+              autoservicio para espectáculos en vivo que permite a cualquier
+              persona crear, compartir, encontrar y asistir a eventos que
+              alimenten sus pasiones y enriquezcan sus vidas.
             </p>
           </div>
 
@@ -97,11 +98,17 @@ export function Footer() {
           <div>
             <h3 className="font-bold mb-4">Mantente Al Tanto</h3>
             <p className="text-text-light/80 text-sm mb-4">
-              Únete a nuestra lista de correo para estar al tanto de nuestros eventos y conciertos más recientes.
+              Únete a nuestra lista de correo para estar al tanto de nuestros
+              eventos y conciertos más recientes.
             </p>
             <div className="flex gap-2">
-              <Input placeholder="Correo Electrónico" className="bg-white text-black border-input-border flex-1" />
-              <Button className="bg-primary-button hover:bg-primary-button/90">Suscribirse</Button>
+              <Input
+                placeholder="Correo Electrónico"
+                className="bg-white text-black border-input-border flex-1"
+              />
+              <Button className="bg-primary-button hover:bg-primary-button/90">
+                Suscribirse
+              </Button>
             </div>
 
             {/* Social Media */}
@@ -129,5 +136,5 @@ export function Footer() {
         </div>
       </div>
     </footer>
-  )
-} 
+  );
+}

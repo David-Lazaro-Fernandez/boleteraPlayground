@@ -1,11 +1,11 @@
-"use client"
-import { 
-  Header, 
-  HeroSection, 
-  UpcomingEventsSection, 
-  CallToActionSection, 
-  Footer 
-} from "@/components/landing"
+"use client";
+import {
+  Header,
+  HeroSection,
+  UpcomingEventsSection,
+  CallToActionSection,
+  Footer,
+} from "@/components/landing";
 
 export default function LandingPage() {
   return (
@@ -16,5 +16,5 @@ export default function LandingPage() {
       <CallToActionSection />
       <Footer />
     </div>
-  )
+  );
 }

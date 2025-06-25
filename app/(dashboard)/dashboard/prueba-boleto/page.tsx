@@ -1,40 +1,52 @@
-"use client"
+"use client";
 
-import { useState, useRef } from "react"
-import { MainLayout } from "@/components/layout/main-layout"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { FileText, Printer, Download, Settings } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Logo } from "@/components/prueba-boleto/logo"
-import Stars from "@/components/palenque/stars"
-import { dazzleUnicase, gontserrat } from "@/lib/fonts"
-import SeparationLines from '@/components/palenque/separationLines'
+import { useState, useRef } from "react";
+import { MainLayout } from "@/components/layout/main-layout";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { FileText, Printer, Download, Settings } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Logo } from "@/components/prueba-boleto/logo";
+import Stars from "@/components/palenque/stars";
+import { dazzleUnicase, gontserrat } from "@/lib/fonts";
+import SeparationLines from "@/components/palenque/separationLines";
 interface TicketData {
-  seccion: string
-  orden: string
-  precio: string
-  tipo: string
-  fila: string
-  asiento: string
-  evento: string
-  fecha: string
-  hora: string
-  lugar: string
-  ciudad: string
+  seccion: string;
+  orden: string;
+  precio: string;
+  tipo: string;
+  fila: string;
+  asiento: string;
+  evento: string;
+  fecha: string;
+  hora: string;
+  lugar: string;
+  ciudad: string;
 }
 
 interface PrintConfig {
-  paperSize: string
-  scale: string
-  orientation: string
-  margins: string
-  monocromo: boolean
-  dpi: string
+  paperSize: string;
+  scale: string;
+  orientation: string;
+  margins: string;
+  monocromo: boolean;
+  dpi: string;
 }
 
 const ZONAS = [
@@ -51,42 +63,42 @@ const ZONAS = [
   { value: "VIP-2", label: "VIP 2" },
   { value: "VIP-3", label: "VIP 3" },
   { value: "VIP-4", label: "VIP 4" },
-]
+];
 
 const TIPOS_BOLETO = [
   { value: "GENERAL", label: "General" },
   { value: "NUMERADO", label: "Numerado" },
   { value: "CORTESIA", label: "Cortesía" },
-]
+];
 
-const FILAS = Array.from({ length: 17 }, (_, i) => String.fromCharCode(65 + i)) // A-Q
+const FILAS = Array.from({ length: 17 }, (_, i) => String.fromCharCode(65 + i)); // A-Q
 
 function generateRandomOrder() {
   // Generate a random 8-character alphanumeric string
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-  let result = ''
+  const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let result = "";
   for (let i = 0; i < 8; i++) {
-    result += characters.charAt(Math.floor(Math.random() * characters.length))
+    result += characters.charAt(Math.floor(Math.random() * characters.length));
   }
-  return result
+  return result;
 }
 
 function borderLine() {
-  return (
-    <div className="w-12 h-[1px] bg-black mt-1"></div>
-  )
+  return <div className="w-12 h-[1px] bg-black mt-1"></div>;
 }
 
 const getPrecioByZona = (zona: string): string => {
-  if (zona.startsWith('ORO')) return '600'
-  if (zona.startsWith('VIP')) return '800'
-  return '300' // GENERAL
-}
+  if (zona.startsWith("ORO")) return "600";
+  if (zona.startsWith("VIP")) return "800";
+  return "300"; // GENERAL
+};
 
 export default function PruebaBoletoPage() {
-  const { toast } = useToast()
-  const ticketRef = useRef<HTMLDivElement>(null)
-  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card' | 'courtesy' | null>(null)
+  const { toast } = useToast();
+  const ticketRef = useRef<HTMLDivElement>(null);
+  const [paymentMethod, setPaymentMethod] = useState<
+    "cash" | "card" | "courtesy" | null
+  >(null);
   const [ticketData, setTicketData] = useState<TicketData>({
     seccion: "GENERAL",
     orden: generateRandomOrder(),
@@ -99,7 +111,7 @@ export default function PruebaBoletoPage() {
     hora: "20:00",
     lugar: "CENTRO DE ESPECTACULOS CD VICTORIA",
     ciudad: "CD. VICTORIA, TAMPS",
-  })
+  });
 
   const [printConfig, setPrintConfig] = useState<PrintConfig>({
     paperSize: "140x50mm",
@@ -108,80 +120,86 @@ export default function PruebaBoletoPage() {
     margins: "none",
     monocromo: true,
     dpi: "203",
-  })
+  });
 
   const handleTicketDataChange = (field: keyof TicketData, value: string) => {
-    if (field === 'orden') {
+    if (field === "orden") {
       setTicketData((prev) => ({
         ...prev,
         orden: generateRandomOrder(),
-      }))
-    } else if (field === 'seccion') {
+      }));
+    } else if (field === "seccion") {
       // Actualizar precio cuando cambia la sección
       setTicketData((prev) => ({
         ...prev,
         [field]: value,
-        precio: prev.tipo === 'CORTESIA' ? '0' : getPrecioByZona(value)
-      }))
+        precio: prev.tipo === "CORTESIA" ? "0" : getPrecioByZona(value),
+      }));
     } else {
       setTicketData((prev) => ({
         ...prev,
         [field]: value,
-      }))
+      }));
     }
-  }
+  };
 
-  const handlePrintConfigChange = (field: keyof PrintConfig, value: string | boolean) => {
+  const handlePrintConfigChange = (
+    field: keyof PrintConfig,
+    value: string | boolean,
+  ) => {
     setPrintConfig((prev) => ({
       ...prev,
       [field]: value,
-    }))
-  }
+    }));
+  };
 
   const handleTicketTypeChange = (value: string) => {
-    setTicketData(prev => ({
+    setTicketData((prev) => ({
       ...prev,
       tipo: value,
-      precio: value === "CORTESIA" ? "0" : getPrecioByZona(prev.seccion)
-    }))
-  }
+      precio: value === "CORTESIA" ? "0" : getPrecioByZona(prev.seccion),
+    }));
+  };
 
   // Función para convertir una imagen a monocromo (1 bit)
-  const convertToMonochrome = async (canvas: HTMLCanvasElement): Promise<HTMLCanvasElement> => {
-    const ctx = canvas.getContext("2d")
-    if (!ctx) return canvas
+  const convertToMonochrome = async (
+    canvas: HTMLCanvasElement,
+  ): Promise<HTMLCanvasElement> => {
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return canvas;
 
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
-    const data = imageData.data
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
 
     // Convertir a escala de grises y luego a 1 bit (blanco y negro)
     for (let i = 0; i < data.length; i += 4) {
       // Convertir a escala de grises usando luminosidad percibida
-      const grayValue = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]
+      const grayValue =
+        0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
 
       // Umbral para convertir a 1 bit (blanco o negro)
-      const threshold = 128
-      const bwValue = grayValue > threshold ? 255 : 0
+      const threshold = 128;
+      const bwValue = grayValue > threshold ? 255 : 0;
 
-      data[i] = bwValue // R
-      data[i + 1] = bwValue // G
-      data[i + 2] = bwValue // B
+      data[i] = bwValue; // R
+      data[i + 1] = bwValue; // G
+      data[i + 2] = bwValue; // B
       // Alpha se mantiene igual
     }
 
-    ctx.putImageData(imageData, 0, 0)
-    return canvas
-  }
+    ctx.putImageData(imageData, 0, 0);
+    return canvas;
+  };
 
   const generatePDF = async () => {
     try {
-      const { jsPDF } = await import("jspdf")
-      const html2canvas = (await import("html2canvas")).default
+      const { jsPDF } = await import("jspdf");
+      const html2canvas = (await import("html2canvas")).default;
 
       if (ticketRef.current) {
         // Configurar opciones para html2canvas
-        const scale = printConfig.monocromo ? 3 : 2 // Mayor escala para mejor calidad en monocromo
-        const dpi = Number.parseInt(printConfig.dpi) / 72 // Convertir DPI a escala para html2canvas
+        const scale = printConfig.monocromo ? 3 : 2; // Mayor escala para mejor calidad en monocromo
+        const dpi = Number.parseInt(printConfig.dpi) / 72; // Convertir DPI a escala para html2canvas
 
         const canvas = await html2canvas(ticketRef.current, {
           scale: scale * dpi,
@@ -189,19 +207,21 @@ export default function PruebaBoletoPage() {
           backgroundColor: "#ffffff", // Fondo explícitamente blanco
           logging: false,
           removeContainer: true,
-        })
+        });
 
         // Aplicar conversión a monocromo si está habilitado
-        const finalCanvas = printConfig.monocromo ? await convertToMonochrome(canvas) : canvas
+        const finalCanvas = printConfig.monocromo
+          ? await convertToMonochrome(canvas)
+          : canvas;
 
-        const imgData = finalCanvas.toDataURL("image/png")
+        const imgData = finalCanvas.toDataURL("image/png");
 
         // Determinar dimensiones según el tamaño seleccionado
-        const pdfWidth = 140
-        let pdfHeight = 50
+        const pdfWidth = 140;
+        let pdfHeight = 50;
 
         if (printConfig.paperSize === "140x50mm+100px") {
-          pdfHeight = 50 + 100 * 0.264583 // Convertir 100px a mm (100px / 378 px/100mm)
+          pdfHeight = 50 + 100 * 0.264583; // Convertir 100px a mm (100px / 378 px/100mm)
         }
 
         const pdf = new jsPDF({
@@ -209,43 +229,53 @@ export default function PruebaBoletoPage() {
           unit: "mm",
           format: [pdfWidth, pdfHeight],
           compress: true,
-        })
+        });
 
         // Establecer fondo blanco explícito
-        pdf.setFillColor(255, 255, 255)
-        pdf.rect(0, 0, pdfWidth, pdfHeight, "F")
+        pdf.setFillColor(255, 255, 255);
+        pdf.rect(0, 0, pdfWidth, pdfHeight, "F");
 
         // Añadir la imagen con calidad optimizada
-        pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight, undefined, "FAST")
+        pdf.addImage(
+          imgData,
+          "PNG",
+          0,
+          0,
+          pdfWidth,
+          pdfHeight,
+          undefined,
+          "FAST",
+        );
 
-        pdf.save(`boleto-${ticketData.orden}.pdf`)
+        pdf.save(`boleto-${ticketData.orden}.pdf`);
 
         toast({
           title: "PDF generado",
-          description: "El boleto se ha descargado como PDF optimizado para impresión térmica.",
-        })
+          description:
+            "El boleto se ha descargado como PDF optimizado para impresión térmica.",
+        });
       }
     } catch (error) {
-      console.error("Error generando PDF:", error)
+      console.error("Error generando PDF:", error);
       toast({
         title: "Error",
         description: "No se pudo generar el PDF. Intenta nuevamente.",
         variant: "destructive",
-      })
+      });
     }
-  }
+  };
 
   const handlePrint = () => {
-    const printWindow = window.open("", "_blank")
+    const printWindow = window.open("", "_blank");
     if (printWindow && ticketRef.current) {
-      const ticketHTML = ticketRef.current.outerHTML
+      const ticketHTML = ticketRef.current.outerHTML;
 
       // Determinar dimensiones según el tamaño seleccionado
-      const pageWidth = "140mm"
-      let pageHeight = "50mm"
+      const pageWidth = "140mm";
+      let pageHeight = "50mm";
 
       if (printConfig.paperSize === "140x50mm+100px") {
-        pageHeight = "76.4mm" // 50mm + 26.4mm (100px convertidos a mm)
+        pageHeight = "76.4mm"; // 50mm + 26.4mm (100px convertidos a mm)
       }
 
       printWindow.document.write(`
@@ -405,8 +435,9 @@ export default function PruebaBoletoPage() {
                 font-weight: normal;
               }
               
-              ${printConfig.monocromo
-          ? `
+              ${
+                printConfig.monocromo
+                  ? `
               /* Estilos específicos para impresión monocromática */
               * {
                 color: black !important;
@@ -414,8 +445,8 @@ export default function PruebaBoletoPage() {
                 border-color: black !important;
               }
               `
-          : ""
-        }
+                  : ""
+              }
             </style>
           </head>
           <body>
@@ -429,69 +460,70 @@ export default function PruebaBoletoPage() {
             </script>
           </body>
         </html>
-      `)
-      printWindow.document.close()
+      `);
+      printWindow.document.close();
     }
-  }
+  };
 
   // Función para exportar como imagen monocromática TIFF
   const exportMonochromeTiff = async () => {
     try {
-      const html2canvas = (await import("html2canvas")).default
+      const html2canvas = (await import("html2canvas")).default;
 
       if (ticketRef.current) {
         toast({
           title: "Procesando...",
           description: "Generando imagen monocromática para impresión térmica.",
-        })
+        });
 
         // Capturar el boleto con alta resolución
         const canvas = await html2canvas(ticketRef.current, {
           scale: 4,
           useCORS: true,
           backgroundColor: "#ffffff",
-        })
+        });
 
         // Convertir a monocromo
-        const monoCanvas = await convertToMonochrome(canvas)
+        const monoCanvas = await convertToMonochrome(canvas);
 
         // Crear un enlace de descarga
-        const link = document.createElement("a")
-        link.download = `boleto-${ticketData.orden}-mono.png`
+        const link = document.createElement("a");
+        link.download = `boleto-${ticketData.orden}-mono.png`;
 
         // Convertir a PNG (los navegadores no soportan TIFF directamente)
         monoCanvas.toBlob((blob) => {
           if (blob) {
-            link.href = URL.createObjectURL(blob)
-            link.click()
+            link.href = URL.createObjectURL(blob);
+            link.click();
 
             toast({
               title: "Imagen generada",
-              description: "La imagen monocromática se ha descargado. Úsala con ImageMagick para convertir a TIFF.",
-            })
+              description:
+                "La imagen monocromática se ha descargado. Úsala con ImageMagick para convertir a TIFF.",
+            });
           }
-        }, "image/png")
+        }, "image/png");
       }
     } catch (error) {
-      console.error("Error generando imagen monocromática:", error)
+      console.error("Error generando imagen monocromática:", error);
       toast({
         title: "Error",
         description: "No se pudo generar la imagen. Intenta nuevamente.",
         variant: "destructive",
-      })
+      });
     }
-  }
+  };
 
   // Determinar altura del contenedor según el tamaño seleccionado
   const getTicketHeight = () => {
-    return printConfig.paperSize === "140x50mm+100px" ? "300px" : "240px"
-  }
+    return printConfig.paperSize === "140x50mm+100px" ? "300px" : "240px";
+  };
 
   const getTicketDescription = () => {
     return printConfig.paperSize === "140x42mm+100px"
       ? "Diseño extendido con 100px adicionales de altura"
-      : "Diseño optimizado para impresión térmica de boletos - Formato horizontal"
-  }
+      : "Diseño optimizado para impresión térmica de boletos - Formato horizontal";
+  };
 
   return (
     <MainLayout activePage="prueba-boleto">
@@ -503,8 +535,12 @@ export default function PruebaBoletoPage() {
               <FileText className="h-8 w-8 text-blue-600" />
             </div>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Prueba de Boleto</h1>
-          <p className="text-gray-600">Configura y previsualiza el diseño del boleto antes de imprimir</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Prueba de Boleto
+          </h1>
+          <p className="text-gray-600">
+            Configura y previsualiza el diseño del boleto antes de imprimir
+          </p>
         </div>
 
         {/* Layout en columna */}
@@ -515,7 +551,9 @@ export default function PruebaBoletoPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Datos del Boleto</CardTitle>
-                <CardDescription>Configura la información que aparecerá en el boleto</CardDescription>
+                <CardDescription>
+                  Configura la información que aparecerá en el boleto
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
@@ -524,7 +562,9 @@ export default function PruebaBoletoPage() {
                     <Input
                       id="evento"
                       value={ticketData.evento}
-                      onChange={(e) => handleTicketDataChange("evento", e.target.value)}
+                      onChange={(e) =>
+                        handleTicketDataChange("evento", e.target.value)
+                      }
                       placeholder="Nombre del evento"
                       disabled
                     />
@@ -552,7 +592,9 @@ export default function PruebaBoletoPage() {
                     <Input
                       id="precio"
                       value={ticketData.precio}
-                      onChange={(e) => handleTicketDataChange("precio", e.target.value)}
+                      onChange={(e) =>
+                        handleTicketDataChange("precio", e.target.value)
+                      }
                       placeholder="300"
                       disabled={true}
                     />
@@ -562,7 +604,9 @@ export default function PruebaBoletoPage() {
                     <Input
                       id="fecha"
                       value={ticketData.fecha}
-                      onChange={(e) => handleTicketDataChange("fecha", e.target.value)}
+                      onChange={(e) =>
+                        handleTicketDataChange("fecha", e.target.value)
+                      }
                       placeholder="19 DE JULIO 2025"
                       disabled
                     />
@@ -572,7 +616,9 @@ export default function PruebaBoletoPage() {
                     <Input
                       id="hora"
                       value={ticketData.hora}
-                      onChange={(e) => handleTicketDataChange("hora", e.target.value)}
+                      onChange={(e) =>
+                        handleTicketDataChange("hora", e.target.value)
+                      }
                       placeholder="20:00"
                       disabled
                     />
@@ -582,7 +628,9 @@ export default function PruebaBoletoPage() {
                     <Input
                       id="lugar"
                       value={ticketData.lugar}
-                      onChange={(e) => handleTicketDataChange("lugar", e.target.value)}
+                      onChange={(e) =>
+                        handleTicketDataChange("lugar", e.target.value)
+                      }
                       placeholder="CENTRO DE EVENTOS CD VICTORIA"
                       disabled
                     />
@@ -592,7 +640,9 @@ export default function PruebaBoletoPage() {
                     <Input
                       id="ciudad"
                       value={ticketData.ciudad}
-                      onChange={(e) => handleTicketDataChange("ciudad", e.target.value)}
+                      onChange={(e) =>
+                        handleTicketDataChange("ciudad", e.target.value)
+                      }
                       placeholder="CD. VICTORIA, TAMPS"
                       disabled
                     />
@@ -608,7 +658,7 @@ export default function PruebaBoletoPage() {
                       />
                       <Button
                         variant="outline"
-                        onClick={() => handleTicketDataChange('orden', '')}
+                        onClick={() => handleTicketDataChange("orden", "")}
                         className="shrink-0"
                       >
                         Regenerar
@@ -619,7 +669,9 @@ export default function PruebaBoletoPage() {
                     <Label htmlFor="seccion">Sección</Label>
                     <Select
                       value={ticketData.seccion}
-                      onValueChange={(value) => handleTicketDataChange("seccion", value)}
+                      onValueChange={(value) =>
+                        handleTicketDataChange("seccion", value)
+                      }
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -634,20 +686,24 @@ export default function PruebaBoletoPage() {
                     </Select>
                   </div>
                   {/* Fila y Asiento solo si no es GENERAL */}
-                  {ticketData.tipo !== 'GENERAL' && (
+                  {ticketData.tipo !== "GENERAL" && (
                     <>
                       <div className="space-y-2">
                         <Label htmlFor="fila">Fila</Label>
                         <Select
                           value={ticketData.fila}
-                          onValueChange={(value) => handleTicketDataChange("fila", value)}
+                          onValueChange={(value) =>
+                            handleTicketDataChange("fila", value)
+                          }
                         >
                           <SelectTrigger>
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
                             {FILAS.map((letra) => (
-                              <SelectItem key={letra} value={letra}>{letra}</SelectItem>
+                              <SelectItem key={letra} value={letra}>
+                                {letra}
+                              </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
@@ -657,7 +713,9 @@ export default function PruebaBoletoPage() {
                         <Input
                           id="asiento"
                           value={ticketData.asiento}
-                          onChange={(e) => handleTicketDataChange("asiento", e.target.value)}
+                          onChange={(e) =>
+                            handleTicketDataChange("asiento", e.target.value)
+                          }
                           placeholder="12"
                         />
                       </div>
@@ -671,7 +729,9 @@ export default function PruebaBoletoPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Configuración de Impresión</CardTitle>
-                <CardDescription>Ajusta las opciones de impresión y formato</CardDescription>
+                <CardDescription>
+                  Ajusta las opciones de impresión y formato
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
@@ -679,14 +739,20 @@ export default function PruebaBoletoPage() {
                     <Label htmlFor="paperSize">Tamaño de Papel</Label>
                     <Select
                       value={printConfig.paperSize}
-                      onValueChange={(value) => handlePrintConfigChange("paperSize", value)}
+                      onValueChange={(value) =>
+                        handlePrintConfigChange("paperSize", value)
+                      }
                     >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="140x50mm">140mm x 50mm (Estándar)</SelectItem>
-                        <SelectItem value="140x50mm+100px">140mm x 50mm + 100px (Extendido)</SelectItem>
+                        <SelectItem value="140x50mm">
+                          140mm x 50mm (Estándar)
+                        </SelectItem>
+                        <SelectItem value="140x50mm+100px">
+                          140mm x 50mm + 100px (Extendido)
+                        </SelectItem>
                         <SelectItem value="A4">A4 (Prueba)</SelectItem>
                         <SelectItem value="Letter">Carta (Prueba)</SelectItem>
                       </SelectContent>
@@ -696,7 +762,9 @@ export default function PruebaBoletoPage() {
                     <Label htmlFor="orientation">Orientación</Label>
                     <Select
                       value={printConfig.orientation}
-                      onValueChange={(value) => handlePrintConfigChange("orientation", value)}
+                      onValueChange={(value) =>
+                        handlePrintConfigChange("orientation", value)
+                      }
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -709,14 +777,25 @@ export default function PruebaBoletoPage() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="dpi">Resolución (DPI)</Label>
-                    <Select value={printConfig.dpi} onValueChange={(value) => handlePrintConfigChange("dpi", value)}>
+                    <Select
+                      value={printConfig.dpi}
+                      onValueChange={(value) =>
+                        handlePrintConfigChange("dpi", value)
+                      }
+                    >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="203">203 DPI (Térmica estándar)</SelectItem>
-                        <SelectItem value="300">300 DPI (Alta calidad)</SelectItem>
-                        <SelectItem value="600">600 DPI (Muy alta calidad)</SelectItem>
+                        <SelectItem value="203">
+                          203 DPI (Térmica estándar)
+                        </SelectItem>
+                        <SelectItem value="300">
+                          300 DPI (Alta calidad)
+                        </SelectItem>
+                        <SelectItem value="600">
+                          600 DPI (Muy alta calidad)
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -724,7 +803,9 @@ export default function PruebaBoletoPage() {
                     <Label htmlFor="margins">Márgenes</Label>
                     <Select
                       value={printConfig.margins}
-                      onValueChange={(value) => handlePrintConfigChange("margins", value)}
+                      onValueChange={(value) =>
+                        handlePrintConfigChange("margins", value)
+                      }
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -750,7 +831,9 @@ export default function PruebaBoletoPage() {
                       <Checkbox
                         id="monocromo"
                         checked={printConfig.monocromo}
-                        onCheckedChange={(checked) => handlePrintConfigChange("monocromo", checked === true)}
+                        onCheckedChange={(checked) =>
+                          handlePrintConfigChange("monocromo", checked === true)
+                        }
                       />
                       <Label htmlFor="monocromo" className="text-sm">
                         Convertir a monocromo (1 bit)
@@ -758,8 +841,9 @@ export default function PruebaBoletoPage() {
                     </div>
 
                     <p className="text-xs text-gray-500">
-                      La conversión a monocromo elimina los tramados y mejora la impresión en impresoras térmicas. Usa
-                      203 DPI para impresoras térmicas estándar.
+                      La conversión a monocromo elimina los tramados y mejora la
+                      impresión en impresoras térmicas. Usa 203 DPI para
+                      impresoras térmicas estándar.
                     </p>
                   </div>
                 </div>
@@ -767,17 +851,28 @@ export default function PruebaBoletoPage() {
                 {/* Action Buttons */}
                 <div className="flex flex-col gap-4 pt-4">
                   <div className="flex gap-4">
-                    <Button onClick={generatePDF} className="flex-1 bg-blue-600 hover:bg-blue-700">
+                    <Button
+                      onClick={generatePDF}
+                      className="flex-1 bg-blue-600 hover:bg-blue-700"
+                    >
                       <Download className="h-4 w-4 mr-2" />
                       Descargar PDF
                     </Button>
-                    <Button onClick={handlePrint} variant="outline" className="flex-1">
+                    <Button
+                      onClick={handlePrint}
+                      variant="outline"
+                      className="flex-1"
+                    >
                       <Printer className="h-4 w-4 mr-2" />
                       Imprimir
                     </Button>
                   </div>
 
-                  <Button onClick={exportMonochromeTiff} variant="secondary" className="w-full">
+                  <Button
+                    onClick={exportMonochromeTiff}
+                    variant="secondary"
+                    className="w-full"
+                  >
                     <Download className="h-4 w-4 mr-2" />
                     Exportar imagen monocromática
                   </Button>
@@ -791,7 +886,10 @@ export default function PruebaBoletoPage() {
             <CardHeader>
               <CardTitle>
                 Vista Previa del Boleto (
-                {printConfig.paperSize === "140x50mm+100px" ? "140mm x 76.4mm" : "140mm x 50mm"})
+                {printConfig.paperSize === "140x50mm+100px"
+                  ? "140mm x 76.4mm"
+                  : "140mm x 50mm"}
+                )
               </CardTitle>
               <CardDescription>{getTicketDescription()}</CardDescription>
             </CardHeader>
@@ -814,39 +912,83 @@ export default function PruebaBoletoPage() {
                     <div className="w-24 p-[5px] font-gontserrat">
                       <div className="space-y-0 text-center">
                         <div className="flex flex-col items-center">
-                          <div className={`text-xs font-[5px] ${gontserrat.className}`}>PRECIO</div>
-                          <div className={`text-[11px] ${gontserrat.className}`}>$ {paymentMethod === 'courtesy' ? '0.00' : ticketData.precio}</div>
+                          <div
+                            className={`text-xs font-[5px] ${gontserrat.className}`}
+                          >
+                            PRECIO
+                          </div>
+                          <div
+                            className={`text-[11px] ${gontserrat.className}`}
+                          >
+                            ${" "}
+                            {paymentMethod === "courtesy"
+                              ? "0.00"
+                              : ticketData.precio}
+                          </div>
                           <div className="py-1">
                             <SeparationLines />
                           </div>
                         </div>
                         <div className="flex flex-col items-center">
-                          <div className={`text-xs font-[5px] ${gontserrat.className}`}>TIPO</div>
-                          <div className={`text-[11px] ${gontserrat.className}`}>
-                            {ticketData.tipo === 'CORTESIA' ? 'CORTESIA' : ticketData.tipo}
+                          <div
+                            className={`text-xs font-[5px] ${gontserrat.className}`}
+                          >
+                            TIPO
+                          </div>
+                          <div
+                            className={`text-[11px] ${gontserrat.className}`}
+                          >
+                            {ticketData.tipo === "CORTESIA"
+                              ? "CORTESIA"
+                              : ticketData.tipo}
                           </div>
                           <div className="py-1">
                             <SeparationLines />
                           </div>
                         </div>
                         <div className="flex flex-col items-center">
-                          <div className={`text-xs font-[5px] ${gontserrat.className}`}>ORDEN</div>
-                          <div className={`text-[11px] ${gontserrat.className}`}>{ticketData.orden}</div>
+                          <div
+                            className={`text-xs font-[5px] ${gontserrat.className}`}
+                          >
+                            ORDEN
+                          </div>
+                          <div
+                            className={`text-[11px] ${gontserrat.className}`}
+                          >
+                            {ticketData.orden}
+                          </div>
                           <div className="py-1">
                             <SeparationLines />
                           </div>
                         </div>
                         <div className="flex flex-col items-center">
-                          <div className={`text-xs font-[5px] ${gontserrat.className}`}>SECCIÓN</div>
-                          <div className={`text-[11px] ${gontserrat.className}`}>{ticketData.seccion}</div>
+                          <div
+                            className={`text-xs font-[5px] ${gontserrat.className}`}
+                          >
+                            SECCIÓN
+                          </div>
+                          <div
+                            className={`text-[11px] ${gontserrat.className}`}
+                          >
+                            {ticketData.seccion}
+                          </div>
                           <div className="py-1">
                             <SeparationLines />
                           </div>
                         </div>
-                        {ticketData.tipo !== 'GENERAL' && (
+                        {ticketData.tipo !== "GENERAL" && (
                           <div className="flex flex-col items-center gap-0px">
-                            <div className={`text-xs font-[5px] ${gontserrat.className}`}>ASIENTO</div>
-                            <div className={`text-[11px] ${gontserrat.className}`}>{ticketData.fila}{ticketData.asiento}</div>
+                            <div
+                              className={`text-xs font-[5px] ${gontserrat.className}`}
+                            >
+                              ASIENTO
+                            </div>
+                            <div
+                              className={`text-[11px] ${gontserrat.className}`}
+                            >
+                              {ticketData.fila}
+                              {ticketData.asiento}
+                            </div>
                           </div>
                         )}
                       </div>
@@ -857,9 +999,13 @@ export default function PruebaBoletoPage() {
                     </div>
 
                     {/* Contenido central */}
-                    <div className={`flex-grow p-[0.6rem] flex flex-col relative ${dazzleUnicase.variable} ${gontserrat.variable}`}>
+                    <div
+                      className={`flex-grow p-[0.6rem] flex flex-col relative ${dazzleUnicase.variable} ${gontserrat.variable}`}
+                    >
                       {/* Título del evento y recinto */}
-                      <div className={`text-2xl font-bold mb-6 ${dazzleUnicase.className}`}>
+                      <div
+                        className={`text-2xl font-bold mb-6 ${dazzleUnicase.className}`}
+                      >
                         {ticketData.evento}
                         <div className="mt-1">
                           {ticketData.lugar.split(" CD ").map((part, index) => (
@@ -874,14 +1020,22 @@ export default function PruebaBoletoPage() {
                       </div>
 
                       {/* Fecha, hora y ciudad */}
-                      <div className={`text-md mb-8 text-[11.7px] ${gontserrat.className}`}>
+                      <div
+                        className={`text-md mb-8 text-[11.7px] ${gontserrat.className}`}
+                      >
                         {ticketData.fecha}
-                        <div className={gontserrat.className}>{ticketData.hora} hrs.</div>
-                        <div className={gontserrat.className}>{ticketData.ciudad}</div>
+                        <div className={gontserrat.className}>
+                          {ticketData.hora} hrs.
+                        </div>
+                        <div className={gontserrat.className}>
+                          {ticketData.ciudad}
+                        </div>
                       </div>
 
                       {/* Detalles del boleto con separadores */}
-                      <div className={`flex items-center space-x-[8px] ${gontserrat.className}`}>
+                      <div
+                        className={`flex items-center space-x-[8px] ${gontserrat.className}`}
+                      >
                         <div className="text-center">
                           <div className="text-[11px]">PRECIO</div>
                           <div className="text-xs">$ {ticketData.precio}</div>
@@ -889,7 +1043,11 @@ export default function PruebaBoletoPage() {
                         <div className="h-8 w-px bg-black"></div>
                         <div className="text-center">
                           <div className="text-[11px]">TIPO</div>
-                          <div className="text-xs">{ticketData.tipo === 'CORTESIA' ? 'CORTESIA' : ticketData.tipo}</div>
+                          <div className="text-xs">
+                            {ticketData.tipo === "CORTESIA"
+                              ? "CORTESIA"
+                              : ticketData.tipo}
+                          </div>
                         </div>
                         <div className="h-8 w-px bg-black"></div>
                         <div className="text-center">
@@ -901,12 +1059,15 @@ export default function PruebaBoletoPage() {
                           <div className="text-[11px]">SECCIÓN</div>
                           <div className="text-xs">{ticketData.seccion}</div>
                         </div>
-                        {ticketData.tipo !== 'GENERAL' && (
+                        {ticketData.tipo !== "GENERAL" && (
                           <>
                             <div className="h-8 w-px bg-black"></div>
                             <div className="text-center">
                               <div className="text-[11px]">ASIENTO</div>
-                              <div className="text-xs">{ticketData.fila}{ticketData.asiento}</div>
+                              <div className="text-xs">
+                                {ticketData.fila}
+                                {ticketData.asiento}
+                              </div>
                             </div>
                           </>
                         )}
@@ -926,39 +1087,83 @@ export default function PruebaBoletoPage() {
                     <div className="w-24 p-[5px] font-gontserrat">
                       <div className="space-y-0 text-center">
                         <div className="flex flex-col items-center">
-                          <div className={`text-xs font-[5px] ${gontserrat.className}`}>PRECIO</div>
-                          <div className={`text-[11px] ${gontserrat.className}`}>$ {paymentMethod === 'courtesy' ? '0.00' : ticketData.precio}</div>
+                          <div
+                            className={`text-xs font-[5px] ${gontserrat.className}`}
+                          >
+                            PRECIO
+                          </div>
+                          <div
+                            className={`text-[11px] ${gontserrat.className}`}
+                          >
+                            ${" "}
+                            {paymentMethod === "courtesy"
+                              ? "0.00"
+                              : ticketData.precio}
+                          </div>
                           <div className="py-1">
                             <SeparationLines />
                           </div>
                         </div>
                         <div className="flex flex-col items-center">
-                          <div className={`text-xs font-[5px] ${gontserrat.className}`}>TIPO</div>
-                          <div className={`text-[11px] ${gontserrat.className}`}>
-                            {ticketData.tipo === 'CORTESIA' ? 'CORTESIA' : ticketData.tipo}
+                          <div
+                            className={`text-xs font-[5px] ${gontserrat.className}`}
+                          >
+                            TIPO
+                          </div>
+                          <div
+                            className={`text-[11px] ${gontserrat.className}`}
+                          >
+                            {ticketData.tipo === "CORTESIA"
+                              ? "CORTESIA"
+                              : ticketData.tipo}
                           </div>
                           <div className="py-1">
                             <SeparationLines />
                           </div>
                         </div>
                         <div className="flex flex-col items-center">
-                          <div className={`text-xs font-[5px] ${gontserrat.className}`}>ORDEN</div>
-                          <div className={`text-[11px] ${gontserrat.className}`}>{ticketData.orden}</div>
+                          <div
+                            className={`text-xs font-[5px] ${gontserrat.className}`}
+                          >
+                            ORDEN
+                          </div>
+                          <div
+                            className={`text-[11px] ${gontserrat.className}`}
+                          >
+                            {ticketData.orden}
+                          </div>
                           <div className="py-1">
                             <SeparationLines />
                           </div>
                         </div>
                         <div className="flex flex-col items-center">
-                          <div className={`text-xs font-[5px] ${gontserrat.className}`}>SECCIÓN</div>
-                          <div className={`text-[11px] ${gontserrat.className}`}>{ticketData.seccion}</div>
+                          <div
+                            className={`text-xs font-[5px] ${gontserrat.className}`}
+                          >
+                            SECCIÓN
+                          </div>
+                          <div
+                            className={`text-[11px] ${gontserrat.className}`}
+                          >
+                            {ticketData.seccion}
+                          </div>
                           <div className="py-1">
                             <SeparationLines />
                           </div>
                         </div>
-                        {ticketData.tipo !== 'GENERAL' && (
+                        {ticketData.tipo !== "GENERAL" && (
                           <div className="flex flex-col items-center gap-0px">
-                            <div className={`text-xs font-[5px] ${gontserrat.className}`}>ASIENTO</div>
-                            <div className={`text-[11px] ${gontserrat.className}`}>{ticketData.fila}{ticketData.asiento}</div>
+                            <div
+                              className={`text-xs font-[5px] ${gontserrat.className}`}
+                            >
+                              ASIENTO
+                            </div>
+                            <div
+                              className={`text-[11px] ${gontserrat.className}`}
+                            >
+                              {ticketData.fila}
+                              {ticketData.asiento}
+                            </div>
                           </div>
                         )}
                       </div>
@@ -971,5 +1176,5 @@ export default function PruebaBoletoPage() {
         </div>
       </div>
     </MainLayout>
-  )
+  );
 }

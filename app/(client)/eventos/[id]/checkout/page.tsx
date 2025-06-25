@@ -1,133 +1,147 @@
-'use client'
+"use client";
 
-import { useState, useEffect, Suspense } from 'react'
-import { useParams, useSearchParams, useRouter } from 'next/navigation'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Separator } from '@/components/ui/separator'
-import { useToast } from '@/hooks/use-toast'
-import { Event, getEvent } from '@/lib/firebase/events'
-import { Venue, getVenue } from '@/lib/firebase/venues'
-import { useCart } from '@/hooks/use-cart'
-import { CartSummaryComponent } from '@/components/stripe/cart-summary'
-import { CheckoutButton } from '@/components/stripe/checkout-button'
-import { ArrowLeft, Mail, User, Calendar, MapPin, Clock, CreditCard } from 'lucide-react'
+import { useState, useEffect, Suspense } from "react";
+import { useParams, useSearchParams, useRouter } from "next/navigation";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/hooks/use-toast";
+import { Event, getEvent } from "@/lib/firebase/events";
+import { Venue, getVenue } from "@/lib/firebase/venues";
+import { useCart } from "@/hooks/use-cart";
+import { CartSummaryComponent } from "@/components/stripe/cart-summary";
+import { CheckoutButton } from "@/components/stripe/checkout-button";
+import {
+  ArrowLeft,
+  Mail,
+  User,
+  Calendar,
+  MapPin,
+  Clock,
+  CreditCard,
+} from "lucide-react";
 
 interface CustomerData {
-  email: string
-  firstName: string
-  lastName: string
-  phone?: string
+  email: string;
+  firstName: string;
+  lastName: string;
+  phone?: string;
 }
 
 function CheckoutContent() {
-  const params = useParams()
-  const searchParams = useSearchParams()
-  const router = useRouter()
-  const { toast } = useToast()
-  
-  const eventId = params.id as string
-  const [event, setEvent] = useState<Event | null>(null)
-  const [venue, setVenue] = useState<Venue | null>(null)
-  const [loading, setLoading] = useState(true)
+  const params = useParams();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const { toast } = useToast();
+
+  const eventId = params.id as string;
+  const [event, setEvent] = useState<Event | null>(null);
+  const [venue, setVenue] = useState<Venue | null>(null);
+  const [loading, setLoading] = useState(true);
   const [customerData, setCustomerData] = useState<CustomerData>({
-    email: '',
-    firstName: '',
-    lastName: '',
-    phone: ''
-  })
-  const [isFormValid, setIsFormValid] = useState(false)
+    email: "",
+    firstName: "",
+    lastName: "",
+    phone: "",
+  });
+  const [isFormValid, setIsFormValid] = useState(false);
 
   const {
     cartSummary,
     removeItem,
     updateQuantity,
     loadFromExistingData,
-    setEvent: setCartEvent
-  } = useCart()
+    setEvent: setCartEvent,
+  } = useCart();
 
   // Cargar datos del evento
   useEffect(() => {
     async function fetchEventDetails() {
       try {
-        setLoading(true)
-        
-        const eventData = await getEvent(eventId)
+        setLoading(true);
+
+        const eventData = await getEvent(eventId);
         if (!eventData) {
           toast({
             title: "Error",
             description: "Evento no encontrado",
-            variant: "destructive"
-          })
-          router.push('/eventos')
-          return
+            variant: "destructive",
+          });
+          router.push("/eventos");
+          return;
         }
-        
-        setEvent(eventData)
-        
-        const venueData = await getVenue(eventData.lugar_id)
-        setVenue(venueData)
-        
+
+        setEvent(eventData);
+
+        const venueData = await getVenue(eventData.lugar_id);
+        setVenue(venueData);
+
         // Establecer evento en el carrito
         const eventInfo = {
           id: eventId,
           title: eventData.nombre,
-          date: eventData.fecha.toLocaleDateString('es-ES'),
+          date: eventData.fecha.toLocaleDateString("es-ES"),
           time: eventData.hora,
-          venue: venueData ? `${venueData.nombre}, ${venueData.ciudad}` : "Ubicación por confirmar"
-        }
-        setCartEvent(eventInfo)
-        
+          venue: venueData
+            ? `${venueData.nombre}, ${venueData.ciudad}`
+            : "Ubicación por confirmar",
+        };
+        setCartEvent(eventInfo);
       } catch (error) {
-        console.error('Error fetching event details:', error)
+        console.error("Error fetching event details:", error);
         toast({
-          title: "Error", 
+          title: "Error",
           description: "Error al cargar los detalles del evento",
-          variant: "destructive"
-        })
+          variant: "destructive",
+        });
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
 
     if (eventId) {
-      fetchEventDetails()
+      fetchEventDetails();
     }
-  }, [eventId, router, toast, setCartEvent])
+  }, [eventId, router, toast, setCartEvent]);
 
   // Cargar datos del carrito desde URL params
   useEffect(() => {
-    const selectedSeatsParam = searchParams.get("selectedSeats")
-    const generalTicketsParam = searchParams.get("generalTickets")
+    const selectedSeatsParam = searchParams.get("selectedSeats");
+    const generalTicketsParam = searchParams.get("generalTickets");
 
     if (selectedSeatsParam || generalTicketsParam) {
-      const selectedSeats = selectedSeatsParam ? JSON.parse(selectedSeatsParam) : []
-      const generalTickets = generalTicketsParam ? JSON.parse(generalTicketsParam) : []
-      loadFromExistingData(selectedSeats, generalTickets)
+      const selectedSeats = selectedSeatsParam
+        ? JSON.parse(selectedSeatsParam)
+        : [];
+      const generalTickets = generalTicketsParam
+        ? JSON.parse(generalTicketsParam)
+        : [];
+      loadFromExistingData(selectedSeats, generalTickets);
     } else {
       // Si no hay datos en la URL, redirigir de vuelta
-      router.push(`/eventos/${eventId}/comprar`)
+      router.push(`/eventos/${eventId}/comprar`);
     }
-  }, [searchParams, loadFromExistingData, router, eventId])
+  }, [searchParams, loadFromExistingData, router, eventId]);
 
   // Validar formulario
   useEffect(() => {
-    const isValid = customerData.email.trim() !== '' && 
-                   customerData.firstName.trim() !== '' && 
-                   customerData.lastName.trim() !== '' &&
-                   /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerData.email)
-    setIsFormValid(isValid)
-  }, [customerData])
+    const isValid =
+      customerData.email.trim() !== "" &&
+      customerData.firstName.trim() !== "" &&
+      customerData.lastName.trim() !== "" &&
+      /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerData.email);
+    setIsFormValid(isValid);
+  }, [customerData]);
 
   const handleInputChange = (field: keyof CustomerData, value: string) => {
-    setCustomerData(prev => ({ ...prev, [field]: value }))
-  }
+    setCustomerData((prev) => ({ ...prev, [field]: value }));
+  };
 
   const handleBackToSeatSelection = () => {
-    router.push(`/eventos/${eventId}/comprar`)
-  }
+    router.push(`/eventos/${eventId}/comprar`);
+  };
 
   if (loading) {
     return (
@@ -137,7 +151,7 @@ function CheckoutContent() {
           <p className="text-gray-600">Cargando información del evento...</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (!event || cartSummary.isEmpty) {
@@ -157,25 +171,27 @@ function CheckoutContent() {
           </CardContent>
         </Card>
       </div>
-    )
+    );
   }
 
   const eventInfo = {
     id: eventId,
     title: event.nombre,
-    date: event.fecha.toLocaleDateString('es-ES'),
+    date: event.fecha.toLocaleDateString("es-ES"),
     time: event.hora,
-    venue: venue ? `${venue.nombre}, ${venue.ciudad}` : "Ubicación por confirmar",
-    image: event.imagen_url || '/placeholder.jpg'
-  }
+    venue: venue
+      ? `${venue.nombre}, ${venue.ciudad}`
+      : "Ubicación por confirmar",
+    image: event.imagen_url || "/placeholder.jpg",
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-6xl mx-auto p-6">
         {/* Header */}
         <div className="mb-6">
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             onClick={handleBackToSeatSelection}
             className="mb-4"
           >
@@ -206,13 +222,15 @@ function CheckoutContent() {
               </CardHeader>
               <CardContent>
                 <div className="flex gap-4">
-                  <img 
-                    src={eventInfo.image} 
+                  <img
+                    src={eventInfo.image}
                     alt={eventInfo.title}
                     className="w-20 h-20 object-cover rounded-lg"
                   />
                   <div className="flex-1">
-                    <h3 className="font-semibold text-lg mb-2">{eventInfo.title}</h3>
+                    <h3 className="font-semibold text-lg mb-2">
+                      {eventInfo.title}
+                    </h3>
                     <div className="space-y-1 text-sm text-gray-600">
                       <div className="flex items-center gap-2">
                         <Calendar className="w-4 h-4" />
@@ -248,7 +266,9 @@ function CheckoutContent() {
                       id="firstName"
                       type="text"
                       value={customerData.firstName}
-                      onChange={(e) => handleInputChange('firstName', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("firstName", e.target.value)
+                      }
                       placeholder="Tu nombre"
                       required
                     />
@@ -259,7 +279,9 @@ function CheckoutContent() {
                       id="lastName"
                       type="text"
                       value={customerData.lastName}
-                      onChange={(e) => handleInputChange('lastName', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("lastName", e.target.value)
+                      }
                       placeholder="Tu apellido"
                       required
                     />
@@ -272,7 +294,7 @@ function CheckoutContent() {
                     id="email"
                     type="email"
                     value={customerData.email}
-                    onChange={(e) => handleInputChange('email', e.target.value)}
+                    onChange={(e) => handleInputChange("email", e.target.value)}
                     placeholder="tu@correo.com"
                     required
                   />
@@ -287,7 +309,7 @@ function CheckoutContent() {
                     id="phone"
                     type="tel"
                     value={customerData.phone}
-                    onChange={(e) => handleInputChange('phone', e.target.value)}
+                    onChange={(e) => handleInputChange("phone", e.target.value)}
                     placeholder="+52 555 123 4567"
                   />
                 </div>
@@ -300,8 +322,9 @@ function CheckoutContent() {
                         Entrega de Boletos
                       </h4>
                       <p className="text-sm text-blue-700">
-                        Después del pago exitoso, recibirás tus boletos por correo electrónico 
-                        en formato PDF listo para imprimir o mostrar desde tu móvil.
+                        Después del pago exitoso, recibirás tus boletos por
+                        correo electrónico en formato PDF listo para imprimir o
+                        mostrar desde tu móvil.
                       </p>
                     </div>
                   </div>
@@ -337,7 +360,7 @@ function CheckoutContent() {
                           Pago Seguro
                         </h4>
                         <p className="text-sm text-green-700">
-                          Tu información está protegida con cifrado SSL. 
+                          Tu información está protegida con cifrado SSL.
                           Procesamos pagos de forma segura con Stripe.
                         </p>
                       </div>
@@ -364,20 +387,22 @@ function CheckoutContent() {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 export default function CheckoutPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Cargando...</p>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Cargando...</p>
+          </div>
         </div>
-      </div>
-    }>
+      }
+    >
       <CheckoutContent />
     </Suspense>
-  )
-} 
+  );
+}
