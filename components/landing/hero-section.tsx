@@ -39,7 +39,7 @@ export function HeroSection() {
           <div className="w-full ">
             <div className="bg-black/20 backdrop-blur-sm rounded-xl p-2 mb-8">
               <Image
-                src="/banner.jpg"
+                src="https://firebasestorage.googleapis.com/v0/b/boletera-375d2.firebasestorage.app/o/events%2FPg8YWJPTZ5pejgYuC9DB%2FAcordeonazo%20-%20Banner%20Digital.jpg?alt=media&token=99676459-57f5-43e4-86d9-6040fc6fc1f4"
                 width={800}
                 height={800}
                 alt="Cartel de Santa Concert"
