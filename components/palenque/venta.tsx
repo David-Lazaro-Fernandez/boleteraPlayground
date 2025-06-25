@@ -1281,7 +1281,7 @@ export function Venta({ generalTickets, selectedSeats }: VentaProps) {
             <Button
               onClick={() => {
                 setShowPrintConfirmationModal(false);
-                window.location.href = "/mapas-asientos";
+                window.location.href = "/dashboard/mapas-asientos";
               }}
             >
               Sí, todo correcto
