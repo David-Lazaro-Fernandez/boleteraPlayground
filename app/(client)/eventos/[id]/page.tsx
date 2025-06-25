@@ -1,12 +1,12 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { MainLayout } from "@/components/layout/main-layout";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+import { useState, useEffect } from "react"
+import { useParams, useRouter } from "next/navigation"
+import { MainLayout } from "@/components/layout/main-layout"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "@/components/ui/card"
+import { Separator } from "@/components/ui/separator"
 import {
   Calendar,
   Clock,
@@ -16,98 +16,99 @@ import {
   Share2,
   Heart,
   Users,
-  Info,
-} from "lucide-react";
-import { Event, getEvent } from "@/lib/firebase/events";
-import { Venue, getVenue } from "@/lib/firebase/venues";
+  Info
+} from "lucide-react"
+import { Event, getEvent } from "@/lib/firebase/events"
+import { Venue, getVenue } from "@/lib/firebase/venues"
 
 export default function EventDetailPage() {
-  const params = useParams();
-  const router = useRouter();
-  const eventId = params.id as string;
+  const params = useParams()
+  const router = useRouter()
+  const eventId = params.id as string
 
-  const [event, setEvent] = useState<Event | null>(null);
-  const [venue, setVenue] = useState<Venue | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [event, setEvent] = useState<Event | null>(null)
+  const [venue, setVenue] = useState<Venue | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     async function fetchEventDetails() {
       try {
-        setLoading(true);
-        setError(null);
+        setLoading(true)
+        setError(null)
 
         // Obtener el evento
-        const eventData = await getEvent(eventId);
+        const eventData = await getEvent(eventId)
         if (!eventData) {
-          setError("Evento no encontrado");
-          return;
+          setError("Evento no encontrado")
+          return
         }
 
-        setEvent(eventData);
+        setEvent(eventData)
 
         // Obtener información del venue
-        const venueData = await getVenue(eventData.lugar_id);
-        setVenue(venueData);
+        const venueData = await getVenue(eventData.lugar_id)
+        setVenue(venueData)
+
       } catch (err) {
-        console.error("Error fetching event details:", err);
-        setError("Error al cargar los detalles del evento");
+        console.error('Error fetching event details:', err)
+        setError("Error al cargar los detalles del evento")
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
     }
 
     if (eventId) {
-      fetchEventDetails();
+      fetchEventDetails()
     }
-  }, [eventId]);
+  }, [eventId])
 
   const formatDate = (date: Date) => {
-    return date.toLocaleDateString("es-ES", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
+    return date.toLocaleDateString('es-ES', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    })
+  }
 
   const formatTime = (timeString: string) => {
-    return timeString;
-  };
+    return timeString
+  }
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "activo":
-        return "bg-green-500";
-      case "en_preventa":
-        return "bg-yellow-500";
-      case "agotado":
-        return "bg-red-500";
-      case "finalizado":
-        return "bg-gray-500";
+      case 'activo':
+        return 'bg-green-500'
+      case 'en_preventa':
+        return 'bg-yellow-500'
+      case 'agotado':
+        return 'bg-red-500'
+      case 'finalizado':
+        return 'bg-gray-500'
       default:
-        return "bg-gray-500";
+        return 'bg-gray-500'
     }
-  };
+  }
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case "activo":
-        return "Venta Activa";
-      case "en_preventa":
-        return "En Preventa";
-      case "agotado":
-        return "Agotado";
-      case "finalizado":
-        return "Finalizado";
+      case 'activo':
+        return 'Venta Activa'
+      case 'en_preventa':
+        return 'En Preventa'
+      case 'agotado':
+        return 'Agotado'
+      case 'finalizado':
+        return 'Finalizado'
       default:
-        return status;
+        return status
     }
-  };
+  }
 
   const handleComprarBoletos = () => {
-    router.push(`/eventos/${eventId}/comprar`);
-  };
+    router.push(`/eventos/${eventId}/comprar`)
+  }
 
   if (loading) {
     return (
@@ -119,7 +120,7 @@ export default function EventDetailPage() {
           </div>
         </div>
       </MainLayout>
-    );
+    )
   }
 
   if (error || !event) {
@@ -134,11 +135,13 @@ export default function EventDetailPage() {
             <p className="text-gray-600 mb-4">
               Lo sentimos, no pudimos encontrar este evento.
             </p>
-            <Button onClick={() => window.history.back()}>Volver</Button>
+            <Button onClick={() => window.history.back()}>
+              Volver
+            </Button>
           </div>
         </div>
       </MainLayout>
-    );
+    )
   }
 
   return (
@@ -147,8 +150,7 @@ export default function EventDetailPage() {
         {/* Header Image */}
         <div className="relative mb-8">
           <div className="aspect-video rounded-lg overflow-hidden bg-gradient-to-r from-blue-400 to-purple-500">
-            {event.imagen_url &&
-            event.imagen_url !== "https://picsum.photos/200" ? (
+            {event.imagen_url && event.imagen_url !== "https://picsum.photos/200" ? (
               <img
                 src={event.imagen_url}
                 alt={event.nombre}
@@ -166,9 +168,7 @@ export default function EventDetailPage() {
 
           {/* Status Badge */}
           <div className="absolute top-4 right-4">
-            <Badge
-              className={`${getStatusColor(event.estado_venta)} text-white`}
-            >
+            <Badge className={`${getStatusColor(event.estado_venta)} text-white`}>
               {getStatusText(event.estado_venta)}
             </Badge>
           </div>
@@ -229,15 +229,11 @@ export default function EventDetailPage() {
                     <h3 className="text-lg font-semibold">Ubicación</h3>
                   </div>
                   <div className="space-y-2">
-                    <h4 className="font-medium text-gray-900">
-                      {venue.nombre}
-                    </h4>
+                    <h4 className="font-medium text-gray-900">{venue.nombre}</h4>
                     {venue.direccion && (
                       <p className="text-gray-600">{venue.direccion}</p>
                     )}
-                    <p className="text-gray-600">
-                      {venue.ciudad}, {venue.estado}
-                    </p>
+                    <p className="text-gray-600">{venue.ciudad}, {venue.estado}</p>
                     <p className="text-gray-600">{venue.pais}</p>
                   </div>
                 </CardContent>
@@ -255,35 +251,28 @@ export default function EventDetailPage() {
                     Boletos Disponibles
                   </div>
                   <p className="text-gray-600 text-sm">
-                    {event.venta_en_linea
-                      ? "Venta en línea disponible"
-                      : "Venta en taquilla únicamente"}
+                    {event.venta_en_linea ? 'Venta en línea disponible' : 'Venta en taquilla únicamente'}
                   </p>
                 </div>
 
                 <Separator className="my-4" />
 
                 <div className="space-y-3">
-                  <Button
+                  {/* <Button
                     className="w-full bg-blue-600 hover:bg-blue-700"
                     size="lg"
-                    disabled={
-                      event.estado_venta === "agotado" ||
-                      event.estado_venta === "finalizado"
-                    }
+                    disabled={event.estado_venta === 'agotado' || event.estado_venta === 'finalizado'}
                     onClick={handleComprarBoletos}
                   >
                     <Ticket className="w-4 h-4 mr-2" />
-                    {event.estado_venta === "agotado"
-                      ? "Agotado"
-                      : event.estado_venta === "finalizado"
-                        ? "Finalizado"
-                        : "Comprar Boletos"}
-                  </Button>
+                    {event.estado_venta === 'agotado' ? 'Agotado' :
+                      event.estado_venta === 'finalizado' ? 'Finalizado' :
+                        'Comprar Boletos'}
+                  </Button> */}
 
-                  {event.estado_venta === "en_preventa" && (
+                  {event.estado_venta === 'en_preventa' && (
                     <p className="text-center text-sm text-yellow-600">
-                      🎟️ Preventa disponible
+                      🎟️ Preventa NO disponible
                     </p>
                   )}
                 </div>
@@ -293,21 +282,15 @@ export default function EventDetailPage() {
             {/* Event Details */}
             <Card>
               <CardContent className="p-6">
-                <h3 className="text-lg font-semibold mb-4">
-                  Detalles del Evento
-                </h3>
+                <h3 className="text-lg font-semibold mb-4">Detalles del Evento</h3>
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Fecha:</span>
-                    <span className="font-medium">
-                      {formatDate(event.fecha)}
-                    </span>
+                    <span className="font-medium">{formatDate(event.fecha)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Hora:</span>
-                    <span className="font-medium">
-                      {formatTime(event.hora)}
-                    </span>
+                    <span className="font-medium">{formatTime(event.hora)}</span>
                   </div>
                   {venue && (
                     <div className="flex justify-between">
@@ -317,9 +300,7 @@ export default function EventDetailPage() {
                   )}
                   <div className="flex justify-between">
                     <span className="text-gray-600">Estado:</span>
-                    <Badge
-                      className={`${getStatusColor(event.estado_venta)} text-white text-xs`}
-                    >
+                    <Badge className={`${getStatusColor(event.estado_venta)} text-white text-xs`}>
                       {getStatusText(event.estado_venta)}
                     </Badge>
                   </div>
@@ -330,5 +311,5 @@ export default function EventDetailPage() {
         </div>
       </div>
     </MainLayout>
-  );
-}
+  )
+} 
