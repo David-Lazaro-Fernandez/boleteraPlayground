@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 export function HeroSection() {
   const categories = [
@@ -36,9 +37,11 @@ export function HeroSection() {
         {/* Main Hero Content */}
         <div className="flex justify-center items-center">
           <div className="w-full ">
-            <div className="bg-black/20 backdrop-blur-sm rounded-lg p-8 mb-8">
-              <img
-                src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot%202025-06-21%20at%207.39.03%E2%80%AFp.m.-SPcOVHWlRxnHHzkqjPr4iSyY5PyMMp.png"
+            <div className="bg-black/20 backdrop-blur-sm rounded-xl p-2 mb-8">
+              <Image
+                src="/banner.jpg"
+                width={800}
+                height={800}
                 alt="Cartel de Santa Concert"
                 className="w-full rounded-lg"
               />
