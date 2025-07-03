@@ -44,7 +44,7 @@ export function CheckoutButton({
     try {
       // URLs de éxito y cancelación
       const baseUrl = window.location.origin;
-      const successUrl = `${baseUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`;
+      const successUrl = `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}`;
       const cancelUrl = `${baseUrl}/eventos/${eventInfo.id}/comprar`;
 
       // Crear sesión de checkout

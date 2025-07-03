@@ -18,6 +18,7 @@ import {
   DocumentSnapshot,
 } from "firebase/firestore";
 import { db } from "./config";
+import process from "process";
 
 // Interfaces base
 interface BaseMovement {
@@ -140,18 +141,33 @@ interface FirestoreCashDrawerOpening {
 }
 
 // Funciones para Movimientos
-export async function createMovement(
-  movement: BaseMovement & { fecha: Date },
-): Promise<string> {
+export async function createMovement(movementData: {
+  total: number;
+  subtotal: number;
+  cargo_servicio: number;
+  tipo_pago: string;
+  buyer_email?: string;
+  buyer_name?: string;
+  event_id?: string;
+  payment_intent_id?: string;
+  session_id?: string;
+  metadata?: any;
+}): Promise<string> {
   try {
-    const movementsRef = collection(db, "movements");
-    const docRef = await addDoc(movementsRef, {
-      ...movement,
-      fecha: Timestamp.fromDate(movement.fecha),
-    });
+    const movement = {
+      ...movementData,
+      fecha: Timestamp.fromDate(new Date()),
+      status: 'pending',
+      created_at: Timestamp.fromDate(new Date()),
+      updated_at: Timestamp.fromDate(new Date())
+    };
+
+    const movementsRef = collection(db, 'movements');
+    const docRef = await addDoc(movementsRef, movement);
+    console.log('Movement created with ID:', docRef.id);
     return docRef.id;
   } catch (error) {
-    console.error("Error creating movement:", error);
+    console.error('Error creating movement:', error);
     throw error;
   }
 }
@@ -179,34 +195,51 @@ export async function getMovement(
 }
 
 // Funciones para Boletos
-export async function createTicket(ticket: Ticket): Promise<string> {
+export async function createTickets(items: any[]): Promise<string[]> {
   try {
-    const ticketsRef = collection(db, "tickets");
-    const docRef = await addDoc(ticketsRef, ticket);
-    return docRef.id;
-  } catch (error) {
-    console.error("Error creating ticket:", error);
-    throw error;
-  }
-}
+    const ticketIds: string[] = [];
+    const ticketsRef = collection(db, 'tickets');
+    
+    for (const item of items) {
+      if (item.type === 'seat') {
+        // Crear ticket para asiento específico
+        const ticketData = {
+          zona: item.zoneName,
+          fila: item.rowLetter,
+          asiento: item.seatNumber,
+          precio: item.price,
+          event_id: item.eventId || null,
+          status: 'reserved',
+          created_at: Timestamp.fromDate(new Date()),
+          updated_at: Timestamp.fromDate(new Date())
+        };
 
-export async function getTicket(ticketId: string): Promise<Ticket | null> {
-  try {
-    const ticketRef = doc(db, "tickets", ticketId);
-    const ticketSnap = await getDoc(ticketRef);
+        const ticketRef = await addDoc(ticketsRef, ticketData);
+        ticketIds.push(ticketRef.id);
+      } else if (item.type === 'general') {
+        // Crear tickets generales
+        const quantity = item.quantity || 1;
+        for (let i = 0; i < quantity; i++) {
+          const ticketData = {
+            zona: item.zoneName,
+            fila: 'General',
+            asiento: 0,
+            precio: item.price,
+            event_id: item.eventId || null,
+            status: 'reserved',
+            created_at: Timestamp.fromDate(new Date()),
+            updated_at: Timestamp.fromDate(new Date())
+          };
 
-    if (ticketSnap.exists()) {
-      const data = ticketSnap.data();
-      return {
-        id: ticketSnap.id,
-        fila: data.fila,
-        asiento: data.asiento,
-        zona: data.zona,
-      };
+          const ticketRef = await addDoc(ticketsRef, ticketData);
+          ticketIds.push(ticketRef.id);
+        }
+      }
     }
-    return null;
+
+    return ticketIds;
   } catch (error) {
-    console.error("Error getting ticket:", error);
+    console.error('Error creating tickets:', error);
     throw error;
   }
 }
@@ -231,14 +264,32 @@ export async function getTicketsByZone(zone: string): Promise<Ticket[]> {
 }
 
 // Funciones para MovimientoBoletos
-export async function createMovementTicket(
-  movementTicket: MovementTicket,
-): Promise<void> {
+export async function createMovementTickets(movementId: string, ticketIds: string[], items: any[]): Promise<void> {
   try {
-    const movementTicketsRef = collection(db, "movement_tickets");
-    await addDoc(movementTicketsRef, movementTicket);
+    const movementTicketsRef = collection(db, 'movement_tickets');
+    let itemIndex = 0;
+    
+    for (const ticketId of ticketIds) {
+      // Encontrar el item correspondiente a este ticket
+      let currentItem = items[itemIndex];
+      
+      const movementTicketData = {
+        movimiento_id: movementId,
+        boleto_id: ticketId,
+        precio_vendido: currentItem.price,
+        created_at: Timestamp.fromDate(new Date()),
+        updated_at: Timestamp.fromDate(new Date())
+      };
+
+      await addDoc(movementTicketsRef, movementTicketData);
+      
+      // Avanzar al siguiente item si es necesario
+      if (currentItem.type === 'seat' || (currentItem.type === 'general' && ticketIds.indexOf(ticketId) % (currentItem.quantity || 1) === (currentItem.quantity || 1) - 1)) {
+        itemIndex++;
+      }
+    }
   } catch (error) {
-    console.error("Error creating movement ticket:", error);
+    console.error('Error creating movement tickets:', error);
     throw error;
   }
 }
@@ -276,16 +327,13 @@ export async function createSale(
     const movementId = await createMovement(movement);
 
     // 2. Para cada boleto
-    for (const { ticket, precio } of tickets) {
-      // 2.1 Crear el boleto
-      const ticketId = await createTicket(ticket);
+          for (const { ticket, precio } of tickets) {
+        // 2.1 Crear el boleto
+        const ticketIds = await createTickets([ticket]);
+        const ticketId = ticketIds[0];
 
-      // 2.2 Crear la relación movimiento-boleto
-      await createMovementTicket({
-        movimiento_id: movementId,
-        boleto_id: ticketId,
-        precio_vendido: precio,
-      });
+        // 2.2 Crear la relación movimiento-boleto
+        await createMovementTickets(movementId, [ticketId], [ticket]);
     }
 
     return movementId;
@@ -897,5 +945,95 @@ export async function cleanAllCollections(): Promise<void> {
   } catch (error) {
     console.error("Error cleaning collections:", error);
     throw error;
+  }
+}
+
+/**
+ * Actualizar el estado de un movimiento
+ */
+export async function updateMovementStatus(movementId: string, status: 'paid' | 'cancelled', additionalData?: any): Promise<void> {
+  try {
+    const updateData = {
+      status,
+      updated_at: Timestamp.fromDate(new Date()),
+      ...additionalData
+    };
+
+    const movementRef = doc(db, 'movements', movementId);
+    await updateDoc(movementRef, updateData);
+    console.log('Movement status updated:', movementId, status);
+  } catch (error) {
+    console.error('Error updating movement status:', error);
+    throw error;
+  }
+}
+
+/**
+ * Llamar al backend Express para procesar el pago
+ */
+export async function processPaymentWithBackend(movementId: string, status: 'paid' | 'cancelled'): Promise<any> {
+  try {
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5102';
+    
+    console.log(`Calling backend at ${backendUrl}/api/tickets/process-payment`);
+    console.log(`Movement ID: ${movementId}, Status: ${status}`);
+    
+    const response = await fetch(`${backendUrl}/api/tickets/process-payment`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        movementId,
+        status
+      })
+    });
+
+    console.log(`Backend response status: ${response.status}`);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Backend error response: ${errorText}`);
+      throw new Error(`Backend response error: ${response.status} - ${errorText}`);
+    }
+
+    const result = await response.json();
+    console.log('Backend processing result:', result);
+    
+    return {
+      success: true,
+      data: result,
+      backendResponse: true
+    };
+  } catch (error) {
+    console.error('Error calling backend:', error);
+    
+    // Distinguir entre diferentes tipos de errores
+    let errorMessage = 'Unknown error';
+    let errorType = 'unknown';
+    
+    if (error instanceof Error) {
+      errorMessage = error.message;
+      
+      if (error.message.includes('fetch')) {
+        errorType = 'network';
+      } else if (error.message.includes('404')) {
+        errorType = 'not_found';
+      } else if (error.message.includes('500')) {
+        errorType = 'server_error';
+      } else if (error.message.includes('timeout')) {
+        errorType = 'timeout';
+      }
+    }
+    
+    console.error(`Backend error type: ${errorType}, message: ${errorMessage}`);
+    
+    // Retornar información detallada del error sin lanzar excepción
+    return { 
+      success: false, 
+      error: errorMessage,
+      errorType,
+      backendResponse: false
+    };
   }
 }
