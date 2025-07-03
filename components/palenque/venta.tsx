@@ -85,6 +85,8 @@ function getTicketDescription() {
 }
 
 export function Venta({ generalTickets, selectedSeats }: VentaProps) {
+  console.log("generalTickets", generalTickets);
+  console.log("selectedSeats", selectedSeats);
   const { toast } = useToast();
   const [paymentMethod, setPaymentMethod] = useState<
     "cash" | "card" | "courtesy" | null
@@ -123,7 +125,7 @@ export function Venta({ generalTickets, selectedSeats }: VentaProps) {
   const updateSeatsStatus = async () => {
     try {
       // First, get the current venue configuration from Firebase Storage
-      const fileRef = ref(storage, "seats-data-palenque-victoria.json");
+      const fileRef = ref(storage, "Seats_data_last_actualizado.json");
       const downloadURL = await getDownloadURL(fileRef);
       const response = await fetch(downloadURL);
       const venueConfig: VenueConfig = await response.json();

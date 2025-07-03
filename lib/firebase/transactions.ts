@@ -327,13 +327,28 @@ export async function createSale(
     const movementId = await createMovement(movement);
 
     // 2. Para cada boleto
-          for (const { ticket, precio } of tickets) {
-        // 2.1 Crear el boleto
-        const ticketIds = await createTickets([ticket]);
-        const ticketId = ticketIds[0];
+    for (const { ticket, precio } of tickets) {
+      // 2.1 Transformar la estructura de datos para createTickets
+      const ticketForCreation = {
+        type: ticket.fila === "GENERAL" ? "general" : "seat",
+        zoneName: ticket.zona,
+        rowLetter: ticket.fila,
+        seatNumber: ticket.asiento,
+        price: precio,
+        quantity: ticket.fila === "GENERAL" ? 1 : undefined,
+      };
 
-        // 2.2 Crear la relación movimiento-boleto
-        await createMovementTickets(movementId, [ticketId], [ticket]);
+      // 2.2 Crear el boleto
+      const ticketIds = await createTickets([ticketForCreation]);
+      const ticketId = ticketIds[0];
+
+      // 2.3 Verificar que el ticketId no sea undefined
+      if (!ticketId) {
+        throw new Error("Failed to create ticket: ticketId is undefined");
+      }
+
+      // 2.4 Crear la relación movimiento-boleto
+      await createMovementTickets(movementId, [ticketId], [ticketForCreation]);
     }
 
     return movementId;

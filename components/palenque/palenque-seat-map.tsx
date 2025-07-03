@@ -310,7 +310,7 @@ export function PalenqueSeatMap({
       try {
         const fileRef = storageRef(
           storage,
-          "seats-data-palenque-victoria.json",
+          "Seats_data_last_actualizado.json",
         );
         const downloadURL = await getDownloadURL(fileRef);
 
