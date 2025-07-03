@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Ticket Astral</title>
+  <!-- Tailwind via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Asegúrate de cargar tus fuentes Gontserrat y DazzleUnicase si las necesitas -->
+
+<!-- Importar fuentes personalizadas -->
+<style>
+  @font-face {
+    font-family: 'Gontserrat';
+    src: url('../../../fonts/Gontserrat-Regular.otf') format('otf');
+    font-weight: normal;
+    font-style: normal;
+  }
+
+  @font-face {
+    font-family: 'Gontserrat';
+    src: url('../../../fonts/Gontserrat-Bold.otf') format('otf');
+    font-weight: bold;
+    font-style: normal;
+  }
+
+  @font-face {
+    font-family: 'DazzleUnicase';
+    src: url('../../../fonts/Dazzle_Unicase_Bold.otf') format('otf');
+    font-weight: normal;
+    font-style: normal;
+  }
+
+  /* Aplicar fuentes a las clases */
+  .font-gontserrat {
+    font-family: 'Gontserrat', sans-serif;
+  }
+
+  .font-dazzle {
+    font-family: 'DazzleUnicase', sans-serif;
+  }
+</style>
+
+<!-- Importar logo SVG -->
+<div id="logo-container" style="display: none;">
+  <svg id="logo-svg" width="100" height="100" viewBox="0 0 100 100">
+    <!-- Aquí irá el contenido del logo SVG -->
+  </svg>
+</div>
+
+</head>
+<body class="bg-gray-100 p-8">
+  <div class="rounded-lg flex justify-center">
+    <div
+      id="ticket"
+      class="bg-[#E8F8EE] border-2 border-purple-500 rounded-lg border-dashed"
+      style="width:100%; max-width:800px; height:300px; display:flex; overflow:hidden;"
+    >
+      <!-- Contenido central -->
+      <div class="flex-grow py-4 px-4 flex flex-col relative font-dazzle text-[#3b01c9]">
+        <!-- Título y recinto -->
+        <div class="text-4xl font-bold mb-4 font-gontserrat">
+          ACORDEONAZO
+          <div class="text-[18px] leading-[1.1] font-dazzle font-bold max-w-3/4">
+            CENTRO DE ESPECTACULOS CD. VICTORIA
+          </div>
+        </div>
+        
+        <!-- Fecha, hora y ciudad -->
+        <div class="text-[16px] text-black mb-20">
+          <p class="mb-1">Cd. Victoria, Tamps</p>
+          Viernes 18 de Julio del 2025
+          <p>20:00 hrs.</p>
+          
+        </div>
+        <!-- Detalles con separadores -->
+        <div class="flex items-center space-x-4 text-black">
+          <div class="text-center">
+            <div class="text-xs ">Precio</div>
+            <div class="text-[16px] font-bold">$ 300</div>
+          </div>
+          <img src="../../../public/Star_Morado.svg" alt="Linea" width="10" height="10">
+          <div class="text-center">
+            <div class="text-xs">Orden</div>
+            <div class="text-[16px] font-bold">A5F42B</div>
+          </div>
+          <img src="../../../public/Star_Morado.svg" alt="Linea" width="10" height="10">
+          <div class="text-center">
+            <div class="text-xs">Tipo</div>
+            <div class="text-[16px] font-bold">GENERAL</div>
+          </div>
+          <img src="../../../public/Star_Morado.svg" alt="Linea" width="10" height="10">
+          <div class="text-center">
+            <div class="text-xs">Sección</div>
+            <div class="text-[16px] font-bold">GENERAL</div>
+          </div>
+          <img src="../../../public/Star_Morado.svg" alt="Linea" width="10" height="10">
+          <div class="text-center">
+                <div class="text-xs">Asiento</div>
+            <div class="text-[14px] font-bold">F55</div>
+          </div>
+        </div>
+
+      </div>
+
+
+
+      <!-- Columna derecha -->
+      <div class="w-auto p-1 mr-6 font-dazzle text-center space-y-1 mt-4">
+        <div class="flex gap-4">
+            <img src="../../../public/Logo_Morado.svg" alt="Mi Logo" width="80" height="50">
+          <div class="flex flex-col items-start ">
+          	<div class="font-bold text-[17px]">astraltickets.com.mx</div>
+            <div class="flex">
+            	<div class="flex space-x-[2px]">
+                	<img src="../../../public/Facebook.svg" alt="Mi Logo" width="20" height="20">
+                    <img src="../../../public/Instagram.svg" alt="Mi Logo" width="20" height="20">
+                    <img src="../../../public/Tiktok.svg" alt="Mi Logo" width="20" height="20">
+                    <div class="ml-2">
+                        @astraltickets
+                    </div>
+                </div>
+                
+            </div>
+          </div>
+        </div>
+        <div class="flex justify-end">
+            <div class="bg-white h-48 w-48 rounded-lg p-2 mt-4">
+                <img src="https://qrexplore.com/icon/apple-icon.png" alt="Mi Logo" >
+            </div>
+        </div>
+        
+        
+    </div>
+  </div>
+</body>
+</html>
