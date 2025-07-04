@@ -353,16 +353,56 @@ export class TicketService {
   }
 
   /**
+   * Cargar configuración de assets desde Firebase Storage
+   */
+  private loadAssetsConfig(): { fonts: Record<string, string>; images: Record<string, string> } {
+    try {
+      const configPath = path.join(__dirname, '../config/assets.json');
+      if (fs.existsSync(configPath)) {
+        const configContent = fs.readFileSync(configPath, 'utf8');
+        return JSON.parse(configContent);
+      }
+    } catch (error) {
+      console.warn('Error loading assets config:', error);
+    }
+    
+    // Fallback a configuración vacía
+    return {
+      fonts: {},
+      images: {}
+    };
+  }
+
+  /**
    * Convierte el template estático a un template dinámico de Handlebars
    */
   private convertToHandlebarsTemplate(templateContent: string): string {
-    // Convertir rutas relativas a rutas absolutas para assets
-    const assetsPath = path.join(__dirname, '../../../public');
-    templateContent = templateContent.replace(/src="..\/..\/..\/public\//g, `src="file://${assetsPath}/`);
+    // Cargar configuración de assets desde Firebase Storage
+    const assetsConfig = this.loadAssetsConfig();
     
-    // Convertir fuentes a rutas absolutas  
-    const fontsPath = path.join(__dirname, '../../../fonts');
-    templateContent = templateContent.replace(/url\('..\/..\/..\/fonts\//g, `url('file://${fontsPath}/`);
+    // Reemplazar rutas de imágenes con URLs de Firebase Storage
+    if (assetsConfig.images) {
+      templateContent = templateContent.replace(/src="..\/..\/..\/public\/Star_Morado\.svg"/g, 
+        `src="${assetsConfig.images.Star_Morado}"`);
+      templateContent = templateContent.replace(/src="..\/..\/..\/public\/Logo_Morado\.svg"/g, 
+        `src="${assetsConfig.images.Logo_Morado}"`);
+      templateContent = templateContent.replace(/src="..\/..\/..\/public\/Facebook\.svg"/g, 
+        `src="${assetsConfig.images.Facebook}"`);
+      templateContent = templateContent.replace(/src="..\/..\/..\/public\/Instagram\.svg"/g, 
+        `src="${assetsConfig.images.Instagram}"`);
+      templateContent = templateContent.replace(/src="..\/..\/..\/public\/Tiktok\.svg"/g, 
+        `src="${assetsConfig.images.Tiktok}"`);
+    }
+    
+    // Reemplazar rutas de fuentes con URLs de Firebase Storage
+    if (assetsConfig.fonts) {
+      templateContent = templateContent.replace(/url\('..\/..\/..\/fonts\/Gontserrat-Regular\.ttf'\)/g, 
+        `url('${assetsConfig.fonts['Gontserrat-Regular']}')`);
+      templateContent = templateContent.replace(/url\('..\/..\/..\/fonts\/Gontserrat-Medium\.ttf'\)/g, 
+        `url('${assetsConfig.fonts['Gontserrat-Medium']}')`);
+      templateContent = templateContent.replace(/url\('..\/..\/..\/fonts\/Dazzle_Unicase_Bold\.otf'\)/g, 
+        `url('${assetsConfig.fonts['Dazzle_Unicase_Bold']}')`);
+    }
     
     // Envolver todo en un loop de Handlebars para cada ticket
     const bodyContent = templateContent.replace(/<body[^>]*>([\s\S]*?)<\/body>/i, (match, content) => {

@@ -1,0 +1,15 @@
+{
+  "fonts": {
+    "Gontserrat-Regular": "https://firebasestorage.googleapis.com/v0/b/boletera-375d2.firebasestorage.app/o/assets%2FGontserrat-Regular.ttf?alt=media&token=faa34346-ed9e-47ea-bd11-d062d70c46ce",
+    "Gontserrat-Medium": "https://firebasestorage.googleapis.com/v0/b/boletera-375d2.firebasestorage.app/o/assets%2FGontserrat-Medium.ttf?alt=media&token=978601dc-3c4b-4db5-bf16-6309c2290d4d",
+    "Dazzle_Unicase_Bold": "https://firebasestorage.googleapis.com/v0/b/boletera-375d2.firebasestorage.app/o/assets%2FDazzle_Unicase_Bold.otf?alt=media&token=df881b57-f4cc-430a-ac75-b20e0cf3106f",
+    "Dazzle_Unicase_Medium": "https://firebasestorage.googleapis.com/v0/b/boletera-375d2.firebasestorage.app/o/assets%2FDazzle_Unicase_Medium.otf?alt=media&token=0a9eff5e-7900-4237-b337-98a3e183e134"
+  },
+  "images": {
+    "Star_Morado": "https://firebasestorage.googleapis.com/v0/b/boletera-375d2.firebasestorage.app/o/assets%2FStar_Morado.svg?alt=media&token=b73f7071-b6dc-4eec-ae61-d71384b5999c",
+    "Logo_Morado": "https://firebasestorage.googleapis.com/v0/b/boletera-375d2.firebasestorage.app/o/assets%2FLogo_Morado.svg?alt=media&token=5e6bdb84-1313-4cf8-95f5-c537f41e6a80",
+    "Facebook": "https://firebasestorage.googleapis.com/v0/b/boletera-375d2.firebasestorage.app/o/assets%2FFacebook.svg?alt=media&token=60aa6620-d9bd-485f-8d80-2c95e759b5a9",
+    "Instagram": "https://firebasestorage.googleapis.com/v0/b/boletera-375d2.firebasestorage.app/o/assets%2FInstagram.svg?alt=media&token=74d6f6c4-b9e4-49d8-b4d5-35ee73ab7cad",
+    "Tiktok": "https://firebasestorage.googleapis.com/v0/b/boletera-375d2.firebasestorage.app/o/assets%2FTiktok.svg?alt=media&token=d9af1f89-7ca7-4047-a64c-d7089d835f55"
+  }
+} 
