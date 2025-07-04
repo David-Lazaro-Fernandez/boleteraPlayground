@@ -16,11 +16,14 @@ if [[ "$ID" == "ubuntu" || "$ID" == "debian" ]]; then
 elif [[ "$ID" == "amzn" ]]; then
   echo "🚀 Instalando Docker en Amazon Linux 2…"
   yum update -y
-  amazon-linux-extras install docker -y
-  service docker start
-  systemctl enable docker
-  usermod -aG docker ec2-user
+  yum -y install docker
+  sudo systemctl start docker
+  sudo systemctl enable docker
+  sudo usermod -aG docker ec2-user
   echo "✅ Agregado ec2-user al grupo docker. Cierra y vuelve a abrir la sesión SSH."
+  echo "🐳 Docker versión:"
+  docker --version
+  
 else
   echo "❌ Distribución no soportada: $ID"
   exit 1
@@ -28,3 +31,9 @@ fi
 
 echo "🐳 Docker versión:"
 docker --version
+
+echo "🏗️ Construyendo imagen Docker del proyecto..."
+sudo docker build -t boletera-backend .
+
+echo "✅ Imagen Docker construida exitosamente: boletera-backend"
+echo "Para ejecutar el contenedor usa: docker run -p 5102:5102 boletera-backend"
