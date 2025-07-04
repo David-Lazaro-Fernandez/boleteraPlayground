@@ -148,7 +148,7 @@ export class TicketService {
       };
 
       const pdfBuffer = await page.pdf(pdfOptions);
-      return pdfBuffer;
+      return Buffer.from(pdfBuffer);
     } catch (error) {
       console.error("Error generating PDF:", error);
       throw error;
