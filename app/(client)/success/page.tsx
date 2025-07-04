@@ -316,7 +316,6 @@ function CheckoutSuccessContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800">
-      <Header />
 
       <main className="container mx-auto px-4 py-8 max-w-6xl">
         {/* Header Success Message */}

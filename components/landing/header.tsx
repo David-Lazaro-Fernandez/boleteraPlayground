@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/prueba-boleto/logo";
+import Link from "next/link";
 export function Header() {
   const navItems = [
     { name: "Eventos", href: "#" },
@@ -13,7 +14,9 @@ export function Header() {
       <div className="container mx-auto px-6 lg:px-8 py-4 max-w-7xl">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <Logo className="w-24 fill-white" />
+            <Link href="/">
+              <Logo className="w-24 fill-white" />
+            </Link>
           </div>
 
           <nav className="hidden md:flex items-center space-x-8">
