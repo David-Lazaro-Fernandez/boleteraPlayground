@@ -1,6 +1,8 @@
 import * as QRCode from "qrcode";
 import * as puppeteer from "puppeteer";
 import * as handlebars from "handlebars";
+import * as fs from "fs";
+import * as path from "path";
 import { db, storage } from "../config/firebaseConfig";
 import { EmailService } from "./emailService";
 import { 
@@ -292,6 +294,72 @@ export class TicketService {
    * Template HTML para generar tickets
    */
   private getTicketHTMLTemplate(): string {
+    try {
+      // Leer el archivo template desde el directorio templates
+      const templatePath = path.join(__dirname, '../templates/ticketTemplate.html');
+      let templateContent = fs.readFileSync(templatePath, 'utf8');
+      
+      // Convertir el template estático a un template dinámico de Handlebars
+      templateContent = this.convertToHandlebarsTemplate(templateContent);
+      
+      return templateContent;
+    } catch (error) {
+      console.error('Error reading ticket template:', error);
+      // Fallback al template básico si hay error
+      return this.getBasicTicketTemplate();
+    }
+  }
+
+  /**
+   * Convierte el template estático a un template dinámico de Handlebars
+   */
+  private convertToHandlebarsTemplate(templateContent: string): string {
+    // Convertir rutas relativas a rutas absolutas para assets
+    const assetsPath = path.join(__dirname, '../../../public');
+    templateContent = templateContent.replace(/src="..\/..\/..\/public\//g, `src="file://${assetsPath}/`);
+    
+    // Convertir fuentes a rutas absolutas  
+    const fontsPath = path.join(__dirname, '../../../fonts');
+    templateContent = templateContent.replace(/url\('..\/..\/..\/fonts\//g, `url('file://${fontsPath}/`);
+    
+    // Envolver todo en un loop de Handlebars para cada ticket
+    const bodyContent = templateContent.replace(/<body[^>]*>([\s\S]*?)<\/body>/i, (match, content) => {
+      return `<body class="bg-gray-100 p-8">
+        {{#each tickets}}
+        ${content}
+        {{/each}}
+      </body>`;
+    });
+    
+    // Reemplazar placeholders con variables dinámicas de Handlebars
+    let dynamicContent = bodyContent;
+    
+    // Reemplazar placeholders específicos
+    dynamicContent = dynamicContent.replace(/<!-- EVENT_NAME_PLACEHOLDER -->/g, '{{eventInfo.nombre}}');
+    dynamicContent = dynamicContent.replace(/<!-- VENUE_NAME_PLACEHOLDER -->/g, '{{eventInfo.lugar}}');
+    dynamicContent = dynamicContent.replace(/<!-- CITY_PLACEHOLDER -->/g, 'Cd. Victoria, Tamps');
+    dynamicContent = dynamicContent.replace(/<!-- DATE_PLACEHOLDER -->/g, '{{eventInfo.fecha}}');
+    dynamicContent = dynamicContent.replace(/<!-- TIME_PLACEHOLDER -->/g, '{{eventInfo.hora}}');
+    
+    // Usar template literal para evitar confusiones del linter
+    const priceTemplate = '$ {{precio}}';
+    dynamicContent = dynamicContent.replace(/<!-- PRICE_PLACEHOLDER -->/g, priceTemplate);
+    
+    dynamicContent = dynamicContent.replace(/<!-- ORDER_PLACEHOLDER -->/g, '{{barCode}}');
+    dynamicContent = dynamicContent.replace(/<!-- TYPE_PLACEHOLDER -->/g, '{{zona}}');
+    dynamicContent = dynamicContent.replace(/<!-- SECTION_PLACEHOLDER -->/g, '{{zona}}');
+    dynamicContent = dynamicContent.replace(/<!-- SEAT_PLACEHOLDER -->/g, '{{fila}}{{asiento}}');
+    
+    const qrTemplate = '<img src="{{qrCode}}" alt="Código QR" style="width: 100%; height: 100%; object-fit: contain;">';
+    dynamicContent = dynamicContent.replace(/<!-- QR_CODE_PLACEHOLDER -->/g, qrTemplate);
+    
+    return dynamicContent;
+  }
+
+  /**
+   * Template básico como fallback
+   */
+  private getBasicTicketTemplate(): string {
     return `
       <!DOCTYPE html>
       <html>
@@ -318,39 +386,39 @@ export class TicketService {
         </style>
       </head>
       <body>
-        ` + `{{#each tickets}}` + `
+        {{#each tickets}}
         <div class="ticket">
           <div class="ticket-header">
             <h1>🎫 BOLETO DE ENTRADA</h1>
-            <h2>` + `{{eventInfo.nombre}}` + `</h2>
-            <p>` + `{{eventInfo.fecha}}` + ` - ` + `{{eventInfo.hora}}` + `</p>
-            <p>` + `{{eventInfo.lugar}}` + `</p>
+            <h2>{{eventInfo.nombre}}</h2>
+            <p>{{eventInfo.fecha}} - {{eventInfo.hora}}</p>
+            <p>{{eventInfo.lugar}}</p>
           </div>
           
           <div class="ticket-info">
             <div>
-              <p><strong>Zona:</strong> ` + `{{zona}}` + `</p>
-              <p><strong>Fila:</strong> ` + `{{fila}}` + `</p>
-              <p><strong>Asiento:</strong> ` + `{{asiento}}` + `</p>
+              <p><strong>Zona:</strong> {{zona}}</p>
+              <p><strong>Fila:</strong> {{fila}}</p>
+              <p><strong>Asiento:</strong> {{asiento}}</p>
             </div>
             <div>
-              <p><strong>Precio:</strong> $` + `{{precio}}` + `</p>
-              <p><strong>Ticket ID:</strong> ` + `{{id}}` + `</p>
+              <p><strong>Precio:</strong> {{precio}}</p>
+              <p><strong>Ticket ID:</strong> {{id}}</p>
             </div>
           </div>
           
           <div class="codes">
             <div class="qr-code">
-              <img src="` + `{{qrCode}}` + `" alt="QR Code" style="width: 150px; height: 150px;">
+              <img src="{{qrCode}}" alt="QR Code" style="width: 150px; height: 150px;">
               <p>Código QR</p>
             </div>
             <div class="bar-code">
-              <p style="font-family: monospace; font-size: 14px; font-weight: bold; letter-spacing: 2px; border: 2px solid #333; padding: 10px; background: white; color: black; border-radius: 5px;">` + `{{barCode}}` + `</p>
+              <p style="font-family: monospace; font-size: 14px; font-weight: bold; letter-spacing: 2px; border: 2px solid #333; padding: 10px; background: white; color: black; border-radius: 5px;">{{barCode}}</p>
               <p>Código de Barras</p>
             </div>
           </div>
         </div>
-        ` + `{{/each}}` + `
+        {{/each}}
       </body>
       </html>
     `;

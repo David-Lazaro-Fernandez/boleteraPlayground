@@ -11,21 +11,21 @@
 <style>
   @font-face {
     font-family: 'Gontserrat';
-    src: url('../../../fonts/Gontserrat-Regular.otf') format('otf');
+    src: url('../../../fonts/Gontserrat-Regular.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
   }
 
   @font-face {
     font-family: 'Gontserrat';
-    src: url('../../../fonts/Gontserrat-Bold.otf') format('otf');
+    src: url('../../../fonts/Gontserrat-Medium.ttf') format('truetype');
     font-weight: bold;
     font-style: normal;
   }
 
   @font-face {
     font-family: 'DazzleUnicase';
-    src: url('../../../fonts/Dazzle_Unicase_Bold.otf') format('otf');
+    src: url('../../../fonts/Dazzle_Unicase_Bold.otf') format('opentype');
     font-weight: normal;
     font-style: normal;
   }
@@ -37,6 +37,12 @@
 
   .font-dazzle {
     font-family: 'DazzleUnicase', sans-serif;
+  }
+
+  /* Estilos adicionales para compatibilidad con PDF */
+  body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 </style>
 
@@ -59,77 +65,71 @@
       <div class="flex-grow py-4 px-4 flex flex-col relative font-dazzle text-[#3b01c9]">
         <!-- Título y recinto -->
         <div class="text-4xl font-bold mb-4 font-gontserrat">
-          ACORDEONAZO
+          <!-- EVENT_NAME_PLACEHOLDER -->
           <div class="text-[18px] leading-[1.1] font-dazzle font-bold max-w-3/4">
-            CENTRO DE ESPECTACULOS CD. VICTORIA
+            <!-- VENUE_NAME_PLACEHOLDER -->
           </div>
         </div>
         
         <!-- Fecha, hora y ciudad -->
         <div class="text-[16px] text-black mb-20">
-          <p class="mb-1">Cd. Victoria, Tamps</p>
-          Viernes 18 de Julio del 2025
-          <p>20:00 hrs.</p>
-          
+          <p class="mb-1"><!-- CITY_PLACEHOLDER --></p>
+          <!-- DATE_PLACEHOLDER -->
+          <p><!-- TIME_PLACEHOLDER --></p>
         </div>
+        
         <!-- Detalles con separadores -->
         <div class="flex items-center space-x-4 text-black">
           <div class="text-center">
-            <div class="text-xs ">Precio</div>
-            <div class="text-[16px] font-bold">$ 300</div>
+            <div class="text-xs">Precio</div>
+            <div class="text-[16px] font-bold"><!-- PRICE_PLACEHOLDER --></div>
           </div>
-          <img src="../../../public/Star_Morado.svg" alt="Linea" width="10" height="10">
+          <img src="../../../public/Star_Morado.svg" alt="Separador" width="10" height="10">
           <div class="text-center">
             <div class="text-xs">Orden</div>
-            <div class="text-[16px] font-bold">A5F42B</div>
+            <div class="text-[16px] font-bold"><!-- ORDER_PLACEHOLDER --></div>
           </div>
-          <img src="../../../public/Star_Morado.svg" alt="Linea" width="10" height="10">
+          <img src="../../../public/Star_Morado.svg" alt="Separador" width="10" height="10">
           <div class="text-center">
             <div class="text-xs">Tipo</div>
-            <div class="text-[16px] font-bold">GENERAL</div>
+            <div class="text-[16px] font-bold"><!-- TYPE_PLACEHOLDER --></div>
           </div>
-          <img src="../../../public/Star_Morado.svg" alt="Linea" width="10" height="10">
+          <img src="../../../public/Star_Morado.svg" alt="Separador" width="10" height="10">
           <div class="text-center">
             <div class="text-xs">Sección</div>
-            <div class="text-[16px] font-bold">GENERAL</div>
+            <div class="text-[16px] font-bold"><!-- SECTION_PLACEHOLDER --></div>
           </div>
-          <img src="../../../public/Star_Morado.svg" alt="Linea" width="10" height="10">
+          <img src="../../../public/Star_Morado.svg" alt="Separador" width="10" height="10">
           <div class="text-center">
-                <div class="text-xs">Asiento</div>
-            <div class="text-[14px] font-bold">F55</div>
+            <div class="text-xs">Asiento</div>
+            <div class="text-[14px] font-bold"><!-- SEAT_PLACEHOLDER --></div>
           </div>
         </div>
-
       </div>
-
-
 
       <!-- Columna derecha -->
       <div class="w-auto p-1 mr-6 font-dazzle text-center space-y-1 mt-4">
         <div class="flex gap-4">
-            <img src="../../../public/Logo_Morado.svg" alt="Mi Logo" width="80" height="50">
-          <div class="flex flex-col items-start ">
-          	<div class="font-bold text-[17px]">astraltickets.com.mx</div>
+          <img src="../../../public/Logo_Morado.svg" alt="Logo Astral" width="80" height="50">
+          <div class="flex flex-col items-start">
+            <div class="font-bold text-[17px]">astraltickets.com.mx</div>
             <div class="flex">
-            	<div class="flex space-x-[2px]">
-                	<img src="../../../public/Facebook.svg" alt="Mi Logo" width="20" height="20">
-                    <img src="../../../public/Instagram.svg" alt="Mi Logo" width="20" height="20">
-                    <img src="../../../public/Tiktok.svg" alt="Mi Logo" width="20" height="20">
-                    <div class="ml-2">
-                        @astraltickets
-                    </div>
-                </div>
-                
+              <div class="flex space-x-[2px]">
+                <img src="../../../public/Facebook.svg" alt="Facebook" width="20" height="20">
+                <img src="../../../public/Instagram.svg" alt="Instagram" width="20" height="20">
+                <img src="../../../public/Tiktok.svg" alt="TikTok" width="20" height="20">
+                <div class="ml-2">@astraltickets</div>
+              </div>
             </div>
           </div>
         </div>
+        
         <div class="flex justify-end">
-            <div class="bg-white h-48 w-48 rounded-lg p-2 mt-4">
-                <img src="https://qrexplore.com/icon/apple-icon.png" alt="Mi Logo" >
-            </div>
+          <div class="bg-white h-48 w-48 rounded-lg p-2 mt-4">
+            <!-- QR_CODE_PLACEHOLDER -->
+          </div>
         </div>
-        
-        
+      </div>
     </div>
   </div>
 </body>
