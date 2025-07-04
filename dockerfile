@@ -6,8 +6,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     curl \
     wget \
-    gconf-service \
+    gnupg \
+    ca-certificates \
+    fonts-liberation \
+    libappindicator3-1 \
     libasound2 \
+    libatk-bridge2.0-0 \
     libatk1.0-0 \
     libc6 \
     libcairo2 \
@@ -15,14 +19,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libdbus-1-3 \
     libexpat1 \
     libfontconfig1 \
-    libfreetype6 \
+    libgbm1 \
     libgcc1 \
-    libgconf-2-4 \
-    libgdk-pixbuf2.0-0 \
     libglib2.0-0 \
     libgtk-3-0 \
     libnspr4 \
+    libnss3 \
     libpango-1.0-0 \
+    libpangocairo-1.0-0 \
     libstdc++6 \
     libx11-6 \
     libx11-xcb1 \
@@ -37,41 +41,44 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libxrender1 \
     libxss1 \
     libxtst6 \
-    ca-certificates \
-    fonts-liberation \
-    libappindicator1 \
-    libnss3 \
     lsb-release \
     xdg-utils \
-    mesa-libgbm \
-    libegl1 \
-    libegl-mesa \
-    libegl1-mesa \
-    libgbm-dev \
-    libgbm1 \
-    libegl1-mesa-dev \
+    libdrm2 \
+    libxkbcommon0 \
+    libatspi2.0-0 \
   && rm -rf /var/lib/apt/lists/*
 
-# 2) Directorio de trabajo dentro del contenedor
+# 2) Instalar Google Chrome
+RUN wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add - \
+  && echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list \
+  && apt-get update \
+  && apt-get install -y google-chrome-stable \
+  && rm -rf /var/lib/apt/lists/*
+
+# 3) Configurar entorno para Puppeteer
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable
+
+# 4) Directorio de trabajo dentro del contenedor
 WORKDIR /app/backend
 
-# 3) Copia sólo los package.json de backend y lockfile
+# 5) Copia sólo los package.json de backend y lockfile
 COPY backend/package.json backend/package-lock.json ./
 
-# 4) Instala deps de Node respetando el lockfile
+# 6) Instala deps de Node respetando el lockfile
 RUN npm ci --prefer-offline --no-audit --progress=false
 
-# 5) Copia el archivo firebase.json desde la raíz del proyecto
+# 7) Copia el archivo firebase.json desde la raíz del proyecto
 COPY firebase.json /app/
 
-# 6) Copia el resto del código del backend
+# 8) Copia el resto del código del backend
 COPY backend ./
 
-# 7) (Opcional) Si usas TypeScript, compila
+# 9) (Opcional) Si usas TypeScript, compila
 RUN npm run build
 
-# 8) Expone el puerto que usa tu app
+# 10) Expone el puerto que usa tu app
 EXPOSE 5102
 
-# 9) Comando por defecto
+# 11) Comando por defecto
 CMD ["npm", "start"]

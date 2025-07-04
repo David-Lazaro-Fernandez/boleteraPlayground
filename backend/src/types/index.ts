@@ -132,6 +132,7 @@ export interface ProcessPaymentRequest {
 export interface PuppeteerConfig {
   headless: boolean;
   args: string[];
+  executablePath?: string;
 }
 
 /**
