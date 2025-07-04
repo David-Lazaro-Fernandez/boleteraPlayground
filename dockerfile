@@ -43,6 +43,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libnss3 \
     lsb-release \
     xdg-utils \
+    mesa-libgbm \
+    libegl1 \
+    libegl-mesa \
+    libegl1-mesa \
+    libgbm-dev \
+    libgbm1 \
+    libegl1-mesa-dev \
   && rm -rf /var/lib/apt/lists/*
 
 # 2) Directorio de trabajo dentro del contenedor

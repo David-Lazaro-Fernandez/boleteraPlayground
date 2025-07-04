@@ -36,4 +36,5 @@ echo "🏗️ Construyendo imagen Docker del proyecto..."
 sudo docker build -t boletera-backend .
 
 echo "✅ Imagen Docker construida exitosamente: boletera-backend"
-echo "Para ejecutar el contenedor usa: docker run -p 5102:5102 boletera-backend"
+echo "🚀 Ejecutando contenedor..."
+sudo docker run -p 5102:5102 boletera-backend
