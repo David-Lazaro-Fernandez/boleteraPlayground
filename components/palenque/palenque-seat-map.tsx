@@ -20,10 +20,6 @@ import { ref as storageRef, getDownloadURL } from "firebase/storage";
 import { storage } from "@/lib/firebase/config";
 import { useMobileDetection } from "@/hooks/use-mobile-detection";
 
-// @ts-ignore
-// import venueConfig from "../../data/seats-data-palenque-victoria.json"
-
-// Importar componentes de secciones
 import {
   GeneralSection,
   Oro1Section,
@@ -40,7 +36,6 @@ import {
   VIP4Section,
 } from "./sections";
 
-// Interfaces para la configuración exportada del seat-map creator
 interface CreatedSeat {
   id: string;
   x: number;
@@ -1223,6 +1218,8 @@ export function PalenqueSeatMap({
                           }}
                           onMouseLeave={() => setHoveredSeat(null)}
                         />
+                        {/* 
+                        REMOVE SEAT NUMBER FOR NOW
                         {zoomLevel >= 0.5 && (
                           <text
                             x={seat.x}
@@ -1236,7 +1233,7 @@ export function PalenqueSeatMap({
                             {seat.rowLetter}
                             {seat.seatNumber}
                           </text>
-                        )}
+                        )} */}
                       </g>
                     ))}
 
