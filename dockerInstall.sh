@@ -6,7 +6,13 @@ set -e
 echo "🔍 Detectado OS: $NAME ($ID)"
 
 if [[ "$ID" == "ubuntu" || "$ID" == "debian" ]]; then
-  # … tu flujo Debian/Ubuntu aquí …
+  echo "🚀 Instalando Docker en Ubuntu/Debian…"
+  apt-get update
+  apt-get install -y docker.io
+  systemctl start docker
+  systemctl enable docker
+  usermod -aG docker $USER
+  echo "✅ Agregado $USER al grupo docker. Cierra y vuelve a abrir la sesión SSH."
 elif [[ "$ID" == "amzn" ]]; then
   echo "🚀 Instalando Docker en Amazon Linux 2…"
   yum update -y
