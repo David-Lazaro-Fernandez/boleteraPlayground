@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { ref as storageRef, getDownloadURL } from "firebase/storage";
 import { storage } from "@/lib/firebase/config";
+import { useMobileDetection } from "@/hooks/use-mobile-detection";
 
 // @ts-ignore
 // import venueConfig from "../../data/seats-data-palenque-victoria.json"
@@ -247,12 +248,14 @@ export function PalenqueSeatMap({
 }: PalenqueSeatMapProps = {}) {
   const router = useRouter();
   const svgRef = useRef<SVGSVGElement>(null);
+  const { isMobile } = useMobileDetection();
 
   // Constants
   const svgWidth = 1800;
   const svgHeight = 1800;
   const centerX = svgWidth / 2;
   const centerY = svgHeight / 2;
+  const MAX_ZOOM = isMobile ? 10 : 4; // 1000% para móvil, 400% para desktop
 
   // Group all useState hooks together
   const [selectedSeats, setSelectedSeats] = useState<CreatedSeat[]>([]);
@@ -271,6 +274,7 @@ export function PalenqueSeatMap({
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [lastPan, setLastPan] = useState({ x: 0, y: 0 });
   const [isPhysicalSale, setIsPhysicalSale] = useState(false);
+  const [lastSelectedSeat, setLastSelectedSeat] = useState<CreatedSeat | null>(null);
 
   // Calculate viewBox string
   const adjustedWidth = svgWidth / zoomLevel;
@@ -303,6 +307,31 @@ export function PalenqueSeatMap({
     const [x, y, width, height] = viewBox.split(" ").map(Number);
     return { x, y, width, height };
   }, [viewBox]);
+
+  // Agrupar asientos por zona para el menú móvil
+  const groupedSelectedSeats = useMemo(() => {
+    return selectedSeats.reduce((acc, seat) => {
+      if (!acc[seat.zoneName]) {
+        acc[seat.zoneName] = [];
+      }
+      acc[seat.zoneName].push(seat);
+      return acc;
+    }, {} as Record<string, CreatedSeat[]>);
+  }, [selectedSeats]);
+
+  // Ordenar asientos dentro de cada zona por fila y número
+  const sortedGroupedSeats = useMemo(() => {
+    const sorted: Record<string, CreatedSeat[]> = {};
+    Object.keys(groupedSelectedSeats).forEach(zoneName => {
+      sorted[zoneName] = [...groupedSelectedSeats[zoneName]].sort((a, b) => {
+        if (a.rowLetter === b.rowLetter) {
+          return a.seatNumber - b.seatNumber;
+        }
+        return a.rowLetter.localeCompare(b.rowLetter);
+      });
+    });
+    return sorted;
+  }, [groupedSelectedSeats]);
 
   // useEffect hooks
   useEffect(() => {
@@ -368,14 +397,22 @@ export function PalenqueSeatMap({
     setSelectedSeats((prev) => {
       const isSelected = prev.find((s) => s.id === seat.id);
       if (isSelected) {
+        setLastSelectedSeat(null);
         return prev.filter((s) => s.id !== seat.id);
       }
+      setLastSelectedSeat(seat);
       return [...prev, seat];
     });
   };
 
   const removeSeat = (seatId: string) => {
-    setSelectedSeats((prev) => prev.filter((s) => s.id !== seatId));
+    setSelectedSeats((prev) => {
+      const newSeats = prev.filter((s) => s.id !== seatId);
+      if (lastSelectedSeat?.id === seatId) {
+        setLastSelectedSeat(null);
+      }
+      return newSeats;
+    });
   };
 
   const handleZoneHover = (zoneName: string, event: React.MouseEvent) => {
@@ -448,13 +485,13 @@ export function PalenqueSeatMap({
 
     setZoomLevel((prevZoom) => {
       const newZoom = delta > 0 ? prevZoom - zoomFactor : prevZoom + zoomFactor;
-      // Limitar el zoom entre 0.5 y 4 (400%)
-      return Math.min(Math.max(newZoom, 0.5), 4);
+      // Limitar el zoom entre 0.5 y MAX_ZOOM (1000% en móvil, 400% en desktop)
+      return Math.min(Math.max(newZoom, 0.5), MAX_ZOOM);
     });
   };
 
   const handleZoomIn = () => {
-    setZoomLevel((prev) => Math.min(prev + 0.5, 4));
+    setZoomLevel((prev) => Math.min(prev + 0.5, MAX_ZOOM));
   };
 
   const handleZoomOut = () => {
@@ -530,7 +567,7 @@ export function PalenqueSeatMap({
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Panel lateral izquierdo */}
-      <div className="w-96 bg-white shadow-xl overflow-y-auto">
+      <div className="w-96 bg-white shadow-xl overflow-y-auto hidden sm:block">
         {/* Información del evento */}
         <div className="p-6 border-b">
           <Card className="bg-gradient-to-r from-purple-600 to-blue-600 text-white border-0">
@@ -768,9 +805,85 @@ export function PalenqueSeatMap({
         </div>
       </div>
 
+      {/* Menú stack inferior para móviles */}
+      {isMobile && selectedSeats.length > 0 && (
+        <div className="fixed bottom-0 left-0 right-0 bg-white shadow-lg border-t z-50 transition-transform duration-300 ease-in-out">
+          <div className="flex items-center justify-between p-2 border-b bg-gray-50">
+            <span className="font-semibold text-gray-700">
+              Asientos Seleccionados ({selectedSeats.length})
+            </span>
+            <span className="font-bold text-green-600">
+              Total: ${selectedSeats.reduce((sum, seat) => sum + seat.price, 0).toFixed(2)} MXN
+            </span>
+          </div>
+          
+          {/* Contenedor scrolleable */}
+          <div 
+            className="overflow-y-auto" 
+            style={{ 
+              maxHeight: "200px",
+              paddingBottom: "60px" // Espacio para el botón fijo
+            }}
+          >
+            {Object.entries(sortedGroupedSeats).map(([zoneName, seats], zoneIndex) => (
+              <div key={zoneName} className="border-b last:border-b-0">
+                {/* Encabezado de zona */}
+                <div className="px-4 py-2 bg-gray-50 sticky top-0 z-10 border-b">
+                  <div className="flex items-center space-x-2">
+                    <div 
+                      className="w-3 h-3 rounded-full" 
+                      style={{ backgroundColor: seats[0]?.color || '#gray-400' }}
+                    ></div>
+                    <span className="font-medium text-sm text-gray-700">{zoneName}</span>
+                  </div>
+                </div>
+                
+                {/* Lista de asientos en la zona */}
+                <div className="divide-y">
+                  {seats.map((seat) => (
+                    <div key={seat.id} className="flex items-center justify-between p-3 bg-white hover:bg-gray-50">
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">
+                              Fila {seat.rowLetter} · Asiento {seat.seatNumber}
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              ${seat.price.toFixed(2)} MXN
+                            </p>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeSeat(seat.id)}
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Botón fijo de compra */}
+          <div className="absolute bottom-0 left-0 right-0 p-2 bg-white border-t">
+            <Button
+              className="w-full bg-[#325CE5] hover:bg-[#2849B3] text-white font-medium py-3 relative z-50"
+              onClick={handlePurchase}
+            >
+              Comprar {selectedSeats.length + generalTickets.reduce((sum, ticket) => sum + ticket.quantity, 0)} boletos
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Mapa de asientos */}
       <div className="flex-1 p-6">
-        <Card className="h-[800px]">
+        <Card className={`h-[800px] ${isMobile && selectedSeats.length > 0 ? 'mb-[300px]' : ''}`}>
           <CardHeader>
             <CardTitle className="text-xl">
               Mapa de Asientos - {venueConfig.venue.name}
@@ -781,7 +894,7 @@ export function PalenqueSeatMap({
                 : "Selecciona una zona para ver los asientos"}
             </p>
           </CardHeader>
-          <CardContent className="h-full relative">
+          <CardContent className={`${isMobile ? 'h-[600px]' : 'h-[800px]'} relative`}>
             {/* Controles flotantes en la esquina superior derecha */}
             <div className="absolute top-4 right-4 z-10 space-y-2">
               {/* Controles de navegación */}
@@ -845,7 +958,7 @@ export function PalenqueSeatMap({
                   size="sm"
                   className="w-8 h-8 p-0"
                   onClick={handleZoomIn}
-                  disabled={zoomLevel >= 3 || isZoomLocked}
+                  disabled={zoomLevel >= MAX_ZOOM || isZoomLocked}
                 >
                   +
                 </Button>
@@ -1049,7 +1162,7 @@ export function PalenqueSeatMap({
                     ))}
 
                 {/* Tooltip para asiento hover */}
-                {hoveredSeat && (
+                {hoveredSeat && !isMobile && (
                   <g
                     transform={`translate(${hoveredSeat.x + 50}, ${hoveredSeat.y - 35})`}
                   >

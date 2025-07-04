@@ -5,10 +5,14 @@ import { useParams } from "next/navigation";
 import { Event, getEvent } from "@/lib/firebase/events";
 import { Venue, getVenue } from "@/lib/firebase/venues";
 import { PalenqueSeatMap } from "@/components/palenque/palenque-seat-map";
+import { useMobileDetection } from "@/hooks/use-mobile-detection";
 
 // Componente que muestra el mapa de asientos con información del evento
-function EventSeatMap({ event, venue }: { event: Event; venue: Venue | null }) {
+function EventSeatMap({ event, venue, eventId }: { event: Event; venue: Venue | null; eventId: string }) {
+  const { isMobile, isLoading } = useMobileDetection();
+  
   const eventInfo = {
+    id: eventId,
     title: event.nombre,
     date: event.fecha.toLocaleDateString("es-ES", {
       weekday: "long",
@@ -22,7 +26,24 @@ function EventSeatMap({ event, venue }: { event: Event; venue: Venue | null }) {
       : "Ubicación por confirmar",
   };
 
-  return <PalenqueSeatMap eventInfo={eventInfo} />;
+  // Mostrar loading mientras se detecta si es móvil
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Cargando mapa de asientos...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Usar el mapa circular en móviles, el mapa tradicional en escritorio
+  return isMobile ? (
+    <PalenqueSeatMap eventInfo={eventInfo} />
+  ) : (
+    <PalenqueSeatMap eventInfo={eventInfo} />
+  );
 }
 
 export default function ComprarBoletosPage() {
@@ -124,5 +145,5 @@ export default function ComprarBoletosPage() {
     );
   }
 
-  return <EventSeatMap event={event} venue={venue} />;
+  return <EventSeatMap event={event} venue={venue} eventId={eventId} />;
 }

@@ -22,6 +22,7 @@ import { getVenue, Venue } from "@/lib/firebase/venues";
 import { Header } from "@/components/landing/header";
 import { Footer } from "@/components/landing/footer";
 import { CartItem } from "@/lib/stripe/types";
+import { useMobileDetection } from "@/hooks/use-mobile-detection";
 
 interface PaymentData {
   customerEmail: string;
@@ -47,6 +48,7 @@ interface PaymentData {
 function CheckoutSuccessContent() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session_id");
+  const { isMobile } = useMobileDetection();
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -317,74 +319,74 @@ function CheckoutSuccessContent() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800">
 
-      <main className="container mx-auto px-4 py-8 max-w-6xl">
+      <main className={`container mx-auto px-4 py-8 ${isMobile ? 'max-w-md' : 'max-w-6xl'}`}>
         {/* Header Success Message */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <CheckCircleIcon className="w-16 h-16 text-white" />
+            <CheckCircleIcon className={`text-white ${isMobile ? 'w-12 h-12' : 'w-16 h-16'}`} />
           </div>
-          <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
+          <h1 className={`font-bold text-white mb-2 ${isMobile ? 'text-2xl' : 'text-3xl md:text-4xl'}`}>
             ¡Ya son tuyos!
           </h1>
-          <p className="text-blue-100 text-lg">
+          <p className={`text-blue-100 ${isMobile ? 'text-base' : 'text-lg'}`}>
             Tu compra ha sido procesada exitosamente
           </p>
         </div>
 
         {/* Two Column Layout */}
-        <div className="grid lg:grid-cols-2 gap-8">
+        <div className={`${isMobile ? 'space-y-6' : 'grid lg:grid-cols-2 gap-8'}`}>
           {/* Left Column - Event Information */}
           <Card className="bg-white shadow-2xl rounded-2xl overflow-hidden">
-            <CardContent className="p-6">
+            <CardContent className={`${isMobile ? 'p-4' : 'p-6'}`}>
               {/* Event Name */}
               <div className="mb-6">
                 <Badge className="bg-green-100 text-green-800 mb-3">
                   Confirmado
                 </Badge>
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                <h2 className={`font-bold text-gray-900 mb-2 ${isMobile ? 'text-xl' : 'text-2xl'}`}>
                   {event.nombre}
                 </h2>
               </div>
 
               {/* Seats Summary */}
               <div className="mb-6">
-                <h3 className="font-semibold text-gray-800 mb-2">
+                <h3 className={`font-semibold text-gray-800 mb-2 ${isMobile ? 'text-base' : ''}`}>
                   Resumen de Asientos
                 </h3>
-                <p className="text-gray-600">{getSeatsSummary()}</p>
+                <p className={`text-gray-600 ${isMobile ? 'text-sm' : ''}`}>{getSeatsSummary()}</p>
               </div>
 
               {/* Event Date & Time */}
               <div className="mb-6">
-                <h3 className="font-semibold text-gray-800 mb-2">
+                <h3 className={`font-semibold text-gray-800 mb-2 ${isMobile ? 'text-base' : ''}`}>
                   Fecha del Evento
                 </h3>
-                <p className="text-gray-600">
+                <p className={`text-gray-600 ${isMobile ? 'text-sm' : ''}`}>
                   {formatEventDate(event.fecha, event.hora)}
                 </p>
               </div>
 
               {/* Location */}
               <div className="mb-6">
-                <h3 className="font-semibold text-gray-800 mb-2">Ubicación</h3>
-                <p className="text-gray-600">{getVenueDisplayName()}</p>
+                <h3 className={`font-semibold text-gray-800 mb-2 ${isMobile ? 'text-base' : ''}`}>Ubicación</h3>
+                <p className={`text-gray-600 ${isMobile ? 'text-sm' : ''}`}>{getVenueDisplayName()}</p>
               </div>
 
               <hr className="my-6" />
 
               {/* Tickets Section */}
               <div>
-                <h3 className="font-semibold text-gray-800 mb-4">Tickets</h3>
+                <h3 className={`font-semibold text-gray-800 mb-4 ${isMobile ? 'text-base' : ''}`}>Tickets</h3>
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Número de Orden:</span>
-                    <span className="font-mono font-medium">
+                    <span className={`text-gray-600 ${isMobile ? 'text-sm' : ''}`}>Número de Orden:</span>
+                    <span className={`font-mono font-medium ${isMobile ? 'text-sm' : ''}`}>
                       {paymentData.orderNumber}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Delivery:</span>
-                    <span className="text-gray-800">Correo Electrónico</span>
+                    <span className={`text-gray-600 ${isMobile ? 'text-sm' : ''}`}>Delivery:</span>
+                    <span className={`text-gray-800 ${isMobile ? 'text-sm' : ''}`}>Correo Electrónico</span>
                   </div>
                 </div>
               </div>
@@ -393,14 +395,14 @@ function CheckoutSuccessContent() {
 
           {/* Right Column - Payment & Ticket Details */}
           <Card className="bg-white shadow-2xl rounded-2xl overflow-hidden">
-            <CardContent className="p-6">
+            <CardContent className={`${isMobile ? 'p-4' : 'p-6'}`}>
               {/* Payment Method Card */}
               {paymentData.paymentMethod?.card && (
                 <div className="mb-6">
                   <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-lg">
-                    <CreditCardIcon className="w-8 h-8 text-gray-600" />
+                    <CreditCardIcon className={`text-gray-600 ${isMobile ? 'w-6 h-6' : 'w-8 h-8'}`} />
                     <div>
-                      <p className="font-medium text-gray-800">
+                      <p className={`font-medium text-gray-800 ${isMobile ? 'text-sm' : ''}`}>
                         {getCardBrand(paymentData.paymentMethod.card.brand)}{" "}
                         •••• {paymentData.paymentMethod.card.last4}
                       </p>
@@ -413,23 +415,23 @@ function CheckoutSuccessContent() {
 
               {/* Tickets Breakdown */}
               <div className="mb-6">
-                <h3 className="font-semibold text-gray-800 mb-4">Tickets</h3>
+                <h3 className={`font-semibold text-gray-800 mb-4 ${isMobile ? 'text-base' : ''}`}>Tickets</h3>
                 <div className="space-y-3">
                   {Object.entries(groupedItems).map(([zoneName, zoneData]) => (
                     <div
                       key={zoneName}
-                      className="flex justify-between items-center"
+                      className={`flex justify-between items-center ${isMobile ? 'flex-col items-start space-y-1' : ''}`}
                     >
                       <div>
-                        <span className="text-gray-800">
+                        <span className={`text-gray-800 ${isMobile ? 'text-sm font-medium' : ''}`}>
                           {zoneData.isGeneral ? "General" : zoneName}:
                         </span>
-                        <span className="text-gray-600 ml-2">
+                        <span className={`text-gray-600 ${isMobile ? 'text-xs block' : 'ml-2'}`}>
                           ${zoneData.items[0].price.toFixed(2)} MXN x{" "}
                           {zoneData.totalQuantity}
                         </span>
                       </div>
-                      <span className="font-medium text-gray-800">
+                      <span className={`font-medium text-gray-800 ${isMobile ? 'text-sm' : ''}`}>
                         ${zoneData.totalPrice.toFixed(2)} MXN
                       </span>
                     </div>
@@ -439,10 +441,10 @@ function CheckoutSuccessContent() {
 
               {/* Service Charge */}
               <div className="mb-6">
-                <h3 className="font-semibold text-gray-800 mb-4">Servicios</h3>
+                <h3 className={`font-semibold text-gray-800 mb-4 ${isMobile ? 'text-base' : ''}`}>Servicios</h3>
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Cargo por servicio</span>
-                  <span className="font-medium text-gray-800">
+                  <span className={`text-gray-600 ${isMobile ? 'text-sm' : ''}`}>Cargo por servicio</span>
+                  <span className={`font-medium text-gray-800 ${isMobile ? 'text-sm' : ''}`}>
                     ${paymentData.serviceCharge.toFixed(2)} MXN
                   </span>
                 </div>
@@ -453,8 +455,8 @@ function CheckoutSuccessContent() {
               {/* Total */}
               <div className="mb-6">
                 <div className="flex justify-between items-center">
-                  <span className="text-xl font-bold text-gray-900">Total</span>
-                  <span className="text-xl font-bold text-green-600">
+                  <span className={`font-bold text-gray-900 ${isMobile ? 'text-lg' : 'text-xl'}`}>Total</span>
+                  <span className={`font-bold text-green-600 ${isMobile ? 'text-lg' : 'text-xl'}`}>
                     ${paymentData.totalAmount.toFixed(2)} MXN
                   </span>
                 </div>
@@ -464,18 +466,18 @@ function CheckoutSuccessContent() {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
+        <div className={`flex gap-4 justify-center mt-8 ${isMobile ? 'flex-col' : 'flex-col sm:flex-row'}`}>
           <Button
-            size="lg"
-            className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 text-lg"
+            size={isMobile ? "default" : "lg"}
+            className={`bg-blue-600 hover:bg-blue-700 text-white ${isMobile ? 'w-full py-3 text-base' : 'px-8 py-3 text-lg'}`}
           >
             Ver y Guardar Boletos
           </Button>
           <Link href="/eventos">
             <Button
               variant="outline"
-              size="lg"
-              className="w-full sm:w-auto bg-white text-blue-600 border-2 border-blue-600 hover:bg-blue-50 px-8 py-3 text-lg"
+              size={isMobile ? "default" : "lg"}
+              className={`bg-white text-blue-600 border-2 border-blue-600 hover:bg-blue-50 ${isMobile ? 'w-full py-3 text-base' : 'w-full sm:w-auto px-8 py-3 text-lg'}`}
             >
               Explorar Más Eventos
             </Button>
@@ -484,7 +486,7 @@ function CheckoutSuccessContent() {
 
         {/* Additional Info */}
         <div className="text-center mt-8 text-blue-100">
-          <p className="text-sm">
+          <p className={`${isMobile ? 'text-xs' : 'text-sm'}`}>
             Recibirás un correo de confirmación con los detalles de tu compra.
           </p>
         </div>

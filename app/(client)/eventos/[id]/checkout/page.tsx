@@ -13,6 +13,7 @@ import { Venue, getVenue } from "@/lib/firebase/venues";
 import { useCart } from "@/hooks/use-cart";
 import { CartSummaryComponent } from "@/components/stripe/cart-summary";
 import { CheckoutButton } from "@/components/stripe/checkout-button";
+import { useMobileDetection } from "@/hooks/use-mobile-detection";
 import {
   ArrowLeft,
   Mail,
@@ -35,6 +36,7 @@ function CheckoutContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { toast } = useToast();
+  const { isMobile } = useMobileDetection();
 
   const eventId = params.id as string;
   const [event, setEvent] = useState<Event | null>(null);
@@ -187,51 +189,52 @@ function CheckoutContent() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-6xl mx-auto p-6">
+      <div className={`mx-auto p-4 ${isMobile ? 'max-w-md' : 'max-w-6xl p-6'}`}>
         {/* Header */}
         <div className="mb-6">
           <Button
             variant="ghost"
             onClick={handleBackToSeatSelection}
             className="mb-4"
+            size={isMobile ? "sm" : "default"}
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Volver a selección de asientos
+            {isMobile ? "Volver" : "Volver a selección de asientos"}
           </Button>
 
           <div className="text-center">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            <h1 className={`font-bold text-gray-900 mb-2 ${isMobile ? 'text-xl' : 'text-3xl'}`}>
               Finalizar Compra
             </h1>
-            <p className="text-gray-600">
+            <p className={`text-gray-600 ${isMobile ? 'text-sm' : ''}`}>
               Completa tus datos para continuar con el pago
             </p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className={`${isMobile ? 'space-y-6' : 'grid grid-cols-1 lg:grid-cols-2 gap-8'}`}>
           {/* Panel izquierdo - Información del evento y formulario */}
           <div className="space-y-6">
             {/* Información del evento */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className={`flex items-center gap-2 ${isMobile ? 'text-base' : ''}`}>
                   <Calendar className="w-5 h-5" />
                   Información del Evento
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flex gap-4">
+                <div className={`${isMobile ? 'space-y-3' : 'flex gap-4'}`}>
                   <img
                     src={eventInfo.image}
                     alt={eventInfo.title}
-                    className="w-20 h-20 object-cover rounded-lg"
+                    className={`object-cover rounded-lg ${isMobile ? 'w-full h-32' : 'w-20 h-20'}`}
                   />
                   <div className="flex-1">
-                    <h3 className="font-semibold text-lg mb-2">
+                    <h3 className={`font-semibold mb-2 ${isMobile ? 'text-base' : 'text-lg'}`}>
                       {eventInfo.title}
                     </h3>
-                    <div className="space-y-1 text-sm text-gray-600">
+                    <div className={`space-y-1 text-gray-600 ${isMobile ? 'text-xs' : 'text-sm'}`}>
                       <div className="flex items-center gap-2">
                         <Calendar className="w-4 h-4" />
                         {eventInfo.date}
@@ -242,7 +245,7 @@ function CheckoutContent() {
                       </div>
                       <div className="flex items-center gap-2">
                         <MapPin className="w-4 h-4" />
-                        {eventInfo.venue}
+                        <span className={isMobile ? 'text-xs' : ''}>{eventInfo.venue}</span>
                       </div>
                     </div>
                   </div>
@@ -253,15 +256,15 @@ function CheckoutContent() {
             {/* Formulario de datos del cliente */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className={`flex items-center gap-2 ${isMobile ? 'text-base' : ''}`}>
                   <User className="w-5 h-5" />
                   Datos del Comprador
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className={`${isMobile ? 'space-y-4' : 'grid grid-cols-1 md:grid-cols-2 gap-4'}`}>
                   <div>
-                    <Label htmlFor="firstName">Nombre *</Label>
+                    <Label htmlFor="firstName" className={isMobile ? 'text-sm' : ''}>Nombre *</Label>
                     <Input
                       id="firstName"
                       type="text"
@@ -271,10 +274,11 @@ function CheckoutContent() {
                       }
                       placeholder="Tu nombre"
                       required
+                      className={isMobile ? 'text-sm' : ''}
                     />
                   </div>
                   <div>
-                    <Label htmlFor="lastName">Apellido *</Label>
+                    <Label htmlFor="lastName" className={isMobile ? 'text-sm' : ''}>Apellido *</Label>
                     <Input
                       id="lastName"
                       type="text"
@@ -284,12 +288,13 @@ function CheckoutContent() {
                       }
                       placeholder="Tu apellido"
                       required
+                      className={isMobile ? 'text-sm' : ''}
                     />
                   </div>
                 </div>
 
                 <div>
-                  <Label htmlFor="email">Correo Electrónico *</Label>
+                  <Label htmlFor="email" className={isMobile ? 'text-sm' : ''}>Correo Electrónico *</Label>
                   <Input
                     id="email"
                     type="email"
@@ -297,20 +302,22 @@ function CheckoutContent() {
                     onChange={(e) => handleInputChange("email", e.target.value)}
                     placeholder="tu@correo.com"
                     required
+                    className={isMobile ? 'text-sm' : ''}
                   />
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className={`text-gray-500 mt-1 ${isMobile ? 'text-xs' : 'text-xs'}`}>
                     Los boletos serán enviados a este correo
                   </p>
                 </div>
 
                 <div>
-                  <Label htmlFor="phone">Teléfono (Opcional)</Label>
+                  <Label htmlFor="phone" className={isMobile ? 'text-sm' : ''}>Teléfono (Opcional)</Label>
                   <Input
                     id="phone"
                     type="tel"
                     value={customerData.phone}
                     onChange={(e) => handleInputChange("phone", e.target.value)}
                     placeholder="+52 555 123 4567"
+                    className={isMobile ? 'text-sm' : ''}
                   />
                 </div>
 
@@ -318,10 +325,10 @@ function CheckoutContent() {
                   <div className="flex items-start gap-3">
                     <Mail className="w-5 h-5 text-blue-600 mt-0.5" />
                     <div>
-                      <h4 className="font-medium text-blue-900 mb-1">
+                      <h4 className={`font-medium text-blue-900 mb-1 ${isMobile ? 'text-sm' : ''}`}>
                         Entrega de Boletos
                       </h4>
-                      <p className="text-sm text-blue-700">
+                      <p className={`text-blue-700 ${isMobile ? 'text-xs' : 'text-sm'}`}>
                         Después del pago exitoso, recibirás tus boletos por
                         correo electrónico en formato PDF listo para imprimir o
                         mostrar desde tu móvil.
@@ -345,7 +352,7 @@ function CheckoutContent() {
             {/* Botón de pago */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className={`flex items-center gap-2 ${isMobile ? 'text-base' : ''}`}>
                   <CreditCard className="w-5 h-5" />
                   Proceder al Pago
                 </CardTitle>
@@ -354,12 +361,12 @@ function CheckoutContent() {
                 <div className="space-y-4">
                   <div className="bg-green-50 p-4 rounded-lg">
                     <div className="flex items-start gap-3">
-                      <div className="text-green-600 text-2xl">🔒</div>
+                      <div className={`text-green-600 ${isMobile ? 'text-xl' : 'text-2xl'}`}>🔒</div>
                       <div>
-                        <h4 className="font-medium text-green-900 mb-1">
+                        <h4 className={`font-medium text-green-900 mb-1 ${isMobile ? 'text-sm' : ''}`}>
                           Pago Seguro
                         </h4>
-                        <p className="text-sm text-green-700">
+                        <p className={`text-green-700 ${isMobile ? 'text-xs' : 'text-sm'}`}>
                           Tu información está protegida con cifrado SSL.
                           Procesamos pagos de forma segura con Stripe.
                         </p>
@@ -371,12 +378,12 @@ function CheckoutContent() {
                     cartSummary={cartSummary}
                     eventInfo={eventInfo}
                     disabled={!isFormValid}
-                    className="w-full h-12 text-lg"
+                    className={`w-full ${isMobile ? 'h-11 text-base' : 'h-12 text-lg'}`}
                     customerData={customerData}
                   />
 
                   {!isFormValid && (
-                    <p className="text-sm text-red-600 text-center">
+                    <p className={`text-red-600 text-center ${isMobile ? 'text-xs' : 'text-sm'}`}>
                       Por favor completa todos los campos requeridos
                     </p>
                   )}
