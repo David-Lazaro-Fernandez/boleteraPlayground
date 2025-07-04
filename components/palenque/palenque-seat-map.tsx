@@ -308,30 +308,47 @@ export function PalenqueSeatMap({
     return { x, y, width, height };
   }, [viewBox]);
 
-  // Agrupar asientos por zona para el menú móvil
-  const groupedSelectedSeats = useMemo(() => {
-    return selectedSeats.reduce((acc, seat) => {
-      if (!acc[seat.zoneName]) {
-        acc[seat.zoneName] = [];
+  // Agrupar asientos y boletos generales por zona para el menú móvil
+  const groupedTickets = useMemo(() => {
+    const groups: Record<string, (CreatedSeat | GeneralTicket)[]> = {};
+    
+    // Agregar asientos numerados
+    selectedSeats.forEach(seat => {
+      if (!groups[seat.zoneName]) {
+        groups[seat.zoneName] = [];
       }
-      acc[seat.zoneName].push(seat);
-      return acc;
-    }, {} as Record<string, CreatedSeat[]>);
-  }, [selectedSeats]);
+      groups[seat.zoneName].push(seat);
+    });
 
-  // Ordenar asientos dentro de cada zona por fila y número
-  const sortedGroupedSeats = useMemo(() => {
-    const sorted: Record<string, CreatedSeat[]> = {};
-    Object.keys(groupedSelectedSeats).forEach(zoneName => {
-      sorted[zoneName] = [...groupedSelectedSeats[zoneName]].sort((a, b) => {
-        if (a.rowLetter === b.rowLetter) {
-          return a.seatNumber - b.seatNumber;
-        }
-        return a.rowLetter.localeCompare(b.rowLetter);
-      });
+    // Agregar boletos generales si existen
+    if (generalTickets.length > 0) {
+      groups["General"] = generalTickets;
+    }
+
+    return groups;
+  }, [selectedSeats, generalTickets]);
+
+  // Ordenar asientos dentro de cada zona
+  const sortedGroupedTickets = useMemo(() => {
+    const sorted: Record<string, (CreatedSeat | GeneralTicket)[]> = {};
+    Object.keys(groupedTickets).forEach(zoneName => {
+      if (zoneName === "General") {
+        // No ordenar boletos generales, mantener orden de adición
+        sorted[zoneName] = groupedTickets[zoneName];
+      } else {
+        // Ordenar asientos numerados
+        sorted[zoneName] = [...groupedTickets[zoneName]].sort((a, b) => {
+          const seatA = a as CreatedSeat;
+          const seatB = b as CreatedSeat;
+          if (seatA.rowLetter === seatB.rowLetter) {
+            return seatA.seatNumber - seatB.seatNumber;
+          }
+          return seatA.rowLetter.localeCompare(seatB.rowLetter);
+        });
+      }
     });
     return sorted;
-  }, [groupedSelectedSeats]);
+  }, [groupedTickets]);
 
   // useEffect hooks
   useEffect(() => {
@@ -565,7 +582,7 @@ export function PalenqueSeatMap({
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-gray-50 mb-24">
       {/* Panel lateral izquierdo */}
       <div className="w-96 bg-white shadow-xl overflow-y-auto hidden sm:block">
         {/* Información del evento */}
@@ -806,14 +823,17 @@ export function PalenqueSeatMap({
       </div>
 
       {/* Menú stack inferior para móviles */}
-      {isMobile && selectedSeats.length > 0 && (
+      {isMobile && (selectedSeats.length > 0 || generalTickets.length > 0) && (
         <div className="fixed bottom-0 left-0 right-0 bg-white shadow-lg border-t z-50 transition-transform duration-300 ease-in-out">
           <div className="flex items-center justify-between p-2 border-b bg-gray-50">
             <span className="font-semibold text-gray-700">
-              Asientos Seleccionados ({selectedSeats.length})
+              Boletos Seleccionados ({selectedSeats.length + generalTickets.reduce((sum, ticket) => sum + ticket.quantity, 0)})
             </span>
             <span className="font-bold text-green-600">
-              Total: ${selectedSeats.reduce((sum, seat) => sum + seat.price, 0).toFixed(2)} MXN
+              Total: ${(
+                selectedSeats.reduce((sum, seat) => sum + seat.price, 0) +
+                generalTickets.reduce((sum, ticket) => sum + ticket.price * ticket.quantity, 0)
+              ).toFixed(2)} MXN
             </span>
           </div>
           
@@ -822,48 +842,107 @@ export function PalenqueSeatMap({
             className="overflow-y-auto" 
             style={{ 
               maxHeight: "200px",
-              paddingBottom: "60px" // Espacio para el botón fijo
+              paddingBottom: "60px"
             }}
           >
-            {Object.entries(sortedGroupedSeats).map(([zoneName, seats], zoneIndex) => (
+            {Object.entries(sortedGroupedTickets).map(([zoneName, tickets]) => (
               <div key={zoneName} className="border-b last:border-b-0">
                 {/* Encabezado de zona */}
                 <div className="px-4 py-2 bg-gray-50 sticky top-0 z-10 border-b">
                   <div className="flex items-center space-x-2">
                     <div 
                       className="w-3 h-3 rounded-full" 
-                      style={{ backgroundColor: seats[0]?.color || '#gray-400' }}
+                      style={{ 
+                        backgroundColor: zoneName === "General" 
+                          ? zoneConfig["General"].color 
+                          : (tickets[0] as CreatedSeat).color
+                      }}
                     ></div>
                     <span className="font-medium text-sm text-gray-700">{zoneName}</span>
                   </div>
                 </div>
                 
-                {/* Lista de asientos en la zona */}
+                {/* Lista de tickets en la zona */}
                 <div className="divide-y">
-                  {seats.map((seat) => (
-                    <div key={seat.id} className="flex items-center justify-between p-3 bg-white hover:bg-gray-50">
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-sm font-medium text-gray-900">
-                              Fila {seat.rowLetter} · Asiento {seat.seatNumber}
-                            </p>
-                            <p className="text-sm text-gray-500">
-                              ${seat.price.toFixed(2)} MXN
-                            </p>
+                  {tickets.map((ticket) => {
+                    if (zoneName === "General") {
+                      // Renderizar boleto general
+                      const generalTicket = ticket as GeneralTicket;
+                      return (
+                        <div key={generalTicket.id} className="flex items-center justify-between p-3 bg-white hover:bg-gray-50">
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="text-sm font-medium text-gray-900">
+                                  Boleto General
+                                </p>
+                                <p className="text-sm text-gray-500">
+                                  ${generalTicket.price.toFixed(2)} MXN x {generalTicket.quantity}
+                                </p>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => updateGeneralTicketQuantity(generalTicket.id, -1)}
+                                  disabled={generalTicket.quantity <= 1}
+                                  className="text-gray-600 hover:text-gray-700"
+                                >
+                                  <Minus className="w-4 h-4" />
+                                </Button>
+                                <span className="w-8 text-center font-semibold">
+                                  {generalTicket.quantity}
+                                </span>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => updateGeneralTicketQuantity(generalTicket.id, 1)}
+                                  className="text-gray-600 hover:text-gray-700"
+                                >
+                                  <Plus className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => removeGeneralTicket(generalTicket.id)}
+                                  className="text-red-600 hover:text-red-700"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            </div>
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => removeSeat(seat.id)}
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
                         </div>
-                      </div>
-                    </div>
-                  ))}
+                      );
+                    } else {
+                      // Renderizar asiento numerado
+                      const seat = ticket as CreatedSeat;
+                      return (
+                        <div key={seat.id} className="flex items-center justify-between p-3 bg-white hover:bg-gray-50">
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="text-sm font-medium text-gray-900">
+                                  Fila {seat.rowLetter} · Asiento {seat.seatNumber}
+                                </p>
+                                <p className="text-sm text-gray-500">
+                                  ${seat.price.toFixed(2)} MXN
+                                </p>
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removeSeat(seat.id)}
+                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    }
+                  })}
                 </div>
               </div>
             ))}
@@ -883,7 +962,7 @@ export function PalenqueSeatMap({
 
       {/* Mapa de asientos */}
       <div className="flex-1 p-6">
-        <Card className={`h-[800px] ${isMobile && selectedSeats.length > 0 ? 'mb-[300px]' : ''}`}>
+        <Card className={`${isMobile && selectedSeats.length > 0 ? 'mb-[300px]' : ''}`}>
           <CardHeader>
             <CardTitle className="text-xl">
               Mapa de Asientos - {venueConfig.venue.name}
@@ -894,7 +973,7 @@ export function PalenqueSeatMap({
                 : "Selecciona una zona para ver los asientos"}
             </p>
           </CardHeader>
-          <CardContent className={`${isMobile ? 'h-[600px]' : 'h-[800px]'} relative`}>
+          <CardContent className={`${isMobile ? 'h-auto' : 'h-[800px]'} relative`}>
             {/* Controles flotantes en la esquina superior derecha */}
             <div className="absolute top-4 right-4 z-10 space-y-2">
               {/* Controles de navegación */}
@@ -986,7 +1065,7 @@ export function PalenqueSeatMap({
             </div>
 
             {/* Canvas del mapa */}
-            <div className="w-full h-full flex justify-center items-center bg-gray-50 rounded-lg border">
+            <div className="w-full h-[600px] flex justify-center items-center bg-gray-50 rounded-lg border">
               <svg
                 ref={svgRef}
                 width="100%"
@@ -1302,6 +1381,28 @@ export function PalenqueSeatMap({
                 )}
               </svg>
             </div>
+            {/* Botón de agregar boleto general debajo del mapa solo para móviles */}
+            {isMobile && (
+              <div className="mt-4 px-2 space-y-4">
+                <div className="bg-white p-4 rounded-xl shadow-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <div>
+                      <h3 className="font-semibold text-gray-900">Zona General</h3>
+                      <p className="text-sm text-gray-600">Entrada General sin asiento asignado</p>
+                    </div>
+                    <div className="text-lg font-bold text-green-600">
+                      $300 MXN
+                    </div>
+                  </div>
+                  <Button
+                    onClick={addGeneralTicket}
+                    className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-4 rounded-lg"
+                  >
+                    Agregar Boleto General
+                  </Button>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
