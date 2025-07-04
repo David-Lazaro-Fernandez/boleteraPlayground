@@ -420,7 +420,7 @@ function CheckoutSuccessContent() {
                   {Object.entries(groupedItems).map(([zoneName, zoneData]) => (
                     <div
                       key={zoneName}
-                      className={`flex justify-between items-center ${isMobile ? 'flex-col items-start space-y-1' : ''}`}
+                      className='flex flex-row justify-between items-start md:items-center'
                     >
                       <div>
                         <span className={`text-gray-800 ${isMobile ? 'text-sm font-medium' : ''}`}>
@@ -467,13 +467,7 @@ function CheckoutSuccessContent() {
 
         {/* Action Buttons */}
         <div className={`flex gap-4 justify-center mt-8 ${isMobile ? 'flex-col' : 'flex-col sm:flex-row'}`}>
-          <Button
-            size={isMobile ? "default" : "lg"}
-            className={`bg-blue-600 hover:bg-blue-700 text-white ${isMobile ? 'w-full py-3 text-base' : 'px-8 py-3 text-lg'}`}
-          >
-            Ver y Guardar Boletos
-          </Button>
-          <Link href="/eventos">
+          <Link href="/">
             <Button
               variant="outline"
               size={isMobile ? "default" : "lg"}
