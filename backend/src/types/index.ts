@@ -15,10 +15,11 @@ export interface TicketData {
   movementId: string;
   zona: string;
   fila: string;
-  asiento: number;
+  asiento: string;
   precio: number;
   qrCode: string;
   barCode: string;
+  displayOrderNumber: string;
   eventInfo: EventInfo;
   buyerInfo: BuyerInfo;
 }
@@ -74,7 +75,7 @@ export interface QRCodeData {
   movementId: string;
   zona?: string;
   fila?: string;
-  asiento?: number;
+  asiento?: string;
   timestamp: number;
   type: "ticket";
 }

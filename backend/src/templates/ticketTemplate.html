@@ -31,18 +31,24 @@
   }
 
   /* Aplicar fuentes a las clases */
-  .font-gontserrat {
-    font-family: 'Gontserrat', sans-serif;
-  }
-
   .font-dazzle {
     font-family: 'DazzleUnicase', sans-serif;
   }
 
+  .font-gontserrat {
+    font-family: 'Gontserrat', sans-serif;
+  }
+
   /* Estilos adicionales para compatibilidad con PDF */
   body {
+    background-color: #ffffff;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
+    width: 1000px;
+    height: 320px;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
   }
 </style>
 
@@ -54,17 +60,17 @@
 </div>
 
 </head>
-<body class="bg-gray-100 p-8">
-  <div class="rounded-lg flex justify-center">
+<body class="bg-gray-100">
+  <div class="w-full h-full p-0 m-0">
     <div
       id="ticket"
       class="bg-[#E8F8EE] border-2 border-purple-500 rounded-lg border-dashed"
-      style="width:100%; max-width:800px; height:300px; display:flex; overflow:hidden;"
+      style="width:1000px; height:300px; display:flex; overflow:hidden;"
     >
       <!-- Contenido central -->
-      <div class="flex-grow py-4 px-4 flex flex-col relative font-dazzle text-[#3b01c9]">
+      <div class="flex-grow py-4 px-4 flex flex-col relative font-gontserrat text-[#3b01c9]">
         <!-- Título y recinto -->
-        <div class="text-4xl font-bold mb-4 font-gontserrat">
+        <div class="text-4xl font-bold mb-4 font-dazzle">
           <!-- EVENT_NAME_PLACEHOLDER -->
           <div class="text-[18px] leading-[1.1] font-dazzle font-bold max-w-3/4">
             <!-- VENUE_NAME_PLACEHOLDER -->
@@ -72,43 +78,43 @@
         </div>
         
         <!-- Fecha, hora y ciudad -->
-        <div class="text-[16px] text-black mb-20">
+        <div class="text-[16px] text-black mb-20 font-gontserrat">
           <p class="mb-1"><!-- CITY_PLACEHOLDER --></p>
           <!-- DATE_PLACEHOLDER -->
           <p><!-- TIME_PLACEHOLDER --></p>
         </div>
         
         <!-- Detalles con separadores -->
-        <div class="flex items-center space-x-4 text-black">
+        <div class="flex items-center space-x-4 text-black font-gontserrat">
           <div class="text-center">
             <div class="text-xs">Precio</div>
-            <div class="text-[16px] font-bold"><!-- PRICE_PLACEHOLDER --></div>
+            <div class="text-[16px] font-bold uppercase"><!-- PRICE_PLACEHOLDER --></div>
           </div>
           <img src="../../../public/Star_Morado.svg" alt="Separador" width="10" height="10">
           <div class="text-center">
             <div class="text-xs">Orden</div>
-            <div class="text-[16px] font-bold"><!-- ORDER_PLACEHOLDER --></div>
+            <div class="text-[16px] font-bold" style="max-width: 6ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><!-- ORDER_PLACEHOLDER --></div>
           </div>
           <img src="../../../public/Star_Morado.svg" alt="Separador" width="10" height="10">
           <div class="text-center">
             <div class="text-xs">Tipo</div>
-            <div class="text-[16px] font-bold"><!-- TYPE_PLACEHOLDER --></div>
+            <div class="text-[16px] font-bold uppercase"><!-- TYPE_PLACEHOLDER --></div>
           </div>
           <img src="../../../public/Star_Morado.svg" alt="Separador" width="10" height="10">
           <div class="text-center">
             <div class="text-xs">Sección</div>
-            <div class="text-[16px] font-bold"><!-- SECTION_PLACEHOLDER --></div>
+            <div class="text-[16px] font-bold uppercase"><!-- SECTION_PLACEHOLDER --></div>
           </div>
           <img src="../../../public/Star_Morado.svg" alt="Separador" width="10" height="10">
           <div class="text-center">
             <div class="text-xs">Asiento</div>
-            <div class="text-[14px] font-bold"><!-- SEAT_PLACEHOLDER --></div>
+            <div class="text-[16px] font-bold uppercase"><!-- SEAT_PLACEHOLDER --></div>
           </div>
         </div>
       </div>
 
       <!-- Columna derecha -->
-      <div class="w-auto p-1 mr-6 font-dazzle text-center space-y-1 mt-4">
+      <div class="w-auto p-1 mr-6 font-gontserrat text-center space-y-1 mt-4">
         <div class="flex gap-4">
           <img src="../../../public/Logo_Morado.svg" alt="Logo Astral" width="80" height="50">
           <div class="flex flex-col items-start">

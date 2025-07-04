@@ -41,10 +41,10 @@ export class TicketService {
 
       // 2. Obtener información del evento si existe event_id
       let eventInfo: EventInfo = {
-        nombre: "Evento Principal",
-        fecha: new Date().toLocaleDateString("es-ES"),
-        hora: "20:00",
-        lugar: "Venue Principal",
+        nombre: "ACORDEONAZO",
+        fecha: "Viernes 18 de Julio del 2025",
+        hora: "20:00 hrs.",
+        lugar: "CENTRO DE ESPECTACULOS CD. VICTORIA",
       };
 
       if (movementData.event_id) {
@@ -52,12 +52,10 @@ export class TicketService {
         if (eventDoc.exists) {
           const eventData = eventDoc.data();
           eventInfo = {
-            nombre: eventData?.nombre || "Evento Principal",
-            fecha: eventData?.fecha ?
-              eventData.fecha.toDate().toLocaleDateString("es-ES") :
-              new Date().toLocaleDateString("es-ES"),
-            hora: eventData?.hora || "20:00",
-            lugar: eventData?.lugar || "Venue Principal",
+            nombre: "ACORDEONAZO",
+            fecha: "Viernes 18 de Julio del 2025",
+            hora: "20:00 hrs.",
+            lugar: "CENTRO DE ESPECTACULOS CD. VICTORIA",
           };
         }
       }
@@ -176,6 +174,13 @@ export class TicketService {
       browser = await puppeteer.launch(puppeteerConfig);
       const page = await browser.newPage();
 
+      // Configurar viewport para coincidir con las dimensiones del PDF
+      await page.setViewport({
+        width: 1100,
+        height: 350,
+        deviceScaleFactor: 1
+      });
+
       // Template HTML para los tickets
       const htmlTemplate = this.getTicketHTMLTemplate();
       const template = handlebars.compile(htmlTemplate);
@@ -183,10 +188,16 @@ export class TicketService {
 
       await page.setContent(html, { waitUntil: "networkidle0" });
 
-      const pdfOptions: PDFOptions = {
-        format: "A4",
+      const pdfOptions = {
+        width: '1100px',
+        height: '350px',
         printBackground: true,
-        margin: { top: "20px", bottom: "20px", left: "20px", right: "20px" },
+        margin: {
+          top: '0px',
+          bottom: '0px',
+          left: '0px',
+          right: '0px'
+        }
       };
 
       const pdfBuffer = await page.pdf(pdfOptions);
@@ -274,10 +285,11 @@ export class TicketService {
           movementId: movementId,
           zona: ticketData?.zona || "",
           fila: ticketData?.fila || "",
-          asiento: ticketData?.asiento || 0,
+          asiento: ticketData?.asiento || "",
           precio: movementTicket.precio_vendido,
           qrCode: "", // Se llenará después
           barCode: "", // Se llenará después
+          displayOrderNumber: "", // Se llenará después
           eventInfo: { // Se llenará después
             nombre: "",
             fecha: "",
@@ -319,11 +331,16 @@ export class TicketService {
       };
 
       const qrCode = await QRCode.toDataURL(JSON.stringify(qrData));
+      const fullBarCode = `${movementData.id}-${ticket.id}`;
+      
+      // Crear versión truncada para mostrar (solo primeros 6 caracteres)
+      const displayOrderNumber = fullBarCode.substring(0, 6);
 
       ticketsWithCodes.push({
         ...ticket,
         qrCode,
-        barCode: `${movementData.id}-${ticket.id}`,
+        barCode: fullBarCode,
+        displayOrderNumber,
         eventInfo,
         buyerInfo,
       });
@@ -427,7 +444,7 @@ export class TicketService {
     const priceTemplate = '$ {{precio}}';
     dynamicContent = dynamicContent.replace(/<!-- PRICE_PLACEHOLDER -->/g, priceTemplate);
     
-    dynamicContent = dynamicContent.replace(/<!-- ORDER_PLACEHOLDER -->/g, '{{barCode}}');
+    dynamicContent = dynamicContent.replace(/<!-- ORDER_PLACEHOLDER -->/g, '{{displayOrderNumber}}');
     dynamicContent = dynamicContent.replace(/<!-- TYPE_PLACEHOLDER -->/g, '{{zona}}');
     dynamicContent = dynamicContent.replace(/<!-- SECTION_PLACEHOLDER -->/g, '{{zona}}');
     dynamicContent = dynamicContent.replace(/<!-- SEAT_PLACEHOLDER -->/g, '{{fila}}{{asiento}}');
@@ -495,7 +512,7 @@ export class TicketService {
               <p>Código QR</p>
             </div>
             <div class="bar-code">
-              <p style="font-family: monospace; font-size: 14px; font-weight: bold; letter-spacing: 2px; border: 2px solid #333; padding: 10px; background: white; color: black; border-radius: 5px;">{{barCode}}</p>
+              <p style="font-family: monospace; font-size: 14px; font-weight: bold; letter-spacing: 2px; border: 2px solid #333; padding: 10px; background: white; color: black; border-radius: 5px;">{{displayOrderNumber}}</p>
               <p>Código de Barras</p>
             </div>
           </div>

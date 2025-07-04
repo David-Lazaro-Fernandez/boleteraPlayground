@@ -19,7 +19,6 @@ export class EmailService {
     const smtpUser = process.env.SMTP_USER;
     const smtpPass = process.env.SMTP_PASS;
 
-    console.log(smtpHost, smtpPort, smtpUser, smtpPass);
     if (!smtpHost || !smtpUser || !smtpPass) {
       throw new Error("SMTP configuration is incomplete. Please set SMTP_HOST, SMTP_USER, and SMTP_PASS environment variables");
     }
