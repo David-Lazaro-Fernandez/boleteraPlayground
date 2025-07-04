@@ -54,14 +54,17 @@ COPY backend/package.json backend/package-lock.json ./
 # 4) Instala deps de Node respetando el lockfile
 RUN npm ci --prefer-offline --no-audit --progress=false
 
-# 5) Copia el resto del código del backend
+# 5) Copia el archivo firebase.json desde la raíz del proyecto
+COPY firebase.json /app/
+
+# 6) Copia el resto del código del backend
 COPY backend ./
 
-# 6) (Opcional) Si usas TypeScript, compila
+# 7) (Opcional) Si usas TypeScript, compila
 RUN npm run build
 
-# 7) Expone el puerto que usa tu app
+# 8) Expone el puerto que usa tu app
 EXPOSE 5102
 
-# 8) Comando por defecto
+# 9) Comando por defecto
 CMD ["npm", "start"]
