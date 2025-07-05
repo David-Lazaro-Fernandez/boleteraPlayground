@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useCart } from "@/hooks/use-cart";
+import { useCart } from "@/lib/hooks/use-cart";
 import { CartSummaryComponent } from "./cart-summary";
 import { CheckoutButton } from "./checkout-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

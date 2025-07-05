@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/lib/hooks/use-auth";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;

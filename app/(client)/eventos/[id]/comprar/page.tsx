@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { Event, getEvent } from "@/lib/firebase/events";
 import { Venue, getVenue } from "@/lib/firebase/venues";
 import { PalenqueSeatMap } from "@/components/palenque/palenque-seat-map";
-import { useMobileDetection } from "@/hooks/use-mobile-detection";
+import { useMobileDetection } from "@/lib/hooks/use-mobile-detection";
 
 // Componente que muestra el mapa de asientos con información del evento
 function EventSeatMap({ event, venue, eventId }: { event: Event; venue: Venue | null; eventId: string }) {

@@ -7,13 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/lib/hooks/use-toast";
 import { Event, getEvent } from "@/lib/firebase/events";
 import { Venue, getVenue } from "@/lib/firebase/venues";
-import { useCart } from "@/hooks/use-cart";
+import { useCart } from "@/lib/hooks/use-cart";
 import { CartSummaryComponent } from "@/components/stripe/cart-summary";
 import { CheckoutButton } from "@/components/stripe/checkout-button";
-import { useMobileDetection } from "@/hooks/use-mobile-detection";
+import { useMobileDetection } from "@/lib/hooks/use-mobile-detection";
 import {
   ArrowLeft,
   Mail,

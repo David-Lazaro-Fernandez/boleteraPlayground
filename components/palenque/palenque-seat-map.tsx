@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { ref as storageRef, getDownloadURL } from "firebase/storage";
 import { storage } from "@/lib/firebase/config";
-import { useMobileDetection } from "@/hooks/use-mobile-detection";
+import { useMobileDetection } from "@/lib/hooks/use-mobile-detection";
 
 import {
   GeneralSection,

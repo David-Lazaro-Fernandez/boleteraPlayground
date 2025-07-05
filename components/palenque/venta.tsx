@@ -18,7 +18,7 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import {} from "next/navigation";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/lib/hooks/use-toast";
 import { Logo } from "@/components/prueba-boleto/logo";
 import { Download } from "lucide-react";
 import Link from "next/link";

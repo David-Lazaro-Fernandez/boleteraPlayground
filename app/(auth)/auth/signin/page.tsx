@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Eye, EyeOff, Mail, Lock, LogIn } from "lucide-react";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/lib/hooks/use-auth";
 
 export default function SignInPage() {
   const router = useRouter();

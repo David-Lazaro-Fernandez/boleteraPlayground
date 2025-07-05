@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { FileText, Printer, Download, Settings } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/lib/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Logo } from "@/components/prueba-boleto/logo";
 import Stars from "@/components/palenque/stars";

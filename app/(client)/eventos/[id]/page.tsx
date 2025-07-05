@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { Event, getEvent } from "@/lib/firebase/events";
 import { Venue, getVenue } from "@/lib/firebase/venues";
-import { useMobileDetection } from "@/hooks/use-mobile-detection";
+import { useMobileDetection } from "@/lib/hooks/use-mobile-detection";
 
 export default function EventDetailPage() {
   const params = useParams();

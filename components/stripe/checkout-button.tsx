@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/lib/hooks/use-toast";
 import { CartSummary, EventInfo, CustomerData } from "@/lib/stripe/types";
 import { createCheckoutSession } from "@/lib/stripe/checkout";
 import { Loader2, CreditCard } from "lucide-react";

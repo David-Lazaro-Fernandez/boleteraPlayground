@@ -22,7 +22,7 @@ import { getVenue, Venue } from "@/lib/firebase/venues";
 import { Header } from "@/components/landing/header";
 import { Footer } from "@/components/landing/footer";
 import { CartItem } from "@/lib/stripe/types";
-import { useMobileDetection } from "@/hooks/use-mobile-detection";
+import { useMobileDetection } from "@/lib/hooks/use-mobile-detection";
 
 interface PaymentData {
   customerEmail: string;

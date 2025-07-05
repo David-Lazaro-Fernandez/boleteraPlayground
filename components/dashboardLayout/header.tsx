@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Settings, User, LogOut } from "lucide-react";
 import Link from "next/link";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/lib/hooks/use-auth";
 import { useRouter } from "next/navigation";
 
 interface HeaderProps {
