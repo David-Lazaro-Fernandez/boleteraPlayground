@@ -256,7 +256,7 @@ export default function EventDetailPage() {
               <Separator className="my-4" />
 
               <div className="space-y-3">
-                <Button
+                {/* <Button
                     className={`w-full bg-blue-600 hover:bg-blue-700 ${isMobile ? 'py-3' : ''}`}
                     size={isMobile ? "default" : "lg"}
                     disabled={event.estado_venta === 'agotado' || event.estado_venta === 'finalizado'}
@@ -266,7 +266,7 @@ export default function EventDetailPage() {
                     {event.estado_venta === 'agotado' ? 'Agotado' :
                       event.estado_venta === 'finalizado' ? 'Finalizado' :
                         'Comprar Boletos'}
-                  </Button>
+                  </Button> */}
 
                 {event.estado_venta === "en_preventa" && (
                   <p className={`text-center text-yellow-600 ${isMobile ? 'text-xs' : 'text-sm'}`}>
