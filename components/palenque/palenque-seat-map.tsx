@@ -34,7 +34,7 @@ import {
   VIP2Section,
   VIP3Section,
   VIP4Section,
-} from "./new-sections";
+} from "./sections";
 
 interface CreatedSeat {
   id: string;
