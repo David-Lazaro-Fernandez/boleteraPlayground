@@ -29,18 +29,20 @@ app.use(helmet({
   },
 }));
 
-// Configurar CORS
+// Configurar CORS para API pública
 const corsOptions = {
-  origin: process.env.CORS_ORIGIN?.split(",") || ["http://localhost:3000"],
-  credentials: true,
+  origin: true, 
+  credentials: false,
   optionsSuccessStatus: 200,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
 };
 app.use(cors(corsOptions));
 
 // Rate limiting
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 100, // máximo 100 requests por ventana
+  windowMs: 15 * 60 * 1000, 
+  max: 100,
   message: {
     success: false,
     message: "Too many requests, please try again later.",
