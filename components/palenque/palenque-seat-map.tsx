@@ -117,7 +117,7 @@ const zoneConfig: Record<string, ZoneInfo> = {
     name: "General",
     price: 300,
     color: "#10B981",
-    selectable: false,
+    selectable: true,
     component: GeneralSection,
   },
   "Oro 1": {
@@ -457,6 +457,12 @@ export function PalenqueSeatMap({
   const handleZoneClick = (zoneName: string) => {
     if (!zoneConfig[zoneName]?.selectable) return;
 
+    // Si es la zona General, agregar boleto general directamente
+    if (zoneName === "General") {
+      addGeneralTicket();
+      return;
+    }
+
     setSelectedZone(zoneName);
 
     const coordinates = zoneCoordinates[zoneName];
@@ -577,7 +583,7 @@ export function PalenqueSeatMap({
   };
 
   return (
-    <div className="flex h-screen bg-gray-50 mb-24">
+    <div className="flex h-screen bg-gray-50">
       {/* Panel lateral izquierdo */}
       <div className="w-96 bg-white shadow-xl overflow-y-auto hidden sm:block">
         {/* Información del evento */}
@@ -1378,28 +1384,7 @@ export function PalenqueSeatMap({
                 )}
               </svg>
             </div>
-            {/* Botón de agregar boleto general debajo del mapa solo para móviles */}
-            {isMobile && (
-              <div className="mt-4 px-2 space-y-4">
-                <div className="bg-white p-4 rounded-xl shadow-lg">
-                  <div className="flex items-center justify-between mb-2">
-                    <div>
-                      <h3 className="font-semibold text-gray-900">Zona General</h3>
-                      <p className="text-sm text-gray-600">Entrada General sin asiento asignado</p>
-                    </div>
-                    <div className="text-lg font-bold text-green-600">
-                      $300 MXN
-                    </div>
-                  </div>
-                  <Button
-                    onClick={addGeneralTicket}
-                    className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-4 rounded-lg"
-                  >
-                    Agregar Boleto General
-                  </Button>
-                </div>
-              </div>
-            )}
+
           </CardContent>
         </Card>
       </div>
