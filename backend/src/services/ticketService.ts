@@ -123,10 +123,12 @@ export class TicketService {
    */
   private async generateTicketsPDF(tickets: TicketData[]): Promise<Buffer> {
     let browser: puppeteer.Browser | undefined;
+    let page: puppeteer.Page | undefined;
     try {
       const puppeteerConfig: PuppeteerConfig = {
-        headless: true,
+        headless: true, // Usar headless estándar
         executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
+        timeout: 30000, // 30 segundos timeout
         args: [
           "--no-sandbox",
           "--disable-setuid-sandbox",
@@ -165,29 +167,61 @@ export class TicketService {
           "--disable-partial-raster",
           "--disable-skia-runtime-opts",
           "--disable-system-font-check",
-          "--disable-features=TranslateUI",
           "--disable-features=BlinkGenPropertyTrees",
+          "--memory-pressure-off",
+          "--max_old_space_size=4096",
+          "--disable-feature=VizDisplayCompositor",
+          "--disable-features=AudioServiceOutOfProcess",
           "--disable-features=VizDisplayCompositor",
+          "--force-color-profile=srgb",
+          "--disable-background-mode",
+          "--disable-renderer-accessibility",
+          "--disable-permissions-api",
+          "--disable-speech-api",
         ],
       };
 
+      console.log("Launching browser with config...");
       browser = await puppeteer.launch(puppeteerConfig);
-      const page = await browser.newPage();
-
-      // Configurar viewport para coincidir con las dimensiones del PDF
-      await page.setViewport({
-        width: 1100,
-        height: 350,
-        deviceScaleFactor: 1
-      });
+      
+      // Verificar que el browser esté conectado
+      if (!browser.isConnected()) {
+        throw new Error("Browser failed to connect");
+      }
+      
+      console.log("Creating new page...");
+      page = await browser.newPage();
+      
+      // Dar tiempo para que la página se estabilice
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Configurar viewport con manejo de errores robusto
+      try {
+        console.log("Setting viewport...");
+        await page.setViewport({
+          width: 1100,
+          height: 350,
+          deviceScaleFactor: 1
+        });
+        console.log("Viewport set successfully");
+      } catch (viewportError) {
+        console.warn("Failed to set viewport, continuing without it:", viewportError);
+        // Continuar sin viewport si falla
+      }
 
       // Template HTML para los tickets
+      console.log("Generating HTML template...");
       const htmlTemplate = this.getTicketHTMLTemplate();
       const template = handlebars.compile(htmlTemplate);
       const html = template({ tickets });
 
-      await page.setContent(html, { waitUntil: "networkidle0" });
+      console.log("Setting page content...");
+      await page.setContent(html, { 
+        waitUntil: "networkidle0",
+        timeout: 30000 
+      });
 
+      console.log("Generating PDF...");
       const pdfOptions = {
         width: '1100px',
         height: '350px',
@@ -197,17 +231,31 @@ export class TicketService {
           bottom: '0px',
           left: '0px',
           right: '0px'
-        }
+        },
+        timeout: 30000
       };
 
       const pdfBuffer = await page.pdf(pdfOptions);
+      console.log("PDF generated successfully");
       return Buffer.from(pdfBuffer);
     } catch (error) {
       console.error("Error generating PDF:", error);
       throw error;
     } finally {
-      if (browser) {
-        await browser.close();
+      try {
+        if (page && !page.isClosed()) {
+          await page.close();
+        }
+      } catch (pageCloseError) {
+        console.warn("Error closing page:", pageCloseError);
+      }
+      
+      try {
+        if (browser && browser.isConnected()) {
+          await browser.close();
+        }
+      } catch (browserCloseError) {
+        console.warn("Error closing browser:", browserCloseError);
       }
     }
   }
