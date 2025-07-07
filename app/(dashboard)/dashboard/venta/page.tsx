@@ -2,7 +2,7 @@
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState, Suspense } from "react";
 import { Venta } from "@/components/palenque/venta";
-import type { CreatedSeat } from "@/types/seat";
+import type { CreatedSeat } from "@/app/types/seat";
 import { dazzleUnicase, gontserrat } from "@/lib/fonts";
 
 // Create a client component that uses useSearchParams
