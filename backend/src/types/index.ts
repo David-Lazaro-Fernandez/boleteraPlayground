@@ -131,7 +131,7 @@ export interface ProcessPaymentRequest {
  * Configuración de Puppeteer
  */
 export interface PuppeteerConfig {
-  headless: boolean | "shell";
+  headless: boolean | "new";
   args: string[];
   executablePath?: string;
   timeout?: number;
