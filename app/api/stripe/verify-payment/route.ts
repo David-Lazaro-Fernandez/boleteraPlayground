@@ -5,7 +5,8 @@ import {
   createTickets, 
   createMovementTickets, 
   updateMovementStatus, 
-  processPaymentWithBackend 
+  processPaymentWithBackend,
+  getMovementBySessionId
 } from "@/lib/firebase/transactions";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -59,60 +60,72 @@ export async function POST(request: NextRequest) {
     let movementId = null;
     if (success && session.metadata) {
       try {
-        // Parsear los items del carrito
-        const cartItems = JSON.parse(session.metadata.cartItems || "[]");
+        // Verificar si ya existe un movimiento para este session_id
+        const existingMovement = await getMovementBySessionId(sessionId);
         
-        // Crear movimiento en Firestore
-        movementId = await createMovement({
-          total: parseFloat(session.metadata.total || "0"),
-          subtotal: parseFloat(session.metadata.subtotal || "0"),
-          cargo_servicio: parseFloat(session.metadata.serviceCharge || "0"),
-          tipo_pago: paymentMethodInfo?.card?.brand || "card",
-          buyer_email: session.metadata.customerEmail || session.customer_details?.email || "",
-          buyer_name: session.metadata.customerName || session.customer_details?.name || "",
-          event_id: session.metadata.eventId || "",
-          payment_intent_id: paymentIntentId,
-          session_id: sessionId,
-          metadata: session.metadata
-        });
-
-        // Crear tickets en Firestore
-        const ticketIds = await createTickets(cartItems);
-
-        // Crear relaciones movement_tickets
-        await createMovementTickets(movementId, ticketIds, cartItems);
-
-        // Actualizar el estado del movimiento a pagado
-        await updateMovementStatus(movementId, "paid", {
-          payment_method: paymentMethodInfo,
-          stripe_session_id: sessionId,
-          stripe_payment_intent_id: paymentIntentId
-        });
-
-        // Llamar al backend Express para procesar tickets y enviar emails
-        const backendResult = await processPaymentWithBackend(movementId, "paid");
-        
-        if (backendResult.success) {
-          console.log("Backend processing successful:", backendResult.data);
+        if (existingMovement) {
+          // El movimiento ya existe, usar el ID existente
+          movementId = existingMovement.id;
+          console.log("Movement already exists for session_id:", sessionId, "movement_id:", movementId);
         } else {
-          console.warn("Backend processing failed:", backendResult.error);
-          console.warn("Error type:", backendResult.errorType);
+          // No existe, crear un nuevo movimiento
+          console.log("Creating new movement for session_id:", sessionId);
           
-          // Si el backend no responde, continuar con el procesamiento
-          // El pago ya fue exitoso en Stripe y los datos se guardaron en Firestore
-          if (backendResult.errorType === 'not_found') {
-            console.log("Backend endpoint not found - continuing without backend processing");
-          } else if (backendResult.errorType === 'network') {
-            console.log("Backend network error - continuing without backend processing");
+          // Parsear los items del carrito
+          const cartItems = JSON.parse(session.metadata.cartItems || "[]");
+          
+          // Crear movimiento en Firestore
+          movementId = await createMovement({
+            total: parseFloat(session.metadata.total || "0"),
+            subtotal: parseFloat(session.metadata.subtotal || "0"),
+            cargo_servicio: parseFloat(session.metadata.serviceCharge || "0"),
+            tipo_pago: paymentMethodInfo?.card?.brand || "card",
+            buyer_email: session.metadata.customerEmail || session.customer_details?.email || "",
+            buyer_name: session.metadata.customerName || session.customer_details?.name || "",
+            event_id: session.metadata.eventId || "",
+            payment_intent_id: paymentIntentId,
+            session_id: sessionId,
+            metadata: session.metadata
+          });
+
+          // Crear tickets en Firestore
+          const ticketIds = await createTickets(cartItems);
+
+          // Crear relaciones movement_tickets
+          await createMovementTickets(movementId, ticketIds, cartItems);
+
+          // Actualizar el estado del movimiento a pagado
+          await updateMovementStatus(movementId, "paid", {
+            payment_method: paymentMethodInfo,
+            stripe_session_id: sessionId,
+            stripe_payment_intent_id: paymentIntentId
+          });
+
+          // Llamar al backend Express para procesar tickets y enviar emails
+          const backendResult = await processPaymentWithBackend(movementId, "paid");
+          
+          if (backendResult.success) {
+            console.log("Backend processing successful:", backendResult.data);
+          } else {
+            console.warn("Backend processing failed:", backendResult.error);
+            console.warn("Error type:", backendResult.errorType);
+            
+            // Si el backend no responde, continuar con el procesamiento
+            // El pago ya fue exitoso en Stripe y los datos se guardaron en Firestore
+            if (backendResult.errorType === 'not_found') {
+              console.log("Backend endpoint not found - continuing without backend processing");
+            } else if (backendResult.errorType === 'network') {
+              console.log("Backend network error - continuing without backend processing");
+            }
           }
+          
+          console.log("Payment processing completed:", {
+            movementId,
+            ticketCount: ticketIds.length,
+            backendResult: backendResult.success,
+            backendError: backendResult.success ? null : backendResult.error
+          });
         }
-        
-        console.log("Payment processing completed:", {
-          movementId,
-          ticketCount: ticketIds.length,
-          backendResult: backendResult.success,
-          backendError: backendResult.success ? null : backendResult.error
-        });
 
       } catch (error) {
         console.error("Error processing payment:", error);

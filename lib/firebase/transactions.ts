@@ -194,6 +194,37 @@ export async function getMovement(
   }
 }
 
+/**
+ * Buscar un movimiento por session_id de Stripe
+ */
+export async function getMovementBySessionId(
+  sessionId: string,
+): Promise<Movement | null> {
+  try {
+    const movementsRef = collection(db, "movements");
+    const q = query(
+      movementsRef,
+      where("session_id", "==", sessionId),
+      limit(1)
+    );
+    const querySnapshot = await getDocs(q);
+
+    if (!querySnapshot.empty) {
+      const doc = querySnapshot.docs[0];
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        fecha: data.fecha instanceof Timestamp ? data.fecha.toDate() : data.fecha,
+      } as Movement;
+    }
+    return null;
+  } catch (error) {
+    console.error("Error getting movement by session_id:", error);
+    throw error;
+  }
+}
+
 // Funciones para Boletos
 export async function createTickets(items: any[]): Promise<string[]> {
   try {

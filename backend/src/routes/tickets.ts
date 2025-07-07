@@ -270,18 +270,39 @@ router.get(
 
       const ticketData = ticketDoc.data();
 
-      // Aquí podrías agregar lógica adicional de validación
-      // Por ejemplo, verificar si el ticket ya fue usado, si está dentro del horario del evento, etc.
+      // Verificar si el ticket ya fue leído/usado
+      if (ticketData?.is_read === true || ticketData?.scanned_at) {
+        return res.status(400).json({
+          success: false,
+          message: "Ticket has already been read",
+          data: {
+            ticketId,
+            zona: ticketData?.zona,
+            fila: ticketData?.fila,
+            asiento: ticketData?.asiento,
+            scanned_at: ticketData?.scanned_at,
+            already_read: true,
+          },
+        });
+      }
+
+      // Marcar el ticket como leído
+      await db.collection("tickets").doc(ticketId!).update({
+        is_read: true,
+        scanned_at: new Date(),
+        updated_at: new Date(),
+      });
 
       return res.json({
         success: true,
-        message: "Ticket is valid",
+        message: "Ticket is valid and has been marked as read",
         data: {
           ticketId,
           zona: ticketData?.zona,
           fila: ticketData?.fila,
           asiento: ticketData?.asiento,
           valid: true,
+          scanned_at: new Date(),
         },
       });
     } catch (error) {
