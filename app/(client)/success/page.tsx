@@ -19,8 +19,6 @@ import Image from "next/image";
 import { verifyPayment } from "@/lib/stripe/checkout";
 import { getEvent, Event } from "@/lib/firebase/events";
 import { getVenue, Venue } from "@/lib/firebase/venues";
-import { Header } from "@/components/landing/header";
-import { Footer } from "@/components/landing/footer";
 import { CartItem } from "@/lib/stripe/types";
 import { useMobileDetection } from "@/lib/hooks/use-mobile-detection";
 
@@ -261,14 +259,12 @@ function CheckoutSuccessContent() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800">
-        <Header />
         <div className="flex items-center justify-center py-20">
           <div className="text-center text-white">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
             <p className="text-lg">Verificando tu compra...</p>
           </div>
         </div>
-        <Footer />
       </div>
     );
   }
@@ -276,7 +272,6 @@ function CheckoutSuccessContent() {
   if (error) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800">
-        <Header />
         <div className="flex items-center justify-center py-20">
           <Card className="w-full max-w-md">
             <CardContent className="p-6 text-center">
@@ -295,7 +290,6 @@ function CheckoutSuccessContent() {
             </CardContent>
           </Card>
         </div>
-        <Footer />
       </div>
     );
   }
@@ -303,13 +297,13 @@ function CheckoutSuccessContent() {
   if (!paymentData || !event) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800">
-        <Header />
+
         <div className="flex items-center justify-center py-20">
           <div className="text-center text-white">
             <p className="text-lg">No se encontró información de la compra</p>
           </div>
         </div>
-        <Footer />
+
       </div>
     );
   }
@@ -485,8 +479,6 @@ function CheckoutSuccessContent() {
           </p>
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 }
