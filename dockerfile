@@ -1,85 +1,43 @@
-# Usa la imagen base de Node 18
-FROM node:18-slim
+# Dockerfile alternativo usando imagen oficial de Puppeteer
+# Incluye: Node.js + Puppeteer + Chrome for Testing (todo en uno)
+FROM ghcr.io/puppeteer/puppeteer:24.12.0
 
-# 1) Instala deps de SO necesarias (Git, Puppeteer libs, curl…)
+# Cambiar a root para instalar dependencias adicionales
+USER root
+
+# Instalar dependencias adicionales necesarias para tu app
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     curl \
-    wget \
-    gnupg \
     ca-certificates \
-    fonts-liberation \
-    libappindicator3-1 \
-    libasound2 \
-    libatk-bridge2.0-0 \
-    libatk1.0-0 \
-    libc6 \
-    libcairo2 \
-    libcups2 \
-    libdbus-1-3 \
-    libexpat1 \
-    libfontconfig1 \
-    libgbm1 \
-    libgcc1 \
-    libglib2.0-0 \
-    libgtk-3-0 \
-    libnspr4 \
-    libnss3 \
-    libpango-1.0-0 \
-    libpangocairo-1.0-0 \
-    libstdc++6 \
-    libx11-6 \
-    libx11-xcb1 \
-    libxcb1 \
-    libxcomposite1 \
-    libxcursor1 \
-    libxdamage1 \
-    libxext6 \
-    libxfixes3 \
-    libxi6 \
-    libxrandr2 \
-    libxrender1 \
-    libxss1 \
-    libxtst6 \
-    lsb-release \
-    xdg-utils \
-    libdrm2 \
-    libxkbcommon0 \
-    libatspi2.0-0 \
-  && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/*
 
-# 2) Instalar Google Chrome usando el método moderno
-RUN curl -fsSL https://dl-ssl.google.com/linux/linux_signing_key.pub | gpg --dearmor -o /usr/share/keyrings/google-chrome-keyring.gpg \
-  && echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome-keyring.gpg] http://dl.google.com/linux/chrome/deb/ stable main" \
-     > /etc/apt/sources.list.d/google-chrome.list \
-  && apt-get update \
-  && apt-get install -y --no-install-recommends google-chrome-stable \
-  && rm -rf /var/lib/apt/lists/*
+# Crear directorio de la app y cambiar permisos
+RUN mkdir -p /app/backend && chown -R pptruser:pptruser /app
 
-# 3) Configurar entorno para Puppeteer
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
-    PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable
+# Cambiar a usuario pptruser (usuario creado por la imagen oficial)
+USER pptruser
 
-# 4) Directorio de trabajo dentro del contenedor
+# Establecer directorio de trabajo
 WORKDIR /app/backend
 
-# 5) Copia sólo los package.json de backend y lockfile
-COPY backend/package.json backend/package-lock.json ./
+# Copiar package files
+COPY --chown=pptruser:pptruser backend/package.json backend/package-lock.json ./
 
-# 6) Instala deps de Node respetando el lockfile
+# Instalar dependencias de Node.js
 RUN npm ci --prefer-offline --no-audit --progress=false
 
-# 7) Copia el archivo firebase.json desde la raíz del proyecto
-COPY firebase.json /app/
+# Copiar firebase.json si es necesario
+COPY --chown=pptruser:pptruser firebase.json /app/
 
-# 8) Copia el resto del código del backend
-COPY backend ./
+# Copiar código fuente
+COPY --chown=pptruser:pptruser backend ./
 
-# 9) (Opcional) Si usas TypeScript, compila
+# Compilar TypeScript
 RUN npm run build
 
-# 10) Expone el puerto que usa tu app
+# Exponer puerto
 EXPOSE 5102
 
-# 11) Comando por defecto
-CMD ["npm", "start"]
+# La imagen oficial ya maneja el init process correctamente
+CMD ["npm", "start"] 
