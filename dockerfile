@@ -33,6 +33,9 @@ COPY --chown=pptruser:pptruser firebase.json /app/
 # Copiar código fuente
 COPY --chown=pptruser:pptruser backend ./
 
+#Install Browser
+RUN npx puppeteer browsers install
+
 # Compilar TypeScript
 RUN npm run build
 
