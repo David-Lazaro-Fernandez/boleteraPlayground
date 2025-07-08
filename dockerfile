@@ -1,6 +1,6 @@
 # Dockerfile alternativo usando imagen oficial de Puppeteer
 # Incluye: Node.js + Puppeteer + Chrome for Testing (todo en uno)
-FROM ghcr.io/puppeteer/puppeteer:24.12.0
+FROM ghcr.io/puppeteer/puppeteer:latest
 
 # Cambiar a root para instalar dependencias adicionales
 USER root
