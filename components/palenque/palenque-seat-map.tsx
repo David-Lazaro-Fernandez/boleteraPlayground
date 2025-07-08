@@ -35,7 +35,7 @@ import {
   VIP2Section,
   VIP3Section,
   VIP4Section,
-} from "./sections";
+} from "./new-sections";
 
 interface CreatedSeat {
   id: string;
@@ -1040,16 +1040,16 @@ export function PalenqueSeatMap({
               >
                 {/* Ruedo central */}
                 <circle
-                  cx={centerX}
-                  cy={centerY}
-                  r={venueConfig.ruedo.radius}
+                  cx={centerX+10}
+                  cy={centerY+10}
+                  r={venueConfig.ruedo.radius + -20}
                   fill="#1F2937"
                   stroke="#374151"
                   strokeWidth="3"
                 />
                 <text
-                  x={centerX}
-                  y={centerY - 10}
+                  x={centerX+10}
+                  y={centerY + 10}
                   textAnchor="middle"
                   fill="white"
                   fontSize="18"
@@ -1058,8 +1058,8 @@ export function PalenqueSeatMap({
                   RUEDO
                 </text>
                 <text
-                  x={centerX}
-                  y={centerY + 15}
+                  x={centerX+10}
+                  y={centerY + 25}
                   textAnchor="middle"
                   fill="white"
                   fontSize="14"
@@ -1074,43 +1074,43 @@ export function PalenqueSeatMap({
                     let transform = "";
                     switch (zoneName) {
                       case "General":
-                        transform = `translate(${centerX - 418}, ${centerY - 418})`;
+                        transform = `translate(${centerX - 407}, ${centerY - 412})`;
                         break;
                       case "Oro 1":
-                        transform = `translate(${centerX + 10}, ${centerY - 345})`;
+                        transform = `translate(${centerX - 320}, ${centerY - 335})`;
                         break;
                       case "Oro 2":
-                        transform = `translate(${centerX + 190}, ${centerY - 165})`;
+                        transform = `translate(${centerX - 310}, ${centerY - 330})`;
                         break;
                       case "Oro 3":
-                        transform = `translate(${centerX + 170}, ${centerY + 30})`;
+                        transform = `translate(${centerX - 312}, ${centerY - 330})`;
                         break;
                       case "Oro 4":
-                        transform = `translate(${centerX + 10}, ${centerY + 190})`;
+                        transform = `translate(${centerX - 315}, ${centerY - 330})`;
                         break;
                       case "Oro 5":
-                        transform = `translate(${centerX - 240}, ${centerY + 180})`;
+                        transform = `translate(${centerX - 320}, ${centerY - 330})`;
                         break;
                       case "Oro 6":
-                        transform = `translate(${centerX - 340}, ${centerY + 10})`;
+                        transform = `translate(${centerX - 325}, ${centerY - 330})`;
                         break;
                       case "Oro 7":
-                        transform = `translate(${centerX - 340}, ${centerY - 280})`;
+                        transform = `translate(${centerX - 325}, ${centerY - 330})`;
                         break;
                       case "Oro 8":
-                        transform = `translate(${centerX - 200}, ${centerY - 345})`;
+                        transform = `translate(${centerX - 325}, ${centerY - 330})`;
                         break;
                       case "VIP 1":
-                        transform = `translate(${centerX + 20}, ${centerY - 240})`;
+                        transform = `translate(${centerX - 290}, ${centerY - 312})`;
                         break;
                       case "VIP 2":
-                        transform = `translate(${centerX + 10}, ${centerY + 10})`;
+                        transform = `translate(${centerX - 295}, ${centerY - 300})`;
                         break;
                       case "VIP 3":
-                        transform = `translate(${centerX - 225}, ${centerY + 10})`;
+                        transform = `translate(${centerX - 310}, ${centerY - 290})`;
                         break;
                       case "VIP 4":
-                        transform = `translate(${centerX - 230}, ${centerY - 245})`;
+                        transform = `translate(${centerX - 320}, ${centerY - 325})`;
                         break;
                     }
 
