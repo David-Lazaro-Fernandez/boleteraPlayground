@@ -158,7 +158,7 @@ export class TicketService {
       // Configuración simplificada siguiendo mejores prácticas
       const pdfBuffer = await page.pdf({
         width: '1100px',
-        height: `${tickets.length * 600}px`, // 600px por ticket para acomodar el ticket + términos
+        height: `1300px`,
         printBackground: true,
         margin: {
           top: '20px',
