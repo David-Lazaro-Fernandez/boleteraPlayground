@@ -16,43 +16,6 @@ import {
   PDFOptions 
 } from "../types";
 
-/**
- * Función para localizar Chrome dinámicamente
- */
-function locateChrome(): string | undefined {
-  // Primero intentar usar la variable de entorno
-  const envPath = process.env.PUPPETEER_EXECUTABLE_PATH;
-  if (envPath) {
-    return envPath;
-  }
-
-  // Rutas comunes donde puede estar Chrome
-  const possiblePaths = [
-    '/usr/bin/google-chrome-stable',
-    '/usr/bin/google-chrome',
-    '/usr/bin/chromium-browser',
-    '/usr/bin/chromium',
-    // Rutas para macOS
-    '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
-    // Rutas para Windows
-    'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-    'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
-  ];
-
-  // Intentar encontrar Chrome en el sistema
-  for (const chromePath of possiblePaths) {
-    try {
-      if (fs.existsSync(chromePath)) {
-        return chromePath;
-      }
-    } catch (err) {
-      // Continuar con el siguiente path
-    }
-  }
-
-  // Si no se encuentra, dejar que Puppeteer use su Chromium por defecto
-  return undefined;
-}
 
 /**
  * Servicio principal para manejo de tickets
@@ -157,150 +120,43 @@ export class TicketService {
   }
 
   /**
-   * Generar PDF con Puppeteer
+   * Generar PDF con Puppeteer siguiendo mejores prácticas v24.12.0
    */
   private async generateTicketsPDF(tickets: TicketData[]): Promise<Buffer> {
     let browser: puppeteer.Browser | undefined;
     let page: puppeteer.Page | undefined;
     
     try {
-      // Localizar Chrome dinámicamente
-      const chromePath = locateChrome();
-      console.log("Chrome executable path:", chromePath);
-      
       const puppeteerConfig = {
-        headless: true,
-        executablePath: chromePath,
-        timeout: 60000,
-        protocolTimeout: 60000,
         args: [
           // Flags esenciales para Docker/containers
           "--no-sandbox",
-          "--disable-setuid-sandbox",
-          "--disable-dev-shm-usage",
-          
-          // Flags adicionales para estabilidad
-          "--disable-accelerated-2d-canvas",
-          "--no-first-run",
-          "--no-zygote",
-          "--single-process",
-          "--disable-gpu",
-          
-          // Flags para optimización en headless
-          "--disable-background-timer-throttling",
-          "--disable-backgrounding-occluded-windows",
-          "--disable-renderer-backgrounding",
-          "--disable-features=TranslateUI",
-          "--disable-web-security",
-          "--disable-features=VizDisplayCompositor",
-          "--disable-extensions",
-          "--disable-plugins",
-          "--disable-sync",
-          "--disable-translate",
-          "--disable-default-apps",
-          "--disable-background-networking",
-          "--disable-component-update",
-          "--disable-client-side-phishing-detection",
-          "--disable-hang-monitor",
-          "--disable-popup-blocking",
-          "--disable-prompt-on-repost",
-          "--disable-domain-reliability",
-          "--disable-features=AudioServiceOutOfProcess",
-          
-          // Flags para manejo de memoria
-          "--memory-pressure-off",
-          "--max_old_space_size=4096",
-          
-          // Flags adicionales para contenedores
-          "--force-color-profile=srgb",
-          "--disable-background-mode",
-          "--disable-renderer-accessibility",
-          "--disable-permissions-api",
-          "--disable-speech-api",
-          
-          // Flags para evitar crashes en contenedores
-          "--disable-software-rasterizer",
-          "--disable-background-media-track",
-          "--disable-background-sync",
-          "--disable-background-fetch"
+          "--disable-setuid-sandbox"
         ],
       };
 
-      console.log("Launching browser with config...");
+      console.log("Launching browser...");
       browser = await puppeteer.launch(puppeteerConfig);
-      
-      // Verificar que el browser esté conectado
-      if (!browser.isConnected()) {
-        throw new Error("Browser failed to connect");
-      }
       
       console.log("Creating new page...");
       page = await browser.newPage();
       
-      // Esperar a que la página se cree completamente
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Verificar que la página esté lista
-      if (page.isClosed()) {
-        throw new Error("Page was closed unexpectedly");
-      }
-
-      // Configurar viewport con manejo de errores robusto
-      try {
-        console.log("Setting viewport...");
-        await page.setViewport({
-          width: 1100,
-          height: 350,
-          deviceScaleFactor: 1
-        });
-        console.log("Viewport set successfully");
-      } catch (viewportError) {
-        console.warn("Failed to set viewport, continuing without it:", viewportError);
-        // Continuar sin viewport si falla
-      }
-
-      // Esperar un poco más antes de set content
-      await new Promise(resolve => setTimeout(resolve, 200));
-      
-      // Verificar que la página sigue activa
-      if (page.isClosed()) {
-        throw new Error("Page was closed before setting content");
-      }
-
-      // Template HTML para los tickets
+      // Generar HTML template
       console.log("Generating HTML template...");
       const htmlTemplate = this.getTicketHTMLTemplate();
       const template = handlebars.compile(htmlTemplate);
       const html = template({ tickets });
 
       console.log("Setting page content...");
-      
-      // Configurar el contenido con mejor manejo de errores
-      try {
-        await page.setContent(html, { 
-          waitUntil: "domcontentloaded", // Cambiar de networkidle0 a domcontentloaded
-          timeout: 30000 
-        });
-        console.log("Content set successfully");
-      } catch (contentError) {
-        console.warn("Failed to set content with domcontentloaded, trying with load:", contentError);
-        // Intentar con 'load' si falla
-        await page.setContent(html, { 
-          waitUntil: "load",
-          timeout: 30000 
-        });
-      }
-
-      // Esperar a que todo esté listo
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Verificar que la página sigue activa antes de generar PDF
-      if (page.isClosed()) {
-        throw new Error("Page was closed before generating PDF");
-      }
+      // Usar networkidle2 como recomienda la documentación para PDFs
+      await page.setContent(html, { 
+        waitUntil: "networkidle2",
+        timeout: 30000 
+      });
 
       console.log("Generating PDF...");
-      const pdfOptions = {
+      // Configuración simplificada siguiendo mejores prácticas
+      const pdfBuffer = await page.pdf({
         width: '1100px',
         height: '350px',
         printBackground: true,
@@ -309,11 +165,9 @@ export class TicketService {
           bottom: '0px',
           left: '0px',
           right: '0px'
-        },
-        timeout: 30000
-      };
+        }
+      });
 
-      const pdfBuffer = await page.pdf(pdfOptions);
       console.log("PDF generated successfully");
       return Buffer.from(pdfBuffer);
       
@@ -321,14 +175,11 @@ export class TicketService {
       console.error("Error generating PDF:", error);
       throw error;
     } finally {
-      // Mejorar el cleanup con más verificaciones
+      // Cleanup simplificado
       if (page) {
         try {
-          if (!page.isClosed()) {
-            console.log("Closing page...");
-            await page.close();
-            console.log("Page closed successfully");
-          }
+          await page.close();
+          console.log("Page closed successfully");
         } catch (pageCloseError) {
           console.warn("Error closing page:", pageCloseError);
         }
@@ -336,11 +187,8 @@ export class TicketService {
       
       if (browser) {
         try {
-          if (browser.isConnected()) {
-            console.log("Closing browser...");
-            await browser.close();
-            console.log("Browser closed successfully");
-          }
+          await browser.close();
+          console.log("Browser closed successfully");
         } catch (browserCloseError) {
           console.warn("Error closing browser:", browserCloseError);
         }
