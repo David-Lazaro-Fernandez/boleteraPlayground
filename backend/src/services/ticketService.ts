@@ -125,7 +125,7 @@ export class TicketService {
     let browser: puppeteer.Browser | undefined;
     let page: puppeteer.Page | undefined;
     try {
-      const puppeteerConfig: puppeteer.LaunchOptions = {
+      const puppeteerConfig = {
         headless: true, // Usar headless estándar para máxima compatibilidad
         executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
         timeout: 30000, // 30 segundos timeout
