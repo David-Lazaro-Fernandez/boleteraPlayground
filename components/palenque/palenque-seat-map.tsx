@@ -19,6 +19,7 @@ import { useRouter } from "next/navigation";
 import { ref as storageRef, getDownloadURL } from "firebase/storage";
 import { storage } from "@/lib/firebase/config";
 import { useMobileDetection } from "@/lib/hooks/use-mobile-detection";
+import { ZonePrices } from "./zone-prices";
 
 import {
   GeneralSection,
@@ -116,91 +117,91 @@ const zoneConfig: Record<string, ZoneInfo> = {
   General: {
     name: "General",
     price: 300,
-    color: "#10B981",
+    color: "#3CA01D",
     selectable: true,
     component: GeneralSection,
   },
   "Oro 1": {
     name: "Oro 1",
     price: 600,
-    color: "#F59E0B",
+    color: "#3CA01D",
     selectable: true,
     component: Oro1Section,
   },
   "Oro 2": {
     name: "Oro 2",
     price: 600,
-    color: "#F59E0B",
+    color: "#3CA01D",
     selectable: true,
     component: Oro2Section,
   },
   "Oro 3": {
     name: "Oro 3",
     price: 600,
-    color: "#F59E0B",
+    color: "#3CA01D",
     selectable: true,
     component: Oro3Section,
   },
   "Oro 4": {
     name: "Oro 4",
     price: 600,
-    color: "#F59E0B",
+    color: "#3CA01D",
     selectable: true,
     component: Oro4Section,
   },
   "Oro 5": {
     name: "Oro 5",
     price: 600,
-    color: "#F59E0B",
+    color: "#3CA01D",
     selectable: true,
     component: Oro5Section,
   },
   "Oro 6": {
     name: "Oro 6",
     price: 600,
-    color: "#F59E0B",
+    color: "#3CA01D",
     selectable: true,
     component: Oro6Section,
   },
   "Oro 7": {
     name: "Oro 7",
     price: 600,
-    color: "#F59E0B",
+    color: "#3CA01D",
     selectable: true,
     component: Oro7Section,
   },
   "Oro 8": {
     name: "Oro 8",
     price: 600,
-    color: "#F59E0B",
+    color: "#3CA01D",
     selectable: true,
     component: Oro8Section,
   },
   "VIP 1": {
     name: "VIP 1",
     price: 800,
-    color: "#8B5CF6",
+    color: "#3CA01D",
     selectable: true,
     component: VIP1Section,
   },
   "VIP 2": {
     name: "VIP 2",
     price: 800,
-    color: "#8B5CF6",
+    color: "#3CA01D",
     selectable: true,
     component: VIP2Section,
   },
   "VIP 3": {
     name: "VIP 3",
     price: 800,
-    color: "#8B5CF6",
+    color: "#3CA01D",
     selectable: true,
     component: VIP3Section,
   },
   "VIP 4": {
     name: "VIP 4",
     price: 800,
-    color: "#8B5CF6",
+    color: "#3CA01D",
     selectable: true,
     component: VIP4Section,
   },
@@ -583,7 +584,7 @@ export function PalenqueSeatMap({
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-gray-50 flex-col md:flex-row mb-[260px] md:mb-0">
       {/* Panel lateral izquierdo */}
       <div className="w-96 bg-white shadow-xl overflow-y-auto hidden sm:block">
         {/* Información del evento */}
@@ -610,50 +611,7 @@ export function PalenqueSeatMap({
         </div>
 
         {/* Lista de precios por zona */}
-        <div className="p-6 border-b">
-          <h3 className="font-semibold text-gray-800 mb-4">Precios por Zona</h3>
-          <div className="space-y-3">
-            {/* General */}
-            <div className="flex items-center p-3 rounded-lg border bg-gray-50">
-              <div className="flex-1">
-                <div className="font-medium text-gray-800">General</div>
-                <div className="text-green-600 font-semibold">
-                  ${zoneConfig["General"].price.toFixed(2)} MXN
-                </div>
-              </div>
-            </div>
-
-            {/* Oro */}
-            <div className="flex items-center p-3 rounded-lg border bg-gray-50">
-              <div className="flex-1">
-                <div className="font-medium text-gray-800">Oro</div>
-                <div className="text-green-600 font-semibold">
-                  ${zoneConfig["Oro 1"].price.toFixed(2)} MXN
-                </div>
-              </div>
-            </div>
-
-            {/* VIP */}
-            <div className="flex items-center p-3 rounded-lg border bg-gray-50">
-              <div className="flex-1">
-                <div className="font-medium text-gray-800">VIP</div>
-                <div className="text-green-600 font-semibold">
-                  ${zoneConfig["VIP 1"].price.toFixed(2)} MXN
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Botón para zona general */}
-        <div className="p-6 border-b">
-          <Button
-            onClick={addGeneralTicket}
-            className="w-full bg-green-600 hover:bg-green-700 text-white"
-          >
-            Agregar Boleto General - $300 MXN
-          </Button>
-        </div>
+        <ZonePrices zoneConfig={zoneConfig} onAddGeneralTicket={addGeneralTicket} />
 
         {/* Boletos generales */}
         {generalTickets.length > 0 && (
@@ -1183,12 +1141,12 @@ export function PalenqueSeatMap({
                         <circle
                           cx={seat.x}
                           cy={seat.y}
-                          r="4"
+                          r="6"
                           fill={
                             selectedSeats.some(
                               (s: CreatedSeat) => s.id === seat.id,
                             )
-                              ? "#EC4899"
+                              ? "#325CE5"
                               : seat.status === "occupied"
                                 ? "#6B7280"
                                 : zoneConfig[selectedZone].color
@@ -1263,7 +1221,7 @@ export function PalenqueSeatMap({
                         y="70"
                         width="320"
                         height="60"
-                        fill={hoveredSeat.color}
+                        fill="#3CA01D"
                         rx="8"
                         ry="8"
                       />
@@ -1272,7 +1230,7 @@ export function PalenqueSeatMap({
                         y="62"
                         width="320"
                         height="16"
-                        fill={hoveredSeat.color}
+                        fill="#3CA01D"
                       />
                     </g>
 
@@ -1388,6 +1346,9 @@ export function PalenqueSeatMap({
           </CardContent>
         </Card>
       </div>
+      <div className="flex block md:hidden">
+          <ZonePrices zoneConfig={zoneConfig} onAddGeneralTicket={addGeneralTicket} />
+        </div>
     </div>
   );
 }

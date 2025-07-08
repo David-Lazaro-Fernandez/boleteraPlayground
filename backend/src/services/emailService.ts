@@ -57,7 +57,7 @@ export class EmailService {
       const mailOptions = {
         from: this.fromEmail,
         to: movementData.buyer_email,
-        subject: "🎫 Tus boletos han sido confirmados",
+        subject: "Tus boletos han sido confirmados",
         html: this.getEmailTemplate(movementData, ticketCount, pdfUrl),
         attachments: [
           {
@@ -87,7 +87,7 @@ export class EmailService {
       const mailOptions = {
         from: this.fromEmail,
         to: email,
-        subject: "✅ Pago confirmado - Procesando tus boletos",
+        subject: "Pago confirmado - Procesando tus boletos",
         html: this.getPaymentConfirmationTemplate(movementData),
       };
 
@@ -109,7 +109,7 @@ export class EmailService {
   ): string {
     return `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h1 style="color: #667eea;">🎫 ¡Tus boletos están listos!</h1>
+        <h1 style="color: #667eea;">¡Tus boletos están listos!</h1>
         
         <p>Hola ${movementData.buyer_name || "Usuario"},</p>
         
@@ -126,7 +126,7 @@ export class EmailService {
         <p>Tus boletos están adjuntos en formato PDF. También puedes descargarlos desde el siguiente enlace:</p>
         
         <a href="${pdfUrl}" style="background: #667eea; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; display: inline-block; margin: 20px 0;">
-          📥 Descargar Boletos
+          Descargar Boletos
         </a>
         
         <p><small>Este enlace expira en 7 días por seguridad.</small></p>
@@ -145,6 +145,34 @@ export class EmailService {
         <p style="color: #666; font-size: 12px;">
           Este email fue enviado automáticamente. No respondas a este mensaje.
         </p>
+        <div style="font-family: Arial, sans-serif; font-size: 11px; color: #666; margin-top: 40px;">
+          <hr style="margin: 20px 0;">
+
+          <h4 style="margin-bottom: 10px;">Términos, Condiciones y Disclaimers del Boleto Digital</h4>
+
+          <p><strong>1. Condiciones Generales:</strong> Astral Tickets actúa únicamente como intermediario entre el comprador y los organizadores del evento, por lo cual no es responsable por cancelaciones, modificaciones o incidencias relacionadas directa o indirectamente con la realización del mismo.</p>
+
+          <p><strong>2. Cancelaciones o Cambios:</strong> En caso de cancelación, reprogramación o modificación del evento, Astral Tickets notificará oportunamente al comprador mediante los datos de contacto proporcionados al momento de la compra. Los procesos de reembolso o canje serán determinados exclusivamente por el organizador. Es obligación del comprador seguir las instrucciones proporcionadas para dicho fin.</p>
+
+          <p><strong>3. Responsabilidad del Comprador:</strong> El comprador es responsable de verificar y confirmar los detalles del evento (fecha, hora, ubicación, restricciones de acceso, entre otros) antes de finalizar la compra. Para dudas o aclaraciones relacionadas con el evento, deberá contactar directamente al organizador.</p>
+
+          <p><strong>4. Uso del Boleto Digital:</strong> Este boleto es personal e intransferible, válido para una sola entrada o acceso según lo indicado. El comprador debe presentar el boleto en formato digital legible desde un dispositivo móvil o impreso claramente en papel al momento del acceso al evento. La duplicación, alteración o mal uso del boleto digital invalidará automáticamente el derecho de acceso.</p>
+
+          <p><strong>5. Seguridad y Fraude:</strong> El comprador debe mantener protegido su boleto digital. Astral Tickets no se responsabiliza por pérdidas, robos o uso indebido del boleto por parte de terceros.</p>
+
+          <p><strong>6. Consentimiento:</strong> Al adquirir este boleto, el comprador acepta expresamente todos los términos, condiciones y disclaimers aquí establecidos.</p>
+
+          <p><strong>Disclaimers adicionales:</strong></p>
+          <ul style="padding-left: 20px; margin-top: 5px; margin-bottom: 5px;">
+            <li>Se prohíbe estrictamente el ingreso con objetos peligrosos, armas, drogas o sustancias ilícitas.</li>
+            <li>El evento podría ser fotografiado o filmado para fines promocionales; al asistir, acepta tácitamente ser captado en estos materiales y renuncia a cualquier reclamo relacionado con el uso de su imagen.</li>
+            <li>La reventa de boletos está estrictamente prohibida.</li>
+            <li>Evite publicar fotografías o capturas del boleto en redes sociales o medios públicos, ya que podrían facilitar el fraude y la duplicación del boleto.</li>
+          </ul>
+
+          <p><strong>Dudas o aclaraciones:</strong> info@astraltickets.com</p>
+          <p><strong>¿Quieres organizar un evento?</strong> contacto@astraltickets.com</p>
+        </div>
       </div>
     `;
   }
@@ -155,7 +183,7 @@ export class EmailService {
   private getPaymentConfirmationTemplate(movementData: MovementData): string {
     return `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h1 style="color: #28a745;">✅ ¡Pago confirmado!</h1>
+        <h1 style="color: #28a745;">¡Pago confirmado!</h1>
         
         <p>Hola ${movementData.buyer_name || "Usuario"},</p>
         
