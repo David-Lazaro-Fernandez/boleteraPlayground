@@ -36,6 +36,9 @@ COPY --chown=pptruser:pptruser backend ./
 #Install Browser
 RUN npx puppeteer browsers install
 
+# Install Puppeteer
+RUN npm i puppeteer
+
 # Compilar TypeScript
 RUN npm run build
 
