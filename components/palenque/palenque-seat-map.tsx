@@ -584,7 +584,7 @@ export function PalenqueSeatMap({
   };
 
   return (
-    <div className="flex h-screen bg-gray-50 flex-col md:flex-row mb-[260px] md:mb-0">
+    <div className="flex h-screen bg-gray-50 flex-col md:flex-row mb-[500px] md:mb-0">
       {/* Panel lateral izquierdo */}
       <div className="w-96 bg-white shadow-xl overflow-y-auto hidden sm:block">
         {/* Información del evento */}
@@ -921,7 +921,7 @@ export function PalenqueSeatMap({
 
       {/* Mapa de asientos */}
       <div className="flex-1 p-6">
-        <Card className={`${isMobile && selectedSeats.length > 0 ? 'mb-[300px]' : ''}`}>
+        <Card>
           <CardHeader>
             <CardTitle className="text-xl">
               Mapa de Asientos - {venueConfig.venue.name}
