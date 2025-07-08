@@ -44,11 +44,19 @@
     background-color: #ffffff;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
-    width: 1000px;
-    height: 320px;
     margin: 0;
     padding: 0;
-    overflow: hidden;
+  }
+
+  .ticket-wrapper {
+    padding: 40px 0;
+    page-break-inside: avoid;
+    page-break-after: always;
+  }
+
+  /* Último ticket no necesita tanto espacio abajo */
+  .ticket-wrapper:last-child {
+    padding-bottom: 20px;
   }
 </style>
 
@@ -61,10 +69,10 @@
 
 </head>
 <body class="bg-gray-100">
-  <div class="w-full h-full p-0 m-0">
+  <div class="ticket-wrapper">
     <div
       id="ticket"
-      class="bg-[#E8F8EE] border-2 border-purple-500 rounded-lg border-dashed"
+      class="bg-[#E8F8EE] border-2 border-purple-500 rounded-lg border-dashed mx-auto"
       style="width:1000px; height:300px; display:flex; overflow:hidden;"
     >
       <!-- Contenido central -->
@@ -136,6 +144,30 @@
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- Términos y Condiciones -->
+    <div class="mt-8 p-4 text-[11px] text-gray-600 font-gontserrat">
+      <h4 class="font-bold mb-2">Términos, Condiciones y Disclaimers del Boleto Digital</h4>
+
+      <p class="mb-2"><strong>1. Condiciones Generales:</strong> Astral Tickets actúa únicamente como intermediario entre el comprador y los organizadores del evento, por lo cual no es responsable por cancelaciones, modificaciones o incidencias relacionadas directa o indirectamente con la realización del mismo.</p>
+
+      <p class="mb-2"><strong>2. Cancelaciones o Cambios:</strong> En caso de cancelación, reprogramación o modificación del evento, Astral Tickets notificará oportunamente al comprador mediante los datos de contacto proporcionados al momento de la compra. Los procesos de reembolso o canje serán determinados exclusivamente por el organizador.</p>
+
+      <p class="mb-2"><strong>3. Responsabilidad del Comprador:</strong> El comprador es responsable de verificar y confirmar los detalles del evento (fecha, hora, ubicación, restricciones de acceso, entre otros) antes de finalizar la compra.</p>
+
+      <p class="mb-2"><strong>4. Uso del Boleto Digital:</strong> Este boleto es personal e intransferible, válido para una sola entrada o acceso según lo indicado. El comprador debe presentar el boleto en formato digital legible o impreso claramente en papel.</p>
+
+      <div class="mt-2">
+        <strong>Disclaimers adicionales:</strong>
+        <ul class="list-disc pl-4 mt-1">
+          <li>Se prohíbe estrictamente el ingreso con objetos peligrosos, armas, drogas o sustancias ilícitas.</li>
+          <li>La reventa de boletos está estrictamente prohibida.</li>
+          <li>Evite publicar fotografías o capturas del boleto en redes sociales.</li>
+        </ul>
+      </div>
+
+      <p class="mt-2"><strong>Dudas o aclaraciones:</strong> info@astraltickets.com</p>
     </div>
   </div>
 </body>
