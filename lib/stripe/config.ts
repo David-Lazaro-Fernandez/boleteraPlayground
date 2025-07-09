@@ -16,6 +16,7 @@ console.log(process.env.NEXT_PUBLIC_STRIPE_MODE);
 // Determinar el modo basado en STRIPE_MODE
 const isTestMode = stripeMode === 'test';
 
+
 // // Validar que las claves coincidan con el modo (test/live)
 // if (isTestMode) {
 //   if (!isValidTestKey(stripeSecretKey, 'sk_test_')) {
