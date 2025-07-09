@@ -38,6 +38,6 @@ export const STRIPE_CONFIG = {
 } as const;
 
 // Instancia de Stripe para uso en el servidor
-export const stripe = new Stripe(STRIPE_CONFIG.secretKey, {
-  apiVersion: '2025-02-24.acacia',
+export const stripe = new Stripe(process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY!, {
+  apiVersion: '2025-06-30.basil',
 });

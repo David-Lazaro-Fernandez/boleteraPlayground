@@ -10,7 +10,7 @@ import {
 } from "@/lib/firebase/transactions";
 
 const stripe = new Stripe(process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY!, {
-  apiVersion: "2025-02-24.acacia",
+  apiVersion: "2025-06-30.basil",
 });
 
 export async function POST(request: NextRequest) {
