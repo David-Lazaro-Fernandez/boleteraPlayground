@@ -9,10 +9,6 @@ const stripeMode = process.env.NEXT_PUBLIC_STRIPE_MODE || 'test'; // Nuevo: perm
 const isValidTestKey = (key: string, prefix: string) => key.startsWith(prefix);
 const isValidLiveKey = (key: string, prefix: string) => key.startsWith(prefix);
 
-console.log(process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY);
-console.log(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
-console.log(process.env.NEXT_PUBLIC_STRIPE_MODE);
-
 // Determinar el modo basado en STRIPE_MODE
 const isTestMode = stripeMode === 'test';
 
