@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Facebook, Twitter, Linkedin } from "lucide-react";
+import { Facebook, Twitter, Linkedin, Instagram } from "lucide-react";
 import { Logo } from "@/components/prueba-boleto/logo";
+
 export function Footer() {
   return (
     <footer className="bg-card-bg text-text-light py-12">
@@ -26,17 +27,7 @@ export function Footer() {
             <ul className="space-y-2 text-sm text-text-light/80">
               <li>
                 <a href="#" className="hover:text-text-light transition-colors">
-                  Crear y Configurar
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-text-light transition-colors">
                   Vender Boletos
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-text-light transition-colors">
-                  Promoción de
                 </a>
               </li>
               <li>
@@ -45,7 +36,7 @@ export function Footer() {
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:text-text-light transition-colors">
+                <a href="eventos@astraltickets.com" className="hover:text-text-light transition-colors">
                   Eventos en Línea
                 </a>
               </li>
@@ -67,12 +58,12 @@ export function Footer() {
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:text-text-light transition-colors">
+                <a href="mailto:contacto@astraltickets.com" className="hover:text-text-light transition-colors">
                   Contáctanos
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:text-text-light transition-colors">
+                <a href="mailto:ayuda@astraltickets.com" className="hover:text-text-light transition-colors">
                   Ayuda
                 </a>
               </li>
@@ -114,22 +105,22 @@ export function Footer() {
             {/* Social Media */}
             <div className="flex space-x-4 mt-6">
               <a
-                href="#"
+                href="https://www.facebook.com/astraltickets"
                 className="w-10 h-10 bg-[#4267B2] rounded-full flex items-center justify-center hover:opacity-80 transition-opacity"
               >
                 <Facebook size={20} />
               </a>
               <a
-                href="#"
+                href="https://x.com/astraltickets"
                 className="w-10 h-10 bg-[#1DA1F2] rounded-full flex items-center justify-center hover:opacity-80 transition-opacity"
               >
                 <Twitter size={20} />
               </a>
               <a
-                href="#"
+                href="https://www.instagram.com/astraltickets/"
                 className="w-10 h-10 bg-[#0077B5] rounded-full flex items-center justify-center hover:opacity-80 transition-opacity"
               >
-                <Linkedin size={20} />
+                <Instagram size={20} />
               </a>
             </div>
           </div>

@@ -6,7 +6,7 @@ export function Header() {
     { name: "Eventos", href: "#" },
     { name: "Conciertos", href: "#" },
     { name: "Bailes", href: "#" },
-    { name: "Contacto", href: "#" },
+    { name: "Contacto", href: "mailto:contacto@astraltickets.com" },
   ];
 
   return (

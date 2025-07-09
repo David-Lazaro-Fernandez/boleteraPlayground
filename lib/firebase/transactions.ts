@@ -26,6 +26,7 @@ interface BaseMovement {
   subtotal: number;
   cargo_servicio: number;
   tipo_pago: "efectivo" | "tarjeta" | "cortesia";
+  card_brand?: "visa" | "mastercard" | "amex" | "other"; // Añadir tipo de tarjeta
 }
 
 // Interfaz para datos en Firestore
@@ -92,6 +93,7 @@ export interface DashboardStats {
     monto: number;
     fecha: Date;
     tipo_pago: "efectivo" | "tarjeta" | "cortesia";
+    card_brand?: "visa" | "mastercard" | "amex" | "other";
     numero_boletos: number;
     subtotal: number;
     cargo_servicio: number;
@@ -106,7 +108,10 @@ export interface DashboardStats {
   }[];
   ventasPorTipoPago: {
     efectivo: number;
-    tarjeta: number;
+    visa: number;
+    mastercard: number;
+    amex: number;
+    other: number;
     cortesia: number;
   };
   ventasPorZona: {
@@ -115,7 +120,10 @@ export interface DashboardStats {
   }[];
   boletosPorTipoPago: {
     efectivo: number;
-    tarjeta: number;
+    visa: number;
+    mastercard: number;
+    amex: number;
+    other: number;
     cortesia: number;
   };
 }
@@ -146,6 +154,7 @@ export async function createMovement(movementData: {
   subtotal: number;
   cargo_servicio: number;
   tipo_pago: string;
+  card_brand?: "visa" | "mastercard" | "amex" | "other";
   buyer_email?: string;
   buyer_name?: string;
   event_id?: string;
@@ -624,11 +633,13 @@ export async function getDashboardStats(
         subtotal: data.subtotal,
         cargo_servicio: data.cargo_servicio,
         tipo_pago: data.tipo_pago,
+        card_brand: data.card_brand,
         fecha: data.fecha.toDate(),
       } as Movement;
     });
 
     // Si no hay movimientos, retornar estadísticas vacías
+
     if (movements.length === 0) {
       return {
         ventasTotales: 0,
@@ -641,13 +652,19 @@ export async function getDashboardStats(
         ventasPorDia: [],
         ventasPorTipoPago: {
           efectivo: 0,
-          tarjeta: 0,
+          visa: 0,
+          mastercard: 0,
+          amex: 0,
+          other: 0,
           cortesia: 0,
         },
         ventasPorZona: [],
         boletosPorTipoPago: {
           efectivo: 0,
-          tarjeta: 0,
+          visa: 0,
+          mastercard: 0,
+          amex: 0,
+          other: 0,
           cortesia: 0,
         },
       };
@@ -728,13 +745,31 @@ export async function getDashboardStats(
     const boletosVendidos = allTicketIds.length;
 
     // Ventas por tipo de pago
+    console.log("Todos los movimientos:", movements.map(m => ({
+      tipo_pago: m.tipo_pago,
+      card_brand: m.card_brand,
+      total: m.total
+    })));
+
     const ventasPorTipoPago = {
       efectivo: movements.reduce(
         (sum, mov) => (mov.tipo_pago === "efectivo" ? sum + mov.total : sum),
         0,
       ),
-      tarjeta: movements.reduce(
-        (sum, mov) => (mov.tipo_pago === "tarjeta" ? sum + mov.total : sum),
+      visa: movements.reduce(
+        (sum, mov) => (mov.tipo_pago === "tarjeta" && mov.card_brand === "visa" ? sum + mov.total : sum),
+        0,
+      ),
+      mastercard: movements.reduce(
+        (sum, mov) => (mov.tipo_pago === "tarjeta" && mov.card_brand === "mastercard" ? sum + mov.total : sum),
+        0,
+      ),
+      amex: movements.reduce(
+        (sum, mov) => (mov.tipo_pago === "tarjeta" && mov.card_brand === "amex" ? sum + mov.total : sum),
+        0,
+      ),
+      other: movements.reduce(
+        (sum, mov) => (mov.tipo_pago === "tarjeta" && (!mov.card_brand || mov.card_brand === "other") ? sum + mov.total : sum),
         0,
       ),
       cortesia: movements.reduce(
@@ -742,6 +777,16 @@ export async function getDashboardStats(
         0,
       ),
     };
+
+    console.log("ventasPorTipoPago calculado:", ventasPorTipoPago);
+    console.log("Suma total de ventas por tipo:", 
+      ventasPorTipoPago.efectivo + 
+      ventasPorTipoPago.visa + 
+      ventasPorTipoPago.mastercard + 
+      ventasPorTipoPago.amex + 
+      ventasPorTipoPago.other + 
+      ventasPorTipoPago.cortesia
+    );
 
     // Total de movimientos
     const totalMovimientos = movements.length;
@@ -769,6 +814,7 @@ export async function getDashboardStats(
         monto: mov.total,
         fecha: mov.fecha,
         tipo_pago: mov.tipo_pago,
+        card_brand: mov.card_brand,
         numero_boletos: boletosData.count,
         subtotal: mov.subtotal,
         cargo_servicio: mov.cargo_servicio,
@@ -809,8 +855,8 @@ export async function getDashboardStats(
 
     movements.forEach((mov) => {
       const fecha = mov.fecha;
-      // Usar la fecha directamente sin conversiones de timezone ya que se guarda correctamente
-      const dateKey = fecha.toISOString().split("T")[0];
+      // Usar la fecha local en lugar de UTC
+      const dateKey = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}-${String(fecha.getDate()).padStart(2, '0')}`;
       const currentAmount = ventasPorDia.get(dateKey) || 0;
       ventasPorDia.set(dateKey, currentAmount + mov.total);
     });
@@ -818,7 +864,7 @@ export async function getDashboardStats(
     // Si estamos consultando un solo día (startDate y endDate son el mismo día),
     // filtrar solo ese día específico
     const isOneDayQuery = startDate.toDateString() === endDate.toDateString();
-    const targetDateKey = startDate.toISOString().split("T")[0];
+    const targetDateKey = `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, '0')}-${String(startDate.getDate()).padStart(2, '0')}`;
 
     let ventasPorDiaArray = Array.from(ventasPorDia.entries())
       .map(([date, sales]) => ({
@@ -827,17 +873,21 @@ export async function getDashboardStats(
       }))
       .sort((a, b) => a.date.localeCompare(b.date));
 
-    // Si es consulta de un solo día, filtrar solo ese día
+    // Si es consulta de un solo día, asegurarnos que las ventas coincidan con ventasTotales
     if (isOneDayQuery) {
-      ventasPorDiaArray = ventasPorDiaArray.filter(
-        (item) => item.date === targetDateKey,
-      );
+      ventasPorDiaArray = [{
+        date: targetDateKey,
+        sales: ventasTotales // Usar el mismo valor que ventasTotales
+      }];
     }
 
     // Contadores para boletos por tipo de pago
     const boletosPorTipoPago = {
       efectivo: 0,
-      tarjeta: 0,
+      visa: 0,
+      mastercard: 0,
+      amex: 0,
+      other: 0,
       cortesia: 0,
     };
 
@@ -845,7 +895,15 @@ export async function getDashboardStats(
     movements.forEach((mov) => {
       const boletosData = boletosPorMovimiento.get(mov.id);
       if (boletosData) {
-        boletosPorTipoPago[mov.tipo_pago] += boletosData.count;
+        if (mov.tipo_pago === "efectivo") {
+          boletosPorTipoPago.efectivo += boletosData.count;
+        } else if (mov.tipo_pago === "cortesia") {
+          boletosPorTipoPago.cortesia += boletosData.count;
+        } else if (mov.tipo_pago === "tarjeta" && mov.card_brand) {
+          boletosPorTipoPago[mov.card_brand] += boletosData.count;
+        } else if (mov.tipo_pago === "tarjeta") {
+          boletosPorTipoPago.other += boletosData.count;
+        }
       }
     });
 
@@ -871,6 +929,8 @@ export async function getDashboardStats(
     throw error;
   }
 }
+
+
 
 // Funciones para Fondo de Caja
 export async function createCashDrawerOpening(
@@ -1035,8 +1095,7 @@ export async function processPaymentWithBackend(movementId: string, status: 'pai
       })
     });
 
-    console.log(`Backend response status: ${response.status}`);
-    
+    console.log(`Backend response status: ${response.status}`); 
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`Backend error response: ${errorText}`);

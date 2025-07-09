@@ -146,6 +146,8 @@ export default function Dashboard() {
     setCashDrawerAmount(cashDrawer?.amount.toString() || "");
   };
 
+  console.log(stats?.ventasPorTipoPago)
+
   return (
     <div>
       {/* Page Header */}
@@ -492,19 +494,37 @@ export default function Dashboard() {
                         <PieChart>
                           <Pie
                             data={[
+                              // Efectivo: Pagos en efectivo
                               {
                                 name: "Efectivo",
                                 value: stats.ventasPorTipoPago.efectivo,
                               },
+                              // VISA: Pagos con tarjeta VISA
                               {
-                                name: "Tarjeta",
-                                value: stats.ventasPorTipoPago.tarjeta,
+                                name: "VISA",
+                                value: stats.ventasPorTipoPago.visa,
                               },
+                              // Mastercard: Pagos con tarjeta Mastercard
+                              {
+                                name: "Mastercard",
+                                value: stats.ventasPorTipoPago.mastercard,
+                              },
+                              // American Express: Pagos con tarjeta AMEX
+                              {
+                                name: "American Express",
+                                value: stats.ventasPorTipoPago.amex,
+                              },
+                              // Pago en línea: Otros tipos de pagos electrónicos
+                              {
+                                name: "Pago en línea",
+                                value: stats.ventasPorTipoPago.other,
+                              },
+                              // Cortesía: Boletos gratuitos o cortesías
                               {
                                 name: "Cortesía",
                                 value: stats.ventasPorTipoPago.cortesia,
                               },
-                            ].filter((item) => item.value > 0)}
+                            ].filter((item) => item.value > 0)} // Solo mostramos los tipos de pago que tienen ventas
                             cx="50%"
                             cy="50%"
                             labelLine={false}
@@ -515,9 +535,12 @@ export default function Dashboard() {
                             fill="#8884d8"
                             dataKey="value"
                           >
-                            <Cell fill="#22c55e" />
-                            <Cell fill="#3b82f6" />
-                            <Cell fill="#f59e0b" />
+                            <Cell fill="#22c55e" /> {/* Verde para Efectivo */}
+                            <Cell fill="#3b82f6" /> {/* Azul para VISA */}
+                            <Cell fill="#f43f5e" /> {/* Rojo para Mastercard */}
+                            <Cell fill="#8b5cf6" /> {/* Morado para AMEX */}
+                            <Cell fill="#64748b" /> {/* Gris para Pago en línea */}
+                            <Cell fill="#f59e0b" /> {/* Naranja para Cortesía */}
                           </Pie>
                           <Tooltip
                             content={({ active, payload }) => {
@@ -635,14 +658,26 @@ export default function Dashboard() {
                               cantidad: stats.boletosPorTipoPago.efectivo,
                             },
                             {
-                              name: "Tarjeta",
-                              cantidad: stats.boletosPorTipoPago.tarjeta,
+                              name: "VISA",
+                              cantidad: stats.boletosPorTipoPago.visa,
+                            },
+                            {
+                              name: "Mastercard",
+                              cantidad: stats.boletosPorTipoPago.mastercard,
+                            },
+                            {
+                              name: "American Express",
+                              cantidad: stats.boletosPorTipoPago.amex,
+                            },
+                            {
+                              name: "Otras Tarjetas",
+                              cantidad: stats.boletosPorTipoPago.other,
                             },
                             {
                               name: "Cortesía",
                               cantidad: stats.boletosPorTipoPago.cortesia,
                             },
-                          ]}
+                          ].filter(item => item.cantidad > 0)}
                           margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                         >
                           <XAxis dataKey="name" />
@@ -652,12 +687,8 @@ export default function Dashboard() {
                               if (active && payload && payload.length) {
                                 return (
                                   <div className="bg-white p-2 border rounded shadow">
-                                    <p className="text-sm font-bold">
-                                      {payload[0].payload.name}
-                                    </p>
-                                    <p className="text-sm">
-                                      {payload[0].value} boletos
-                                    </p>
+                                    <p className="text-sm font-bold">{payload[0].payload.name}</p>
+                                    <p className="text-sm">{payload[0].value} boletos</p>
                                   </div>
                                 );
                               }
@@ -666,9 +697,16 @@ export default function Dashboard() {
                           />
                           <Legend />
                           <Bar dataKey="cantidad" radius={[4, 4, 0, 0]}>
-                            <Cell fill="#22c55e" /> {/* Efectivo */}
-                            <Cell fill="#3b82f6" /> {/* Tarjeta */}
-                            <Cell fill="#f59e0b" /> {/* Cortesía */}
+                            {[
+                              "#22c55e", // Efectivo
+                              "#3b82f6", // VISA
+                              "#f43f5e", // Mastercard
+                              "#8b5cf6", // American Express
+                              "#64748b", // Otras Tarjetas
+                              "#f59e0b", // Cortesía
+                            ].map((color, index) => (
+                              <Cell key={`cell-${index}`} fill={color} />
+                            ))}
                           </Bar>
                         </BarChart>
                       </ResponsiveContainer>

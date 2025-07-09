@@ -52,6 +52,40 @@ export async function POST(request: Request) {
           ? session.payment_intent 
           : session.payment_intent?.id;
 
+        // Obtener información de la tarjeta
+        let cardBrand: "visa" | "mastercard" | "amex" | "other" = "other";
+        
+        if (paymentIntentId) {
+          try {
+            const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+            if (paymentIntent.payment_method) {
+              const paymentMethod = await stripe.paymentMethods.retrieve(
+                typeof paymentIntent.payment_method === 'string' 
+                  ? paymentIntent.payment_method 
+                  : paymentIntent.payment_method.id
+              );
+              
+              if (paymentMethod.card?.brand) {
+                switch(paymentMethod.card.brand.toLowerCase()) {
+                  case 'visa':
+                    cardBrand = 'visa';
+                    break;
+                  case 'mastercard':
+                    cardBrand = 'mastercard';
+                    break;
+                  case 'amex':
+                    cardBrand = 'amex';
+                    break;
+                  default:
+                    cardBrand = 'other';
+                }
+              }
+            }
+          } catch (error) {
+            console.error('Error getting payment method:', error);
+          }
+        }
+
         // Verificar si ya existe un movimiento para este session_id
         const existingMovement = await getMovementBySessionId(sessionId);
         
@@ -60,7 +94,8 @@ export async function POST(request: Request) {
           movementId = existingMovement.id;
           await updateMovementStatus(movementId, "paid", {
             stripe_session_id: sessionId,
-            stripe_payment_intent_id: paymentIntentId
+            stripe_payment_intent_id: paymentIntentId,
+            card_brand: cardBrand
           });
         } else if (session.metadata) {
           // Crear nuevo movimiento
@@ -70,7 +105,8 @@ export async function POST(request: Request) {
             total: parseFloat(session.metadata.total || "0"),
             subtotal: parseFloat(session.metadata.subtotal || "0"),
             cargo_servicio: parseFloat(session.metadata.serviceCharge || "0"),
-            tipo_pago: "card",
+            tipo_pago: "tarjeta",
+            card_brand: cardBrand,
             buyer_email: session.metadata.customerEmail || session.customer_details?.email || "",
             buyer_name: session.metadata.customerName || session.customer_details?.name || "",
             event_id: session.metadata.eventId || "",
