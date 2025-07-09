@@ -1,11 +1,24 @@
+import { loadStripe } from "@stripe/stripe-js";
 import {
   CartSummary,
   EventInfo,
   CheckoutSession,
-  PaymentResult,
   CustomerData,
 } from "./types";
 import { STRIPE_CONFIG } from "./config";
+
+// Inicializar el cliente de Stripe
+export const stripePromise = loadStripe(STRIPE_CONFIG.publishableKey);
+
+/**
+ * Formatea un precio en formato de moneda
+ */
+export function formatPrice(amount: number): string {
+  return new Intl.NumberFormat("es-MX", {
+    style: "currency",
+    currency: "MXN",
+  }).format(amount);
+}
 
 /**
  * Crea una sesión de checkout en Stripe
@@ -32,32 +45,35 @@ export async function createCheckoutSession(
         customerData,
         successUrl,
         cancelUrl,
-        currency: STRIPE_CONFIG.currency,
       }),
     });
 
+    const data = await response.json();
+
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(
-        errorData.error || "Error al crear la sesión de checkout",
-      );
+      throw new Error(data.details || data.error || "Error al crear la sesión de checkout");
     }
 
-    const data = await response.json();
+    if (!data.url) {
+      throw new Error("No se recibió la URL de checkout");
+    }
+
     return {
       sessionId: data.sessionId,
       url: data.url,
     };
   } catch (error) {
     console.error("Error creating checkout session:", error);
-    throw error;
+    throw error instanceof Error 
+      ? error 
+      : new Error("Error al crear la sesión de checkout");
   }
 }
 
 /**
  * Verifica el estado de un pago
  */
-export async function verifyPayment(sessionId: string): Promise<PaymentResult> {
+export async function verifyPayment(sessionId: string): Promise<any> {
   try {
     const response = await fetch(`/api/stripe/verify-payment`, {
       method: "POST",
@@ -92,17 +108,4 @@ export async function verifyPayment(sessionId: string): Promise<PaymentResult> {
       error: error instanceof Error ? error.message : "Error desconocido",
     };
   }
-}
-
-/**
- * Formatea el precio para mostrar en la UI
- */
-export function formatPrice(
-  amount: number,
-  currency: string = STRIPE_CONFIG.currency,
-): string {
-  return new Intl.NumberFormat(STRIPE_CONFIG.locale, {
-    style: "currency",
-    currency: currency.toUpperCase(),
-  }).format(amount);
 }

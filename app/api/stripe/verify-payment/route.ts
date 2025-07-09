@@ -9,7 +9,7 @@ import {
   getMovementBySessionId
 } from "@/lib/firebase/transactions";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+const stripe = new Stripe(process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY!, {
   apiVersion: "2025-02-24.acacia",
 });
 

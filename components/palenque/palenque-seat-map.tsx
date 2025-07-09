@@ -535,6 +535,16 @@ export function PalenqueSeatMap({
     setGeneralTickets((prev) => [...prev, newTicket]);
   };
 
+  const addTestGeneralTicket = () => {
+    const newTicket: GeneralTicket = {
+      id: `general-test-${Date.now()}`,
+      zoneName: "General (Test)",
+      price: 10, // Precio especial para pruebas
+      quantity: 1,
+    };
+    setGeneralTickets((prev) => [...prev, newTicket]);
+  };
+
   const updateGeneralTicketQuantity = (ticketId: string, change: number) => {
     setGeneralTickets((prev) =>
       prev.map((ticket) => {
@@ -606,6 +616,16 @@ export function PalenqueSeatMap({
                 <MapPin className="w-4 h-4 mr-2" />
                 {eventInfo.venue}
               </div>
+              {/* Botón de prueba */}
+              {process.env.NEXT_PUBLIC_SALES_MODE === 'test' && (
+                <Button
+                  onClick={addTestGeneralTicket}
+                  variant="secondary"
+                  className="w-full mt-2 bg-yellow-500 hover:bg-yellow-600 text-black"
+                >
+                  Agregar Boleto de Prueba ($10 MXN)
+                </Button>
+              )}
             </CardContent>
           </Card>
         </div>
