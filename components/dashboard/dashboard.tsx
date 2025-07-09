@@ -146,8 +146,6 @@ export default function Dashboard() {
     setCashDrawerAmount(cashDrawer?.amount.toString() || "");
   };
 
-  console.log(stats?.ventasPorTipoPago)
-
   return (
     <div>
       {/* Page Header */}
