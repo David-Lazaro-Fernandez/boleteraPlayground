@@ -16,22 +16,22 @@ console.log(process.env.NEXT_PUBLIC_STRIPE_MODE);
 // Determinar el modo basado en STRIPE_MODE
 const isTestMode = stripeMode === 'test';
 
-// Validar que las claves coincidan con el modo (test/live)
-if (isTestMode) {
-  if (!isValidTestKey(stripeSecretKey, 'sk_test_')) {
-    throw new Error('STRIPE_SECRET_KEY debe comenzar con sk_test_ en modo test');
-  }
-  if (!isValidTestKey(stripePublishableKey, 'pk_test_')) {
-    throw new Error('NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY debe comenzar con pk_test_ en modo test');
-  }
-} else {
-  if (!isValidLiveKey(stripeSecretKey, 'sk_live_')) {
-    throw new Error('STRIPE_SECRET_KEY debe comenzar con sk_live_ en modo producción');
-  }
-  if (!isValidLiveKey(stripePublishableKey, 'pk_live_')) {
-    throw new Error('NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY debe comenzar con pk_live_ en modo producción');
-  }
-}
+// // Validar que las claves coincidan con el modo (test/live)
+// if (isTestMode) {
+//   if (!isValidTestKey(stripeSecretKey, 'sk_test_')) {
+//     throw new Error('STRIPE_SECRET_KEY debe comenzar con sk_test_ en modo test');
+//   }
+//   if (!isValidTestKey(stripePublishableKey, 'pk_test_')) {
+//     throw new Error('NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY debe comenzar con pk_test_ en modo test');
+//   }
+// } else {
+//   if (!isValidLiveKey(stripeSecretKey, 'sk_live_')) {
+//     throw new Error('STRIPE_SECRET_KEY debe comenzar con sk_live_ en modo producción');
+//   }
+//   if (!isValidLiveKey(stripePublishableKey, 'pk_live_')) {
+//     throw new Error('NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY debe comenzar con pk_live_ en modo producción');
+//   }
+// }
 
 export const STRIPE_CONFIG = {
   publishableKey: stripePublishableKey,
