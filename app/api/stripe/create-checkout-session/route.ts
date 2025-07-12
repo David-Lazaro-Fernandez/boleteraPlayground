@@ -23,6 +23,7 @@ export async function POST(request: NextRequest) {
       customerData,
       successUrl,
       cancelUrl,
+      userId,
       currency = 'mxn',
     } = requestData;
 
@@ -50,13 +51,10 @@ export async function POST(request: NextRequest) {
 
     // Crear line items para Stripe
     const lineItems = items.map((item: any) => {
-      const isTestMode = STRIPE_CONFIG.mode === 'test';
-      const price = isTestMode ? 1 : item.price; // 1 peso en modo prueba
-
       const lineItem = {
         price_data: {
           currency,
-          unit_amount: Math.round(price * 100), // Stripe usa centavos
+          unit_amount: Math.round(item.price * 100), // Stripe usa centavos
           product_data: {
             name: item.type === 'seat' 
               ? `${eventInfo.title} - ${item.zoneName} - Fila ${item.rowLetter}, Asiento ${item.seatNumber}`
@@ -83,6 +81,7 @@ export async function POST(request: NextRequest) {
         name: lineItem.price_data.product_data.name,
         price: lineItem.price_data.unit_amount,
         quantity: lineItem.quantity,
+        originalPrice: item.price,
       });
 
       return lineItem;
@@ -90,13 +89,10 @@ export async function POST(request: NextRequest) {
 
     // Agregar cargo por servicio si existe
     if (serviceCharge > 0) {
-      const isTestMode = STRIPE_CONFIG.mode === 'test';
-      const serviceFee = isTestMode ? 1 : serviceCharge;
-      
       const serviceChargeItem = {
         price_data: {
           currency,
-          unit_amount: Math.round(serviceFee * 100),
+          unit_amount: Math.round(serviceCharge * 100),
           product_data: {
             name: "Cargo por Servicio",
             description: "18% cargo por procesamiento",
@@ -107,6 +103,7 @@ export async function POST(request: NextRequest) {
 
       console.log('Service charge:', {
         amount: serviceChargeItem.price_data.unit_amount,
+        originalAmount: serviceCharge,
       });
 
       lineItems.push(serviceChargeItem);
@@ -133,6 +130,7 @@ export async function POST(request: NextRequest) {
         total: total?.toString(),
         cartItems: JSON.stringify(items),
         isTestMode: STRIPE_CONFIG.mode === 'test' ? 'true' : 'false',
+        userId: userId || "",
         ...(customerData && {
           customerEmail: customerData.email,
           customerName: `${customerData.firstName} ${customerData.lastName}`,
@@ -144,6 +142,7 @@ export async function POST(request: NextRequest) {
           eventId: eventInfo.id || 'test',
           items: JSON.stringify(items),
           isTestMode: STRIPE_CONFIG.mode === 'test' ? 'true' : 'false',
+          userId: userId || "",
           ...(customerData && {
             customerEmail: customerData.email,
             customerFirstName: customerData.firstName,
@@ -156,11 +155,23 @@ export async function POST(request: NextRequest) {
       }),
     };
 
+    const calculatedTotal = sessionData.line_items.reduce((sum: number, item: any) => 
+      sum + (item.price_data.unit_amount * item.quantity), 0);
+    
     console.log('Creating Stripe session with data:', {
       mode: sessionData.mode,
       itemCount: sessionData.line_items.length,
-      total: sessionData.line_items.reduce((sum: number, item: any) => 
-        sum + (item.price_data.unit_amount * item.quantity), 0),
+      calculatedTotalInCentavos: calculatedTotal,
+      calculatedTotalInPesos: calculatedTotal / 100,
+      expectedTotalInPesos: total,
+      lineItemsDetails: sessionData.line_items.map((item: any) => ({
+        name: item.price_data.product_data.name,
+        unitAmountCentavos: item.price_data.unit_amount,
+        unitAmountPesos: item.price_data.unit_amount / 100,
+        quantity: item.quantity,
+        totalCentavos: item.price_data.unit_amount * item.quantity,
+        totalPesos: (item.price_data.unit_amount * item.quantity) / 100,
+      })),
     });
 
     const session = await stripe.checkout.sessions.create(sessionData);

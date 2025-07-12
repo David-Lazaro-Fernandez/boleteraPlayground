@@ -13,7 +13,7 @@ export default function DashboardLayout({
     const activePage = pathname.split("/").pop() || "";
     console.log(activePage);
     return (
-        <ProtectedRoute redirectTo="/auth/signin">
+        <ProtectedRoute redirectTo="/auth/signin" requireAdmin={true}>
             <MainLayout activePage={activePage}>{children}</MainLayout>
         </ProtectedRoute>
     );

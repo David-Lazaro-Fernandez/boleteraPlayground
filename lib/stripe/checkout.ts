@@ -29,6 +29,7 @@ export async function createCheckoutSession(
   successUrl: string,
   cancelUrl: string,
   customerData?: CustomerData,
+  userId?: string,
 ): Promise<CheckoutSession> {
   try {
     const response = await fetch("/api/stripe/create-checkout-session", {
@@ -45,6 +46,7 @@ export async function createCheckoutSession(
         customerData,
         successUrl,
         cancelUrl,
+        userId,
       }),
     });
 

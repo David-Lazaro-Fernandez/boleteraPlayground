@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/lib/hooks/use-toast";
+import { useAuth } from "@/lib/hooks/use-auth";
 import { CartSummary, EventInfo, CustomerData } from "@/lib/stripe/types";
 import { createCheckoutSession } from "@/lib/stripe/checkout";
 import { Loader2, CreditCard } from "lucide-react";
@@ -28,6 +29,7 @@ export function CheckoutButton({
 }: CheckoutButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const handleCheckout = async () => {
     if (cartSummary.items.length === 0) {
@@ -48,12 +50,14 @@ export function CheckoutButton({
       const cancelUrl = `${baseUrl}/eventos/${eventInfo.id}/comprar`;
 
       // Crear sesión de checkout
+      // Nota: Ya no necesitamos user?.uid porque el webhook creará el usuario automáticamente
       const { url } = await createCheckoutSession(
         cartSummary,
         eventInfo,
         successUrl,
         cancelUrl,
         customerData,
+        user?.uid, // Opcional: si el usuario está logueado, usar su UID
       );
 
       // Redirigir a Stripe Checkout

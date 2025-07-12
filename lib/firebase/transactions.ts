@@ -177,6 +177,7 @@ export async function createMovement(movementData: {
   event_id?: string;
   payment_intent_id?: string;
   session_id?: string;
+  user_id?: string; // Agregar campo user_id
   metadata?: any;
 }): Promise<string> {
   try {
@@ -252,7 +253,7 @@ export async function getMovementBySessionId(
 }
 
 // Funciones para Boletos
-export async function createTickets(items: any[]): Promise<string[]> {
+export async function createTickets(items: any[], userId?: string): Promise<string[]> {
   try {
     const ticketIds: string[] = [];
     const ticketsRef = collection(db, 'tickets');
@@ -266,6 +267,7 @@ export async function createTickets(items: any[]): Promise<string[]> {
           asiento: item.seatNumber,
           precio: item.price,
           event_id: item.eventId || null,
+          user_id: userId || "", // Agregar user_id
           status: 'reserved',
           created_at: Timestamp.fromDate(new Date()),
           updated_at: Timestamp.fromDate(new Date())
@@ -283,6 +285,7 @@ export async function createTickets(items: any[]): Promise<string[]> {
             asiento: 0,
             precio: item.price,
             event_id: item.eventId || null,
+            user_id: userId || "", // Agregar user_id
             status: 'reserved',
             created_at: Timestamp.fromDate(new Date()),
             updated_at: Timestamp.fromDate(new Date())

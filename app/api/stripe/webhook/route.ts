@@ -9,6 +9,7 @@ import {
   processPaymentWithBackend,
   getMovementBySessionId 
 } from "@/lib/firebase/transactions";
+import { createOrGetUserFromCheckout } from "@/lib/utils/auto-user-creation";
 
 const stripe = new Stripe(process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY!, {
   apiVersion: "2025-06-30.basil",
@@ -101,22 +102,52 @@ export async function POST(request: Request) {
           // Crear nuevo movimiento
           const cartItems = JSON.parse(session.metadata.cartItems || "[]");
           
+          // Obtener datos del cliente
+          const customerEmail = session.metadata.customerEmail || session.customer_details?.email || "";
+          const customerName = session.metadata.customerName || session.customer_details?.name || "";
+          const customerPhone = session.metadata.customerPhone || session.customer_details?.phone || "";
+          
+          // Crear o obtener usuario automáticamente
+          let userId = session.metadata.userId || "";
+          
+          if (!userId && customerEmail) {
+            try {
+              // Extraer nombre y apellido del customerName si está disponible
+              const nameParts = customerName.split(' ');
+              const firstName = nameParts[0] || '';
+              const lastName = nameParts.slice(1).join(' ') || '';
+              
+              userId = await createOrGetUserFromCheckout({
+                email: customerEmail,
+                firstName,
+                lastName,
+                phone: customerPhone,
+              });
+              
+              console.log('Usuario creado/obtenido automáticamente:', userId);
+            } catch (error) {
+              console.error('Error creating user from checkout:', error);
+              // Continuar sin userId si hay error
+            }
+          }
+          
           movementId = await createMovement({
             total: parseFloat(session.metadata.total || "0"),
             subtotal: parseFloat(session.metadata.subtotal || "0"),
             cargo_servicio: parseFloat(session.metadata.serviceCharge || "0"),
             tipo_pago: "tarjeta",
             card_brand: cardBrand,
-            buyer_email: session.metadata.customerEmail || session.customer_details?.email || "",
-            buyer_name: session.metadata.customerName || session.customer_details?.name || "",
+            buyer_email: customerEmail,
+            buyer_name: customerName,
             event_id: session.metadata.eventId || "",
             payment_intent_id: paymentIntentId,
             session_id: sessionId,
+            user_id: userId, // Usar el userId creado automáticamente
             metadata: session.metadata
           });
 
           // Crear tickets
-          const ticketIds = await createTickets(cartItems);
+          const ticketIds = await createTickets(cartItems, userId);
           await createMovementTickets(movementId, ticketIds, cartItems);
 
           // Actualizar estado
