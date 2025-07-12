@@ -256,7 +256,7 @@ export default function EventDetailPage() {
               <Separator className="my-4" />
 
               <div className="space-y-3">
-                <Button
+                {/* <Button
                     className={`w-full bg-blue-600 hover:bg-blue-700 ${isMobile ? 'py-3' : ''}`}
                     size={isMobile ? "default" : "lg"}
                     disabled={event.estado_venta === 'agotado' || event.estado_venta === 'finalizado'}
@@ -266,7 +266,10 @@ export default function EventDetailPage() {
                     {event.estado_venta === 'agotado' ? 'Agotado' :
                       event.estado_venta === 'finalizado' ? 'Finalizado' :
                         'Comprar Boletos'}
-                  </Button> 
+                  </Button>  */}
+                  <div className="bg-gray-300 text-gray-600 text-sm cursor-not-allowed text-center py-2 rounded-md">
+                    Estamos en mantenimiento, por favor, intentalo más tarde.
+                  </div>
               </div>
             </CardContent>
           </Card>
