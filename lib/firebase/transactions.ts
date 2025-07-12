@@ -19,6 +19,7 @@ import {
 } from "firebase/firestore";
 import { db } from "./config";
 import process from "process";
+import { startOfDay, endOfDay } from "date-fns";
 
 // Interfaces base
 interface BaseMovement {
@@ -27,6 +28,10 @@ interface BaseMovement {
   cargo_servicio: number;
   tipo_pago: "efectivo" | "tarjeta" | "cortesia";
   card_brand?: "visa" | "mastercard" | "amex" | "other"; // Añadir tipo de tarjeta
+  metadata?: {
+    ticketCount: string;
+    [key: string]: any;
+  };
 }
 
 // Interfaz para datos en Firestore
@@ -39,6 +44,10 @@ export interface FirestoreMovement extends BaseMovement {
 export interface Movement extends BaseMovement {
   id: string;
   fecha: Date;
+  buyer_email?: string;
+  buyer_name?: string;
+  numero_boletos: number;
+  payment_method?: string;
 }
 
 export interface Ticket {
@@ -87,7 +96,10 @@ export interface DashboardStats {
   totalMovimientos: number;
   activosAhora: number;
   fondoCaja: number;
+  ventasOnline: number;
+  boletosEnLinea: number; // Agregamos el nuevo campo
   ventasRecientes: {
+    id: string;
     nombre: string;
     email: string;
     monto: number;
@@ -97,6 +109,7 @@ export interface DashboardStats {
     numero_boletos: number;
     subtotal: number;
     cargo_servicio: number;
+    payment_method?: string;
   }[];
   ventasPorMes: {
     month: string;
@@ -126,6 +139,10 @@ export interface DashboardStats {
     other: number;
     cortesia: number;
   };
+  ventasPorHora: {
+    hora: number;
+    cantidad: number;
+  }[];
 }
 
 // Nueva interfaz para Fondo de Caja
@@ -607,6 +624,60 @@ async function getTicketsInBatches(
   return Promise.all(batches);
 }
 
+// Nueva función para obtener los boletos por hora usando movement_tickets
+export async function getTicketsByHour(startDate: Date, endDate: Date) {
+  try {
+    // Primero obtenemos todos los movement_ids del día
+    const movementsRef = collection(db, "movements");
+    const movementsQuery = query(
+      movementsRef,
+      where("fecha", ">=", Timestamp.fromDate(startDate)),
+      where("fecha", "<=", Timestamp.fromDate(endDate))
+    );
+    
+    const movementsSnapshot = await getDocs(movementsQuery);
+    const movementIds = movementsSnapshot.docs.map(doc => doc.id);
+
+    // Ahora obtenemos todos los tickets asociados a estos movements
+    const ticketsRef = collection(db, "movement_tickets");
+    const ticketsQuery = query(
+      ticketsRef,
+      where("movimiento_id", "in", movementIds)
+    );
+
+    const ticketsSnapshot = await getDocs(ticketsQuery);
+    // Creamos un mapa para contar boletos por hora
+    const ticketsByHour = new Map<number, number>();
+    for (let i = 7; i <= 19; i++) {
+      ticketsByHour.set(i, 0);
+    }
+
+    // Contamos los tickets por hora usando la fecha del movimiento original
+    ticketsSnapshot.docs.forEach(ticketDoc => {
+      const movementDoc = movementsSnapshot.docs.find(
+        doc => doc.id === ticketDoc.data().movimiento_id
+      );
+      
+      if (movementDoc) {
+        const fecha = movementDoc.data().fecha.toDate();
+        const hora = fecha.getHours();
+        if (hora >= 7 && hora <= 19) {
+          ticketsByHour.set(hora, (ticketsByHour.get(hora) || 0) + 1);
+        }
+      }
+    });
+
+    // Convertimos el mapa a un array para el gráfico
+    return Array.from(ticketsByHour.entries()).map(([hora, cantidad]) => ({
+      hora,
+      cantidad,
+    })).sort((a, b) => a.hora - b.hora);
+  } catch (error) {
+    console.error("Error getting tickets by hour:", error);
+    return [];
+  }
+}
+
 export async function getDashboardStats(
   startDate: Date,
   endDate: Date,
@@ -634,12 +705,14 @@ export async function getDashboardStats(
         cargo_servicio: data.cargo_servicio,
         tipo_pago: data.tipo_pago,
         card_brand: data.card_brand,
+        payment_method: data.payment_method,
         fecha: data.fecha.toDate(),
+        numero_boletos: data.numero_boletos || 0,
+        metadata: data.metadata,
       } as Movement;
     });
 
     // Si no hay movimientos, retornar estadísticas vacías
-
     if (movements.length === 0) {
       return {
         ventasTotales: 0,
@@ -647,6 +720,7 @@ export async function getDashboardStats(
         totalMovimientos: 0,
         activosAhora: 0,
         fondoCaja: 0,
+        ventasOnline: 0,
         ventasRecientes: [],
         ventasPorMes: [],
         ventasPorDia: [],
@@ -667,16 +741,23 @@ export async function getDashboardStats(
           other: 0,
           cortesia: 0,
         },
+        ventasPorHora: [],
+        boletosEnLinea: 0,
       };
     }
+
+    // Calcular ventas online (movimientos con payment_method)
+    const ventasOnline = movements
+      .filter((mov) => mov.payment_method !== undefined)
+      .reduce((total, mov) => total + mov.total, 0);
 
     // Calcular ventas totales
     const ventasTotales = movements.reduce(
       (total, mov) => total + mov.total,
-      0,
+      0
     );
 
-    // 2. Obtener todos los movement_tickets para los movimientos del día
+    // Obtener todos los movement_tickets para los movimientos del día
     const movementTicketsRef = collection(db, "movement_tickets");
     const movementTicketsQuery = query(
       movementTicketsRef,
@@ -691,25 +772,61 @@ export async function getDashboardStats(
     // Crear un mapa de movimiento_id a número de boletos y sus IDs
     const boletosPorMovimiento = new Map<
       string,
-      { count: number; ticketIds: string[] }
+      { count: number; ticketIds: string[]; fecha: Date }
     >();
 
     movementTicketsSnapshot.docs.forEach((doc) => {
       const movementTicket = doc.data();
       const movimientoId = movementTicket.movimiento_id;
       const boletoId = movementTicket.boleto_id;
+      const movement = movements.find(m => m.id === movimientoId);
 
-      const currentData = boletosPorMovimiento.get(movimientoId) || {
-        count: 0,
-        ticketIds: [],
-      };
-      boletosPorMovimiento.set(movimientoId, {
-        count: currentData.count + 1,
-        ticketIds: [...currentData.ticketIds, boletoId],
-      });
+      if (movement) {
+        const currentData = boletosPorMovimiento.get(movimientoId) || {
+          count: 0,
+          ticketIds: [],
+          fecha: movement.fecha
+        };
+        boletosPorMovimiento.set(movimientoId, {
+          count: currentData.count + 1,
+          ticketIds: [...currentData.ticketIds, boletoId],
+          fecha: currentData.fecha
+        });
+      }
     });
 
-    // 3. Obtener todos los boletos únicos, excluyendo los de cortesía
+    // Calcular boletos por tipo de pago
+    const boletosPorTipoPago = {
+      efectivo: Array.from(boletosPorMovimiento.entries())
+        .filter(([movId]) => {
+          const movement = movements.find(m => m.id === movId);
+          return movement && movement.tipo_pago === "efectivo";
+        })
+        .reduce((total, [_, data]) => total + data.count, 0),
+      visa: 0,
+      mastercard: 0,
+      amex: 0,
+      other: 0,
+      cortesia: 0
+    };
+
+    // Sumar boletos de tarjeta (todos los tipos)
+    const boletosTarjeta = Array.from(boletosPorMovimiento.entries())
+      .filter(([movId]) => {
+        const movement = movements.find(m => m.id === movId);
+        return movement && movement.tipo_pago === "tarjeta";
+      })
+      .reduce((total, [_, data]) => total + data.count, 0);
+
+    // Sumar boletos en línea usando metadata.ticketCount
+    const boletosEnLinea = movements
+      .filter(mov => mov.metadata?.ticketCount)
+      .reduce((total, mov) => total + parseInt(mov.metadata!.ticketCount, 10), 0);
+
+    // Reemplazamos la lógica anterior de ventasPorHora con la nueva función
+    const ventasPorHora = await getTicketsByHour(startDate, endDate);
+
+    // 2. Obtener todos los boletos únicos, excluyendo los de cortesía
     const allTicketIds = Array.from(
       new Set(
         Array.from(boletosPorMovimiento.entries())
@@ -809,6 +926,7 @@ export async function getDashboardStats(
         ticketIds: [],
       };
       return {
+        id: mov.id, // Asegurarnos de incluir el ID del documento
         nombre: "Usuario", // Campo por defecto ya que no existe en la base de datos
         email: "email@example.com", // Campo por defecto ya que no existe en la base de datos
         monto: mov.total,
@@ -881,32 +999,6 @@ export async function getDashboardStats(
       }];
     }
 
-    // Contadores para boletos por tipo de pago
-    const boletosPorTipoPago = {
-      efectivo: 0,
-      visa: 0,
-      mastercard: 0,
-      amex: 0,
-      other: 0,
-      cortesia: 0,
-    };
-
-    // Contar boletos por tipo de pago
-    movements.forEach((mov) => {
-      const boletosData = boletosPorMovimiento.get(mov.id);
-      if (boletosData) {
-        if (mov.tipo_pago === "efectivo") {
-          boletosPorTipoPago.efectivo += boletosData.count;
-        } else if (mov.tipo_pago === "cortesia") {
-          boletosPorTipoPago.cortesia += boletosData.count;
-        } else if (mov.tipo_pago === "tarjeta" && mov.card_brand) {
-          boletosPorTipoPago[mov.card_brand] += boletosData.count;
-        } else if (mov.tipo_pago === "tarjeta") {
-          boletosPorTipoPago.other += boletosData.count;
-        }
-      }
-    });
-
     // Obtener el fondo de caja del día seleccionado (solo para mostrar, no afecta los cálculos)
     const cashDrawer = await getCashDrawerOpening(startDate);
     const fondoCaja = cashDrawer?.amount || 0;
@@ -922,7 +1014,17 @@ export async function getDashboardStats(
       ventasPorDia: ventasPorDiaArray,
       ventasPorTipoPago,
       ventasPorZona: ventasPorZonaArray,
-      boletosPorTipoPago,
+      boletosPorTipoPago: {
+        efectivo: boletosPorTipoPago.efectivo,
+        visa: 0,
+        mastercard: 0,
+        amex: 0,
+        other: boletosTarjeta,
+        cortesia: 0
+      },
+      ventasOnline,
+      boletosEnLinea,
+      ventasPorHora,
     };
   } catch (error) {
     console.error("Error getting dashboard stats:", error);
@@ -1140,5 +1242,40 @@ export async function processPaymentWithBackend(movementId: string, status: 'pai
       errorType,
       backendResponse: false
     };
+  }
+}
+
+/**
+ * Obtiene los movimientos para una fecha específica
+ */
+export async function getMovements(
+  startDate: Date,
+  endDate: Date,
+): Promise<Movement[]> {
+  try {
+    const movementsRef = collection(db, "movements");
+    const q = query(
+      movementsRef,
+      where("fecha", ">=", Timestamp.fromDate(startOfDay(startDate))),
+      where("fecha", "<=", Timestamp.fromDate(endOfDay(endDate))),
+      orderBy("fecha", "desc")
+    );
+
+    const querySnapshot = await getDocs(q);
+    const movements: Movement[] = [];
+
+    querySnapshot.forEach((doc) => {
+      const data = doc.data();
+      movements.push({
+        id: doc.id,
+        ...data,
+        fecha: data.fecha instanceof Timestamp ? data.fecha.toDate() : data.fecha,
+      } as Movement);
+    });
+
+    return movements;
+  } catch (error) {
+    console.error("Error getting movements:", error);
+    throw error;
   }
 }
