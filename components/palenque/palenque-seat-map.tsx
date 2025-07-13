@@ -594,7 +594,7 @@ export function PalenqueSeatMap({
   };
 
   return (
-    <div className="flex h-screen bg-gray-50 flex-col md:flex-row mb-[500px] md:mb-0">
+    <div className="flex h-screen bg-gray-50 flex-col md:flex-row mb-[500px] md:mb-10">
       {/* Panel lateral izquierdo */}
       <div className="w-96 bg-white shadow-xl overflow-y-auto hidden sm:block">
         {/* Información del evento */}

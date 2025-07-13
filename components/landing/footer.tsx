@@ -5,7 +5,7 @@ import { Logo } from "@/components/prueba-boleto/logo";
 
 export function Footer() {
   return (
-    <footer className="bg-card-bg text-text-light py-12">
+    <footer className="bg-card-bg text-text-light py-12 z-10">
       <div className="container mx-auto px-6 lg:px-8 max-w-7xl">
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
           {/* Company Info */}
