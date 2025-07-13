@@ -14,12 +14,6 @@ interface ZonePricesProps {
 }
 
 export function ZonePrices({ zoneConfig, onAddGeneralTicket }: ZonePricesProps) {
-  const handleTestTicket = () => {
-    // Función para agregar boleto de prueba
-    console.log("Agregando boleto de prueba - General $10 MXN");
-    onAddGeneralTicket();
-  };
-
   return (
     <>
       <div className="p-6 border-b flex flex-col bg-white w-full">
@@ -64,16 +58,6 @@ export function ZonePrices({ zoneConfig, onAddGeneralTicket }: ZonePricesProps) 
           className="w-full bg-green-600 hover:bg-green-700 text-white"
         >
           Agregar Boleto General - $10 MXN
-        </Button>
-      </div>
-
-      {/* Botón de prueba para boleto general */}
-      <div className="p-6 border-b">
-        <Button
-          onClick={handleTestTicket}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-        >
-          🧪 PRUEBA: Agregar Boleto General - $10 MXN
         </Button>
       </div>
     </>
