@@ -48,6 +48,7 @@ export interface Movement extends BaseMovement {
   buyer_name?: string;
   numero_boletos: number;
   payment_method?: string;
+  status?: string;
 }
 
 export interface Ticket {
@@ -253,7 +254,7 @@ export async function getMovementBySessionId(
 }
 
 // Funciones para Boletos
-export async function createTickets(items: any[], userId?: string): Promise<string[]> {
+export async function createTickets(items: any[], userId?: string, eventId?: string): Promise<string[]> {
   try {
     const ticketIds: string[] = [];
     const ticketsRef = collection(db, 'tickets');
@@ -266,7 +267,7 @@ export async function createTickets(items: any[], userId?: string): Promise<stri
           fila: item.rowLetter,
           asiento: item.seatNumber,
           precio: item.price,
-          event_id: item.eventId || null,
+          event_id: eventId || null,
           user_id: userId || "", // Agregar user_id
           status: 'reserved',
           created_at: Timestamp.fromDate(new Date()),
@@ -284,7 +285,7 @@ export async function createTickets(items: any[], userId?: string): Promise<stri
             fila: 'General',
             asiento: 0,
             precio: item.price,
-            event_id: item.eventId || null,
+            event_id: eventId || null,
             user_id: userId || "", // Agregar user_id
             status: 'reserved',
             created_at: Timestamp.fromDate(new Date()),
@@ -399,7 +400,7 @@ export async function createSale(
       };
 
       // 2.2 Crear el boleto
-      const ticketIds = await createTickets([ticketForCreation]);
+      const ticketIds = await createTickets([ticketForCreation], "", undefined);
       const ticketId = ticketIds[0];
 
       // 2.3 Verificar que el ticketId no sea undefined
@@ -1279,6 +1280,43 @@ export async function getMovements(
     return movements;
   } catch (error) {
     console.error("Error getting movements:", error);
+    throw error;
+  }
+}
+
+/**
+ * Buscar movimientos por email del comprador en un rango de fechas
+ */
+export async function getMovementsByEmail(
+  email: string,
+  startDate: Date,
+  endDate: Date,
+): Promise<Movement[]> {
+  try {
+    const movementsRef = collection(db, "movements");
+    const q = query(
+      movementsRef,
+      where("buyer_email", "==", email),
+      where("fecha", ">=", Timestamp.fromDate(startOfDay(startDate))),
+      where("fecha", "<=", Timestamp.fromDate(endOfDay(endDate))),
+      orderBy("fecha", "desc")
+    );
+
+    const querySnapshot = await getDocs(q);
+    const movements: Movement[] = [];
+
+    querySnapshot.forEach((doc) => {
+      const data = doc.data();
+      movements.push({
+        id: doc.id,
+        ...data,
+        fecha: data.fecha instanceof Timestamp ? data.fecha.toDate() : data.fecha,
+      } as Movement);
+    });
+
+    return movements;
+  } catch (error) {
+    console.error("Error getting movements by email:", error);
     throw error;
   }
 }

@@ -10,6 +10,7 @@ import {
   getMovementBySessionId 
 } from "@/lib/firebase/transactions";
 import { createOrGetUserFromCheckout } from "@/lib/utils/auto-user-creation";
+import { updateSeatsFromCartItems } from "@/lib/firebase/seat-management";
 
 const stripe = new Stripe(process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY!, {
   apiVersion: "2025-06-30.basil",
@@ -88,11 +89,25 @@ export async function POST(request: Request) {
         }
 
         // Verificar si ya existe un movimiento para este session_id
+        console.log("Webhook: Checking for existing movement with session_id:", sessionId);
         const existingMovement = await getMovementBySessionId(sessionId);
+        console.log("Webhook: Existing movement found:", !!existingMovement);
         
         if (existingMovement) {
           // El movimiento ya existe, actualizar su estado
           movementId = existingMovement.id;
+          
+          // Actualizar estado de asientos si hay metadata
+          if (session.metadata?.cartItems) {
+            const cartItems = JSON.parse(session.metadata.cartItems);
+            const seatUpdateResult = await updateSeatsFromCartItems(cartItems, 'occupied');
+            if (!seatUpdateResult.success) {
+              console.error("Error updating seats for existing movement:", seatUpdateResult.error);
+            } else {
+              console.log("Seats updated successfully for existing movement");
+            }
+          }
+          
           await updateMovementStatus(movementId, "paid", {
             stripe_session_id: sessionId,
             stripe_payment_intent_id: paymentIntentId,
@@ -147,8 +162,17 @@ export async function POST(request: Request) {
           });
 
           // Crear tickets
-          const ticketIds = await createTickets(cartItems, userId);
+          const ticketIds = await createTickets(cartItems, userId, session.metadata.eventId);
           await createMovementTickets(movementId, ticketIds, cartItems);
+
+          // Actualizar estado de asientos en Firebase Storage
+          const seatUpdateResult = await updateSeatsFromCartItems(cartItems, 'occupied');
+          if (!seatUpdateResult.success) {
+            console.error("Error updating seats:", seatUpdateResult.error);
+            // No fallar el webhook, solo registrar el error
+          } else {
+            console.log("Seats updated successfully for webhook transaction");
+          }
 
           // Actualizar estado
           await updateMovementStatus(movementId, "paid", {

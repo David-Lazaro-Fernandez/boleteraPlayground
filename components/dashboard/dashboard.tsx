@@ -54,6 +54,10 @@ import {
 import { cn } from "@/lib/utils";
 import ReportView from "./report-view";
 import TicketSearchView from "./ticket-search-view";
+import SeatManagementView from "./seat-management-view";
+import ManualTicketSendView from "./manual-ticket-send-view";
+import TicketResendView from "./ticket-resend-view";
+import StripeManualProcessView from "./stripe-manual-process-view";
 
 export default function Dashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -135,6 +139,10 @@ export default function Dashboard() {
           <TabsTrigger value="analitica">Analítica</TabsTrigger>
           <TabsTrigger value="reportes">Reportes</TabsTrigger>
           <TabsTrigger value="buscar-boletos">Buscar Boletos</TabsTrigger>
+          <TabsTrigger value="agregar-boletos">Administrar Asientos</TabsTrigger>
+          <TabsTrigger value="envio-manual">Envío Manual</TabsTrigger>
+          <TabsTrigger value="reenvio-boletos">Reenvío de Boletos</TabsTrigger>
+          <TabsTrigger value="stripe-manual">Procesar Stripe</TabsTrigger>
           <TabsTrigger value="notificaciones">Notificaciones</TabsTrigger>
         </TabsList>
 
@@ -487,6 +495,26 @@ export default function Dashboard() {
         {/* Contenido de Búsqueda de Boletos */}
         <TabsContent value="buscar-boletos">
           <TicketSearchView />
+        </TabsContent>
+
+        {/* Contenido de Agregar Boletos */}
+        <TabsContent value="agregar-boletos">
+          <SeatManagementView />
+        </TabsContent>
+
+        {/* Contenido de Envío Manual */}
+        <TabsContent value="envio-manual">
+          <ManualTicketSendView />
+        </TabsContent>
+
+        {/* Contenido de Reenvío de Boletos */}
+        <TabsContent value="reenvio-boletos">
+          <TicketResendView />
+        </TabsContent>
+
+        {/* Contenido de Procesar Stripe Manual */}
+        <TabsContent value="stripe-manual">
+          <StripeManualProcessView />
         </TabsContent>
 
         {/* Contenido de Notificaciones */}

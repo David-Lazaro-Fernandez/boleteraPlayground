@@ -8,6 +8,7 @@ import {
   processPaymentWithBackend,
   getMovementBySessionId
 } from "@/lib/firebase/transactions";
+import { updateSeatsFromCartItems } from "@/lib/firebase/seat-management";
 
 const stripe = new Stripe(process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY!, {
   apiVersion: "2025-06-30.basil",
@@ -89,10 +90,19 @@ export async function POST(request: NextRequest) {
           });
 
           // Crear tickets en Firestore
-          const ticketIds = await createTickets(cartItems);
+          const ticketIds = await createTickets(cartItems, "", session.metadata.eventId);
 
           // Crear relaciones movement_tickets
           await createMovementTickets(movementId, ticketIds, cartItems);
+
+          // Actualizar estado de asientos en Firebase Storage
+          const seatUpdateResult = await updateSeatsFromCartItems(cartItems, 'occupied');
+          if (!seatUpdateResult.success) {
+            console.error("Error updating seats:", seatUpdateResult.error);
+            // No fallar la operación, solo registrar el error
+          } else {
+            console.log("Seats updated successfully for verify-payment transaction");
+          }
 
           // Actualizar el estado del movimiento a pagado
           await updateMovementStatus(movementId, "paid", {

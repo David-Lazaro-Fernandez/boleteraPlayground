@@ -24,6 +24,7 @@ import { Download } from "lucide-react";
 import Link from "next/link";
 import { storage } from "@/lib/firebase/config";
 import { ref, getDownloadURL, uploadString } from "firebase/storage";
+import { updateSeatsFromCartItems } from "@/lib/firebase/seat-management";
 import { dazzleUnicase, gontserrat } from "@/lib/fonts";
 import { createSale, Movement, Ticket } from "@/lib/firebase/transactions";
 import Stars from "./stars";
@@ -124,38 +125,26 @@ export function Venta({ generalTickets, selectedSeats }: VentaProps) {
 
   const updateSeatsStatus = async () => {
     try {
-      // First, get the current venue configuration from Firebase Storage
-      const fileRef = ref(storage, "Seats_data_last_actualizado.json");
-      const downloadURL = await getDownloadURL(fileRef);
-      const response = await fetch(downloadURL);
-      const venueConfig: VenueConfig = await response.json();
+      // Convertir los asientos seleccionados al formato necesario para la función reutilizable
+      const cartItems = selectedSeats.map(seat => ({
+        id: seat.id,
+        type: 'seat',
+        zoneName: seat.zoneName,
+        rowLetter: seat.rowLetter,
+        seatNumber: seat.seatNumber,
+        price: seat.price
+      }));
 
-      // Update the seats status in the venue configuration
-      const updatedSeats = venueConfig.createdSeats.map(
-        (seat: VenueConfigSeat) => {
-          const selectedSeat = selectedSeats.find((s) => s.id === seat.id);
-          if (selectedSeat) {
-            return { ...seat, status: "occupied" };
-          }
-          return seat;
-        },
-      );
-
-      // Create updated venue configuration
-      const updatedVenueConfig: VenueConfig = {
-        ...venueConfig,
-        createdSeats: updatedSeats,
-      };
-
-      // Convert the updated configuration to a JSON string
-      const jsonString = JSON.stringify(updatedVenueConfig);
-
-      // Upload the updated JSON back to Firebase Storage
-      await uploadString(fileRef, jsonString, "raw", {
-        contentType: "application/json",
-      });
-
-      return true; // Return true if the operation succeeds
+      // Usar la función reutilizable
+      const result = await updateSeatsFromCartItems(cartItems, 'occupied');
+      
+      if (result.success) {
+        console.log("Asientos actualizados exitosamente");
+        return true;
+      } else {
+        console.error("Error al actualizar los asientos:", result.error);
+        return false;
+      }
     } catch (error) {
       console.error("Error al actualizar los asientos:", error);
       return false;
@@ -268,12 +257,16 @@ export function Venta({ generalTickets, selectedSeats }: VentaProps) {
         // First update seats status in the venue configuration
         const success = await updateSeatsStatus();
         if (success) {
+          // Calculate total number of tickets
+          const totalTickets = selectedSeats.length + generalTickets.reduce((sum, ticket) => sum + ticket.quantity, 0);
+          
           // Create the movement data
           const movementData: Omit<Movement, "id"> = {
             total: paymentMethod === "courtesy" ? 0 : total,
             subtotal: paymentMethod === "courtesy" ? 0 : subtotal,
             cargo_servicio: paymentMethod === "courtesy" ? 0 : serviceCharge,
             fecha: new Date(),
+            numero_boletos: totalTickets,
             tipo_pago:
               paymentMethod === "courtesy"
                 ? "cortesia"
