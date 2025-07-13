@@ -57,7 +57,7 @@ export function ZonePrices({ zoneConfig, onAddGeneralTicket }: ZonePricesProps) 
           onClick={onAddGeneralTicket}
           className="w-full bg-green-600 hover:bg-green-700 text-white"
         >
-          Agregar Boleto General - $10 MXN
+          Agregar Boleto General - ${zoneConfig["General"].price.toFixed(2)} MXN
         </Button>
       </div>
     </>
