@@ -43,7 +43,7 @@ export class TicketService {
       // 2. Obtener información del evento si existe event_id
       let eventInfo: EventInfo = {
         nombre: "ACORDEONAZO",
-        fecha: "Viernes 18 de Julio del 2025",
+        fecha: "Sábado 19 de Julio del 2025",
         hora: "20:00 hrs.",
         lugar: "CENTRO DE ESPECTACULOS CD. VICTORIA",
       };
@@ -54,7 +54,7 @@ export class TicketService {
           const eventData = eventDoc.data();
           eventInfo = {
             nombre: "ACORDEONAZO",
-            fecha: "Viernes 18 de Julio del 2025",
+            fecha: "Sábado 19 de Julio del 2025",
             hora: "20:00 hrs.",
             lugar: "CENTRO DE ESPECTACULOS CD. VICTORIA",
           };
